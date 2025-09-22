@@ -1,0 +1,62 @@
+.archiveEntry {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 20px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.posterContainer {
+  flex-shrink: 0;
+}
+
+.posterImage {
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.entryDetails {
+  flex: 1;
+}
+
+.entryDetails h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.entryDetails p {
+  margin: 5px 0;
+  color: #666;
+}
+
+.tags {
+  margin-top: 15px;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.tag {
+  background: #f0f0f0;
+  color: #333;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .archiveEntry {
+    flex-direction: column;
+  }
+  
+  .posterContainer {
+    align-self: center;
+  }
+}
