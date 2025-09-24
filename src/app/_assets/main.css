@@ -1,0 +1,16 @@
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-color);
+  background-image:
+    linear-gradient(90deg, transparent var(--first-line0), var(--column-line-color) var(--first-line0), var(--column-line-color) var(--first-line1), transparent var(--first-line1)),
+    linear-gradient(90deg, transparent var(--second-line0), var(--column-line-color) var(--second-line0), var(--column-line-color) var(--second-line1), transparent var(--second-line1)),
+    linear-gradient(90deg, transparent var(--third-line0), var(--column-line-color) var(--third-line0), var(--column-line-color) var(--third-line1), transparent var(--third-line1)),
+    linear-gradient(90deg, transparent var(--fourth-line0), var(--column-line-color) var(--fourth-line0), var(--column-line-color) var(--fourth-line1), transparent var(--fourth-line1)),
+    linear-gradient(90deg, transparent var(--fifth-line0), var(--column-line-color) var(--fifth-line0), var(--column-line-color) var(--fifth-line1), transparent var(--fifth-line1));
+}

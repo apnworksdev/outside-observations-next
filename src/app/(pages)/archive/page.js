@@ -1,7 +1,8 @@
 import { client } from '@/sanity/lib/client'
 import { ARCHIVE_ENTRIES_QUERY } from '@/sanity/lib/queries'
-import ArchiveEntry from '@/ui/components/ArchiveEntry'
-import styles from "./page.module.css";
+import ArchiveEntry from '@app/_components/ArchiveEntry'
+import styles from '@app/_assets/archive.module.css'
+import Script from 'next/script'
 
 // Enable ISR - revalidate every 60 seconds
 export const revalidate = 60
@@ -21,21 +22,32 @@ export async function generateMetadata() {
   }
 }
 
-export default async function Home() {
+export default async function Archive() {
   const entries = await client.fetch(ARCHIVE_ENTRIES_QUERY);
 
+  const additionalEntries = [];
+
+  for (let i = 0; i < 50; i++) {
+    for (let j = 0; j < entries.length; j++) {
+      additionalEntries.push({
+        ...entries[j],
+        _id: `generated-${i}-${j}`,
+        year: 2020 + i,
+      });
+    }
+  }
+
   return (
-    <div className={styles.page}>
-      <h1>Outside Observation</h1>
-      
-      <div className={styles.archiveContainer}>
-        {entries.length > 0 ? (
-          entries.map((entry, index) => (
+    <div>
+      <div className={styles.container}>
+        {additionalEntries.length > 0 ? (
+          additionalEntries.map((entry, index) => (
             <ArchiveEntry key={entry._id} entry={entry} isFirst={index === 0} />
           ))
         ) : (
           <p>No archive entries found. Create some entries in your Sanity Studio!</p>
         )}
+
       </div>
     </div>
   );

@@ -3,6 +3,10 @@ import {defineQuery} from 'next-sanity'
 export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | order(year desc) {
   _id,
   year,
+  slug {
+    current,
+    _type
+  },
   artName,
   fileName,
   source,
@@ -13,10 +17,18 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
   }
 }`)
 
-export const POSTS_QUERY = defineQuery(`*[_type == "post" && defined(slug.current)][0...12]{
-  _id, title, slug
+export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && slug.current == $slug][0] {
+  _id,
+  year,
+  slug,
+  artName,
+  fileName,
+  source,
+  poster,
+  tags[]->{
+    _id,
+    name
+  }
 }`)
 
-export const POST_QUERY = defineQuery(`*[_type == "post" && slug.current == $slug][0]{
-  title, body, mainImage
-}`)
+export const ARCHIVE_ENTRY_SLUGS = defineQuery(`*[_type == "archiveEntry" && defined(slug.current)][].slug.current`)
