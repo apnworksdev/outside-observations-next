@@ -4,7 +4,7 @@ export async function generateMetadata() {
   return {
     title: 'Outside Observation',
   }
-}
+};
 
 export default async function Home() {
   return (
@@ -12,4 +12,4 @@ export default async function Home() {
       <h1>Outside Observation</h1>
     </div>
   );
-}
+};

@@ -22,7 +22,7 @@
   /* Transitions */
   --transition-time: 0.3s;
   --transition-effect: ease;
-  --transition-delay: 0.6s;
+  --transition-delay: 0.4s;
 
   /* Columns */
   --column-line-color: var(--gray-color);

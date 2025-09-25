@@ -1,0 +1,28 @@
+.linesGrid {
+  display: grid;
+  grid-template-columns: 1fr var(--column-gap) 2fr var(--column-gap) 2fr var(--column-gap) 3fr var(--column-gap) 3fr var(--column-gap) 1fr;
+  padding: 0 var(--padding);
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  width: 100vw;
+  height: 100dvh;
+  top: 0;
+  left: 0;
+}
+
+.linesGridItem {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.linesGridItem::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--column-line-width);
+  height: 100%;
+  background-color: var(--column-line-color);
+}
