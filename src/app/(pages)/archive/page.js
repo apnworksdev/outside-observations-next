@@ -51,7 +51,7 @@ export default async function Archive({ searchParams }) {
           <MaskScrollWrapper className={styles.containerContent}>
             {additionalEntries.length > 0 ? (
               additionalEntries.map((entry) => (
-                <Link key={entry._id} href={`/archive/${entry.slug.current}`} className={styles.archiveEntryImageLink}>
+                <Link key={entry._id} href={`/archive/entry/${entry.slug.current}`} className={styles.archiveEntryImageLink}>
                   <div className={styles.archiveEntryImageContainer}>
                     {entry?.poster?.asset?._ref ? (
                       <Image

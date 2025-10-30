@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server'
+import { resolvePageType } from '@/lib/resolvePageType'
 
 export function middleware(request) {
   const pathname = request.nextUrl.pathname
-  const pageType = pathname.startsWith('/archive') ? 'archive' : 
-                   pathname.startsWith('/lab') ? 'lab' : 
-                   pathname.startsWith('/radio') ? 'radio' : 'home'
-  
+  const pageType = resolvePageType(pathname)
+
   const response = NextResponse.next()
   response.headers.set('x-page-type', pageType)
   return response

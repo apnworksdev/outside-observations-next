@@ -2,6 +2,7 @@ import "@app/_assets/variables.css";
 import "@app/_assets/globals.css";
 import styles from "@app/_assets/main.module.css";
 import HeaderNav from '@app/_components/HeaderNav';
+import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
 import { headers } from 'next/headers';
 
 export const metadata = {
@@ -16,6 +17,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <body data-page={pageType}>
+        <BodyPageTypeUpdater />
         <HeaderNav />
         {children}
         <div className={styles.linesGrid}>

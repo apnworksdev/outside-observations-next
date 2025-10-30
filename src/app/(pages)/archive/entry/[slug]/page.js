@@ -37,7 +37,7 @@ export default async function ArchiveEntryPage({ params }) {
           <p>{entry.source}</p>
           <p>{entry.fileName}</p>
           <p>{entry.tags.map((tag) => tag.name).join(', ')}</p>
-          <Image src={urlFor(entry.poster).width(1200).height(630).url()} alt={entry.artName} width={1200} height={630} />
+          <Image src={urlFor(entry.poster).width(1200).height(630).url()} alt={entry.artName} width={1200} height={630} priority />
         </article>
       </div>
     </div>

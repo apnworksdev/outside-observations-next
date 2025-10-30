@@ -55,7 +55,7 @@ export default function ArchiveEntry({ entry }) {
   );
 
   return hasSlug ? (
-    <Link href={`/archive/${entry.slug.current}`} className={styles.itemContainer}>
+    <Link href={`/archive/entry/${entry.slug.current}`} className={styles.itemContainer}>
       {content}
     </Link>
   ) : (
