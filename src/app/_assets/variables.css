@@ -1,6 +1,7 @@
 :root {
   /* Colors */
   --bg-color: #EFEFEF;
+  --bg-color-75: rgba(239, 239, 239, 0.75);
   --fg-color: #000000;
   --selection-background-color: #ffffff;
   --selection-foreground-color: #000000;
@@ -16,6 +17,7 @@
   --line-height: 10px;
 
   --padding: 9px;
+  --bubble-height: 23px;
   --gap: 1px;
   --item-gap: 3px;
 
@@ -28,18 +30,13 @@
   --column-line-color: var(--gray-color);
   --column-line-width: .5px;
   --columns: 12;
-  --column-gaps-count: 7;
+  --column-gaps-count: calc(var(--columns) - 1);
   --column-gap: var(--padding);
-  --column-gap-half: calc((var(--column-gap) - var(--column-line-width)) / 2);
-  --column-width: calc((100dvw - (var(--column-gap) * var(--column-gaps-count))) / var(--columns));
-  --first-line0: calc(var(--column-gap) + var(--column-width) * 1 + var(--column-gap-half));
-  --first-line1: calc(var(--column-gap) + var(--column-width) * 1 + var(--column-gap-half) + var(--column-line-width));
-  --second-line0: calc(var(--column-gap) * 2 + var(--column-width) * 3 + var(--column-gap-half));
-  --second-line1: calc(var(--column-gap) * 2 + var(--column-width) * 3 + var(--column-gap-half) + var(--column-line-width));
-  --third-line0: calc(var(--column-gap) * 3 + var(--column-width) * 5 + var(--column-gap-half));
-  --third-line1: calc(var(--column-gap) * 3 + var(--column-width) * 5 + var(--column-gap-half) + var(--column-line-width));
-  --fourth-line0: calc(var(--column-gap) * 4 + var(--column-width) * 8 + var(--column-gap-half));
-  --fourth-line1: calc(var(--column-gap) * 4 + var(--column-width) * 8 + var(--column-gap-half) + var(--column-line-width));
-  --fifth-line0: calc(var(--column-gap) * 5 + var(--column-width) * 11 + var(--column-gap-half));
-  --fifth-line1: calc(var(--column-gap) * 5 + var(--column-width) * 11 + var(--column-gap-half) + var(--column-line-width));
+  --column-gap-half: calc((var(--column-gap)) / 2);
+  --column-width: calc((100vw - (var(--column-gap) * var(--column-gaps-count)) - var(--padding) * 2) / var(--columns));
+  --first-line-offset: calc(var(--padding) + var(--column-width) * 1  + var(--column-gap) * 0 + var(--column-gap-half));
+  --second-line-offset: calc(var(--padding) + var(--column-width) * 3 + var(--column-gap) * 2 + var(--column-gap-half));
+  --third-line-offset: calc(var(--padding) + var(--column-width) * 5 + var(--column-gap) * 4 + var(--column-gap-half));
+  --fourth-line-offset: calc(var(--padding) + var(--column-width) * 8 + var(--column-gap) * 7 + var(--column-gap-half));
+  --fifth-line-offset: calc(var(--padding) + var(--column-width) * 11 + var(--column-gap) * 10 + var(--column-gap-half));
 }

@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Optimize for development
   experimental: {
     turbo: {
       rules: {
@@ -21,7 +20,7 @@ const nextConfig = {
       },
     ],
   },
-  // Faster builds in development
+  devIndicators: false,
   ...(process.env.NODE_ENV === 'development' && {
     webpack: (config) => {
       config.watchOptions = {

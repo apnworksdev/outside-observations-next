@@ -10,7 +10,12 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
   artName,
   fileName,
   source,
-  poster,
+  poster{
+    ...,
+    asset,
+    'lqip': asset->metadata.lqip,
+    'dimensions': asset->metadata.dimensions
+  },
   tags[]->{
     _id,
     name
@@ -24,7 +29,12 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && slu
   artName,
   fileName,
   source,
-  poster,
+  poster{
+    ...,
+    asset,
+    'lqip': asset->metadata.lqip,
+    'dimensions': asset->metadata.dimensions
+  },
   tags[]->{
     _id,
     name

@@ -1,7 +1,4 @@
 .linesGrid {
-  display: grid;
-  grid-template-columns: 1fr var(--column-gap) 2fr var(--column-gap) 2fr var(--column-gap) 3fr var(--column-gap) 3fr var(--column-gap) 1fr;
-  padding: 0 var(--padding);
   position: fixed;
   z-index: 1000;
   pointer-events: none;
@@ -9,20 +6,33 @@
   height: 100dvh;
   top: 0;
   left: 0;
+  z-index: -1;
 }
 
 .linesGridItem {
-  width: 100%;
+  width: 0.5px;
   height: 100%;
-  position: relative;
+  position: absolute;
+  background-color: var(--column-line-color);
+  transform: translateX(-50%);
 }
 
-.linesGridItem::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: var(--column-line-width);
-  height: 100%;
-  background-color: var(--column-line-color);
+.linesGridItem:nth-child(1) {
+  left: var(--first-line-offset);
+}
+
+.linesGridItem:nth-child(2) {
+  left: var(--second-line-offset);
+}
+
+.linesGridItem:nth-child(3) {
+  left: var(--third-line-offset);
+}
+
+.linesGridItem:nth-child(4) {
+  left: var(--fourth-line-offset);
+}
+
+.linesGridItem:nth-child(5) {
+  left: var(--fifth-line-offset);
 }

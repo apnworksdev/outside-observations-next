@@ -6,10 +6,6 @@ import { client } from '@/sanity/lib/client';
 import { ARCHIVE_ENTRY_QUERY, ARCHIVE_ENTRY_SLUGS } from '@/sanity/lib/queries';
 import { urlFor } from '@/sanity/lib/image';
 
-// Enable ISR - revalidate every 60 seconds
-export const revalidate = 60;
-
-// Generate static params for all archive entries
 export async function generateStaticParams() {
   const slugs = await client.fetch(ARCHIVE_ENTRY_SLUGS);
   
@@ -18,40 +14,10 @@ export async function generateStaticParams() {
   }));
 }
 
-// Generate metadata for each archive entry
-export async function generateMetadata({ params }) {
-  const entry = await client.fetch(ARCHIVE_ENTRY_QUERY, {
-    slug: params.slug,
-  });
-
-  if (!entry) {
-    return {
-      title: 'Archive Entry Not Found',
-    };
-  }
-
-  return {
-    title: `${entry.artName} - Outside Observation`,
-    description: `Archive entry from ${entry.year}: ${entry.artName} by ${entry.source}`,
-    openGraph: {
-      title: `${entry.artName} - Outside Observation`,
-      description: `Archive entry from ${entry.year}: ${entry.artName} by ${entry.source}`,
-      type: 'article',
-      images: entry.poster ? [
-        {
-          url: urlFor(entry.poster).width(1200).height(630).url(),
-          width: 1200,
-          height: 630,
-          alt: entry.artName,
-        }
-      ] : [],
-    },
-  };
-}
-
 export default async function ArchiveEntryPage({ params }) {
+  const resolvedParams = await params;
   const entry = await client.fetch(ARCHIVE_ENTRY_QUERY, {
-    slug: params.slug,
+    slug: resolvedParams.slug,
   });
 
   if (!entry) {

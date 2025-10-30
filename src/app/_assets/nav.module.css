@@ -1,0 +1,107 @@
+.header menu {
+  display: flex;
+  gap: var(--gap);
+}
+
+.navBubble {
+  height: var(--nav-bubble-height);
+  background-color: var(--gray-color);
+  padding-top: 6px;
+  padding-right: var(--padding);
+  padding-bottom: 7px;
+  padding-left: var(--padding);
+  color: var(--white-color);
+  width: fit-content;
+  pointer-events: auto;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  padding: var(--padding);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  pointer-events: none;
+}
+
+.navTitleContainer {
+  display: flex;
+  gap: 1px;
+}
+
+.navTitleSpan.outside {
+  margin-right: 4px;
+}
+
+.navMenuMobile {
+  display: none;
+}
+
+.navNavigation {
+  margin-left: var(--padding);
+}
+
+.navNavigation menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.navNavigation .navLi {
+  margin-left: var(--padding);
+}
+
+/* ------------------------------------------------------------ */
+
+/*                          ARCHIVE PAGE                        */
+
+/* ------------------------------------------------------------ */
+
+.archiveNavOptions {
+  display: none;
+}
+
+body[data-page="archive"] .header {
+  height: 100dvh;
+}
+
+body[data-page="archive"] .navNavigation {
+  height: 100%;
+}
+
+body[data-page="archive"] .navNavigation menu {
+  height: 100%;
+}
+
+body[data-page="archive"] .navNavigation .navLi:global(.archive-nav) {
+  margin-left: 0;
+  position: relative;
+}
+
+body[data-page="archive"] .navNavigation .navLi:global(.lab-nav) {
+  margin-top: auto;
+}
+
+body[data-page="archive"] .archiveNavOptions {
+  position: absolute;
+  bottom: 0;
+  left: calc(100% + 1px);
+  display: flex;
+  gap: 1px;
+}
+
+body[data-page="archive"] .archiveNavOption {
+  display: flex;
+  gap: 6px;
+}
+
+.archiveViewToggleButton[aria-pressed="true"] {
+  font-weight: 700;
+  font-style: oblique;
+  text-transform: uppercase;
+  text-decoration: underline;
+}

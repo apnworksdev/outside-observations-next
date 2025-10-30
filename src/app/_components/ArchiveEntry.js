@@ -5,7 +5,7 @@ import styles from '@app/_assets/archive.module.css';
 
 export default function ArchiveEntry({ entry }) {
   const hasSlug = entry.slug?.current;
-  
+  const posterWidth = 400;
   const content = (
     <div className={styles.itemWrapper}>
       <div className={styles.itemColumn}>
@@ -22,19 +22,19 @@ export default function ArchiveEntry({ entry }) {
         <div className={styles.itemColumnContent}>
           <p>{entry.fileName}</p>
         </div>
-          {entry.poster && (
+          {entry?.poster?.asset?._ref ? (
             <div className={styles.itemPoster}>
               <Image
-                src={urlFor(entry.poster).width(300).height(400).url()}
+                src={urlFor(entry.poster).width(posterWidth).url()}
                 alt={entry.artName || 'Archive entry poster'}
-                width={300}
-                height={400}
+                width={posterWidth}
+                height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
                 loading="lazy"
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                placeholder={entry?.poster?.lqip ? 'blur' : undefined}
+                blurDataURL={entry?.poster?.lqip || undefined}
               />
             </div>
-          )}
+          ) : null}
       </div>
       <div className={styles.itemColumn}>
         <div className={styles.itemColumnContent}>
