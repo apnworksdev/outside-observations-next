@@ -99,9 +99,16 @@ body[data-page="archive"] .archiveNavOption {
   gap: 6px;
 }
 
-.archiveViewToggleButton[aria-pressed="true"] {
+body[data-page="archive"] .archiveViewToggleButton[aria-pressed="true"] {
   font-weight: 700;
   font-style: oblique;
   text-transform: uppercase;
   text-decoration: underline;
+}
+
+body[data-page="archive-entry"] .header {
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity var(--transition-time) var(--transition-effect);
+  pointer-events: none;
 }

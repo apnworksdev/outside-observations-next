@@ -6,7 +6,7 @@
   height: 100dvh;
   top: 0;
   left: 0;
-  z-index: -1;
+  z-index: 0;
 }
 
 .linesGridItem {
@@ -35,4 +35,8 @@
 
 .linesGridItem:nth-child(5) {
   left: var(--fifth-line-offset);
+}
+
+body[data-page="archive-entry"] .linesGridItem {
+  background-color: var(--bg-color);
 }

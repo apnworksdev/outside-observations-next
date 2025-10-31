@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { urlFor } from '@/sanity/lib/image';
 import styles from '@app/_assets/archive.module.css';
 
-export default function ArchiveEntry({ entry }) {
+export default function ArchiveEntryListRow({ entry }) {
   const hasSlug = entry.slug?.current;
   const posterWidth = 400;
   const content = (
