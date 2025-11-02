@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation';
 import { client } from '@/sanity/lib/client';
 import { ARCHIVE_ENTRY_QUERY, ARCHIVE_ENTRY_SLUGS } from '@/sanity/lib/queries';
 import styles from '@app/_assets/archive.module.css';
-import { ArchiveEntryArticle, ArchiveEntryMetadata } from '@/app/_components/ArchiveEntryContent';
-import ArchiveEntryBackdrop from '@/app/_components/ArchiveEntryBackdrop';
+import { ArchiveEntryArticle, ArchiveEntryMetadata } from '@/app/_components/Archive/ArchiveEntryContent';
+import ArchiveEntryBackdrop from '@/app/_components/Archive/ArchiveEntryBackdrop';
 
 export async function generateStaticParams() {
   const slugs = await client.fetch(ARCHIVE_ENTRY_SLUGS);

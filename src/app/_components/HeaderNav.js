@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import styles from '@app/_assets/nav.module.css'
-import ArchiveViewToggle from '@app/_components/ArchiveViewToggle';
+import ArchiveViewToggle from '@/app/_components/Archive/ArchiveViewToggle';
 
 export default function HeaderNav() {
 
@@ -30,7 +30,7 @@ export default function HeaderNav() {
             </div>
           </li>
           <li className={`${styles.navLi} ${styles.navBubble} lab-nav`}>
-            <Link href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+            <Link href="/lab">
               Lab
             </Link>
           </li>

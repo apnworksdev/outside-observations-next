@@ -6,7 +6,7 @@ import { client } from '@/sanity/lib/client';
 import { ARCHIVE_ENTRIES_QUERY } from '@/sanity/lib/queries';
 
 import styles from '@app/_assets/archive.module.css';
-import ArchiveEntry from '@/app/_components/ArchiveEntryListRow';
+import ArchiveEntry from '@/app/_components/Archive/ArchiveEntryListRow';
 import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper';
 import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
 

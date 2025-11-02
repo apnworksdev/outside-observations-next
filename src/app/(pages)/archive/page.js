@@ -1,5 +1,4 @@
-import ArchiveList from '@app/_components/ArchiveList';
-
+import ArchiveList from '@/app/_components/Archive/ArchiveList';
 
 // Enable ISR - revalidate every 60 seconds
 export const revalidate = 60;
