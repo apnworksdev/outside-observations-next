@@ -37,7 +37,10 @@
   line-height: 100%;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
 
+.labText1 > span:first-child {
+  display: inline-block;
 }
 
 .labText2 {
@@ -52,6 +55,10 @@
   line-height: 100%;
   letter-spacing: 2px;
   text-transform: uppercase;
+}
+
+.labText2 > span:first-child {
+  display: inline-block;
 }
 
 .labText3 {
@@ -69,6 +76,11 @@
   text-transform: uppercase;
 }
 
+.labText3 > span:first-child {
+  display: inline-block;
+  width: 100%;
+}
+
 .labText4 {
   position: absolute;
   width: max-content;
@@ -80,6 +92,10 @@
   line-height: 100%;
   letter-spacing: 1px;
   text-transform: uppercase;
+}
+
+.labText4 > span:first-child {
+  display: inline-block;
 }
 
 .labText5 {
@@ -95,6 +111,11 @@
   text-align: center;
 }
 
+.labText5 > span:first-child {
+  display: inline-block;
+  width: 100%;
+}
+
 .labText6 {
   position: absolute;
   width: 300px;
@@ -105,6 +126,11 @@
   line-height: 100%;
   letter-spacing: 1px;
   text-transform: uppercase;
+}
+
+.labText6 > span:first-child {
+  display: inline-block;
+  width: 100%;
 }
 
 .labText7 {
@@ -122,6 +148,11 @@
   text-transform: uppercase;
 }
 
+.labText7 > span:first-child {
+  display: inline-block;
+  width: 100%;
+}
+
 .labText8 {
   position: absolute;
   width: max-content;
@@ -133,7 +164,10 @@
   line-height: 100%;
   letter-spacing: 1px;
   text-transform: uppercase;
+}
 
+.labText8 > span:first-child {
+  display: inline-block;
 }
 
 .labButtonLink {
