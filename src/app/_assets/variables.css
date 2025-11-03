@@ -16,6 +16,10 @@
   --font-size: 10px;
   --line-height: 10px;
 
+  --arial-narrow-font-family: 'Arial Narrow', sans-serif;
+  --arial-font-family: 'Arial', sans-serif;
+  --optima-font-family: 'Optima', sans-serif;
+
   --padding: 9px;
   --bubble-height: 23px;
   --gap: 1px;

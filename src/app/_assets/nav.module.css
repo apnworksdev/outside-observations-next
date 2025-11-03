@@ -4,7 +4,7 @@
 }
 
 .navBubble {
-  height: var(--nav-bubble-height);
+  height: var(--bubble-height);
   background-color: var(--gray-color);
   padding-top: 6px;
   padding-right: var(--padding);
