@@ -1,4 +1,4 @@
-.header menu {
+.header :global(menu) {
   display: flex;
   gap: var(--gap);
 }
@@ -44,7 +44,7 @@
   margin-left: var(--padding);
 }
 
-.navNavigation menu {
+.navNavigation :global(menu) {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -73,20 +73,20 @@ body[data-page="archive"] .navNavigation {
   height: 100%;
 }
 
-body[data-page="archive"] .navNavigation menu {
+body[data-page="archive"] .navNavigation :global(menu) {
   height: 100%;
 }
 
-body[data-page="archive"] .navNavigation .navLi:global(.archive-nav) {
+:global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) {
   margin-left: 0;
   position: relative;
 }
 
-body[data-page="archive"] .navNavigation .navLi:global(.lab-nav) {
+:global(body[data-page="archive"]) .navNavigation .navLi:global(.lab-nav) {
   margin-top: auto;
 }
 
-body[data-page="archive"] .archiveNavOptions {
+:global(body[data-page="archive"]) .archiveNavOptions {
   position: absolute;
   bottom: 0;
   left: calc(100% + 1px);
@@ -94,19 +94,19 @@ body[data-page="archive"] .archiveNavOptions {
   gap: 1px;
 }
 
-body[data-page="archive"] .archiveNavOption {
+:global(body[data-page="archive"]) .archiveNavOption {
   display: flex;
   gap: 6px;
 }
 
-body[data-page="archive"] .archiveViewToggleButton[aria-pressed="true"] {
+:global(body[data-page="archive"]) .archiveViewToggleButton[aria-pressed="true"] {
   font-weight: 700;
   font-style: oblique;
   text-transform: uppercase;
   text-decoration: underline;
 }
 
-body[data-page="archive-entry"] .header {
+:global(body[data-page="archive-entry"]) .header {
   overflow: hidden;
   opacity: 0;
   transition: opacity var(--transition-time) var(--transition-effect);

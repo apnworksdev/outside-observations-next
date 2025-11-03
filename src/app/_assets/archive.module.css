@@ -137,7 +137,7 @@
   min-width: 0;
 }
 
-.itemColumn p {
+.itemColumn :global(p) {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -226,12 +226,12 @@
 /*                        ARCHIVE ENTRY PAGE                    */
 
 /* ------------------------------------------------------------ */
-body[data-page="archive-entry"] {
+:global(body[data-page="archive-entry"]) {
   overflow: hidden;
   background-color: var(--gray-color);
 }
 
-body[data-page="archive-entry"] .container {
+:global(body[data-page="archive-entry"]) .container {
   opacity: 0;
   transition: opacity var(--transition-time) var(--transition-effect);
   pointer-events: none;
@@ -347,7 +347,7 @@ body[data-page="archive-entry"] .container {
   min-width: 0;
 }
 
-.archiveEntryModalAsideContentItem p {
+.archiveEntryModalAsideContentItem :global(p) {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

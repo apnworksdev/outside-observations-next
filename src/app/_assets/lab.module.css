@@ -39,7 +39,7 @@
   letter-spacing: 1px;
 }
 
-.labText1 > span:first-child {
+.labText1 > :global(span:first-child) {
   display: inline-block;
 }
 
@@ -57,7 +57,7 @@
   text-transform: uppercase;
 }
 
-.labText2 > span:first-child {
+.labText2 > :global(span:first-child) {
   display: inline-block;
 }
 
@@ -76,7 +76,7 @@
   text-transform: uppercase;
 }
 
-.labText3 > span:first-child {
+.labText3 > :global(span:first-child) {
   display: inline-block;
   width: 100%;
 }
@@ -94,7 +94,7 @@
   text-transform: uppercase;
 }
 
-.labText4 > span:first-child {
+.labText4 > :global(span:first-child) {
   display: inline-block;
 }
 
@@ -111,7 +111,7 @@
   text-align: center;
 }
 
-.labText5 > span:first-child {
+.labText5 > :global(span:first-child) {
   display: inline-block;
   width: 100%;
 }
@@ -128,7 +128,7 @@
   text-transform: uppercase;
 }
 
-.labText6 > span:first-child {
+.labText6 > :global(span:first-child) {
   display: inline-block;
   width: 100%;
 }
@@ -148,7 +148,7 @@
   text-transform: uppercase;
 }
 
-.labText7 > span:first-child {
+.labText7 > :global(span:first-child) {
   display: inline-block;
   width: 100%;
 }
@@ -166,7 +166,7 @@
   text-transform: uppercase;
 }
 
-.labText8 > span:first-child {
+.labText8 > :global(span:first-child) {
   display: inline-block;
 }
 

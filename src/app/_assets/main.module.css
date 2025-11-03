@@ -37,6 +37,6 @@
   left: var(--fifth-line-offset);
 }
 
-body[data-page="archive-entry"] .linesGridItem {
+:global(body[data-page="archive-entry"]) .linesGridItem {
   background-color: var(--bg-color);
 }
