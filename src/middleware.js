@@ -7,6 +7,7 @@ export function middleware(request) {
 
   const response = NextResponse.next()
   response.headers.set('x-page-type', pageType)
+  response.headers.set('x-pathname', pathname)
   return response
 }
 
