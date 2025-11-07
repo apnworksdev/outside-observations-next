@@ -12,12 +12,16 @@ import {structureTool} from 'sanity/structure'
 import {apiVersion, dataset, projectId} from './src/sanity/env'
 import {schema} from './src/sanity/schemaTypes'
 import {structure} from './src/sanity/structure'
+import {archiveEntryVectorStoreActions} from './src/sanity/documentActions/archiveEntryVectorStoreActions'
 
 export default defineConfig({
   basePath: '/studio',
   projectId,
   dataset,
   schema,
+  document: {
+    actions: archiveEntryVectorStoreActions,
+  },
   plugins: [
     structureTool({structure}),
     // Vision is for querying with GROQ from inside the Studio

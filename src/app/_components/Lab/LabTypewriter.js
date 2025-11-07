@@ -32,16 +32,16 @@ export default function LabTypewriter() {
   const intervalRefs = useRef([]);
 
   useEffect(() => {
-    const typewriterSpeed = 80; // milliseconds per character
+    const typewriterSpeed = 70; // milliseconds per character
     const textDelays = {
-      title: 2200,
-      text1: 1200,
-      text2: 4200,
-      text3: 3400,
-      text4: 2600,
-      text5: 800,
-      text6: 4000,
-      text7: 2800,
+      title: 2100,
+      text1: 1100,
+      text2: 4000,
+      text3: 3200,
+      text4: 2400,
+      text5: 700,
+      text6: 3800,
+      text7: 2600,
       text8: 0,
     };
 
