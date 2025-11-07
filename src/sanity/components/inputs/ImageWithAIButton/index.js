@@ -301,6 +301,14 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
                 </Stack>
               </Card>
             )}
+
+            <Button
+              text={isProcessing ? 'Processing…' : 'Generate AI Content'}
+              tone="primary"
+              mode="ghost"
+              onClick={handleAIProcess}
+              disabled={!canProcess || isProcessing}
+            />
           </Stack>
         </Card>
       )}

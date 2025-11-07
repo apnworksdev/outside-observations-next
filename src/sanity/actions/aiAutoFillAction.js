@@ -48,7 +48,7 @@ export const aiAutoFillAction = {
       const formData = new FormData()
       formData.append('file', imageFile)
 
-      const response = await fetch('/api/test-ai', {
+      const response = await fetch('/api/generate-metadata', {
         method: 'POST',
         body: formData
       })
@@ -58,8 +58,7 @@ export const aiAutoFillAction = {
         throw new Error(errorData.error || `API call failed: ${response.status}`)
       }
 
-      const data = await response.json()
-      const aiResult = data.aiResponse
+      const aiResult = await response.json()
 
       // Create patches to update the document
       const patches = []
