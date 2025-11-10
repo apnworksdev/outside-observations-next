@@ -19,7 +19,8 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
   tags[]->{
     _id,
     name
-  }
+  },
+  aiDescription
 }`)
 
 export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && slug.current == $slug][0] {
@@ -38,7 +39,8 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && slu
   tags[]->{
     _id,
     name
-  }
+  },
+  aiDescription
 }`)
 
 export const ARCHIVE_ENTRY_SLUGS = defineQuery(`*[_type == "archiveEntry" && defined(slug.current)][].slug.current`)

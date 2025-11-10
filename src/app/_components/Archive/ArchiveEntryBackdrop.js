@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import styles from '@app/_assets/archive.module.css';
+import styles from '@app/_assets/archive/archive-entry.module.css';
 
 export default function ArchiveEntryBackdrop({ children }) {
   const router = useRouter();

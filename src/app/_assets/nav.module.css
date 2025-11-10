@@ -6,13 +6,34 @@
 .navBubble {
   height: var(--bubble-height);
   background-color: var(--gray-color);
-  padding-top: 6px;
+  display: flex;
+  align-items: center;
   padding-right: var(--padding);
-  padding-bottom: 7px;
   padding-left: var(--padding);
   color: var(--white-color);
   width: fit-content;
   pointer-events: auto;
+}
+
+.navLi.navBubble[data-active="true"] {
+  margin-left: 0;
+}
+
+.navLi.navBubble[data-active="true"] .navLink {
+  position: relative;
+  padding-left: 11px;
+}
+
+.navLi.navBubble[data-active="true"] .navLink::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--bg-color);
 }
 
 .header {
@@ -111,4 +132,18 @@ body[data-page="archive"] .navNavigation :global(menu) {
   opacity: 0;
   transition: opacity var(--transition-time) var(--transition-effect);
   pointer-events: none;
+}
+
+/* ------------------------------------------------------------ */
+
+/*                  UNEXPECTED CONNECTIONS PAGE                 */
+
+/* ------------------------------------------------------------ */
+
+body[data-page="unexpected-connections"] .navBubble {
+  background-color: var(--fg-color-75);
+}
+
+:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.lab-nav) {
+  margin-top: calc(var(--unexpected-primary-poster-height) + var(--gap));
 }

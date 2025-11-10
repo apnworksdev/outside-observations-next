@@ -136,6 +136,7 @@ picture,
 img,
 video {
   width: inherit;
+  line-height: 0;
 }
 
 .media {

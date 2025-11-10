@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { urlFor } from '@/sanity/lib/image';
-import styles from '@app/_assets/archive.module.css';
+import styles from '@app/_assets/archive/archive-page.module.css';
 
 export default function ArchiveEntryListRow({ entry }) {
   const hasSlug = entry.slug?.current;

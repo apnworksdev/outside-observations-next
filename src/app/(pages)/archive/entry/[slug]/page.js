@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { client } from '@/sanity/lib/client';
 import { ARCHIVE_ENTRY_QUERY, ARCHIVE_ENTRY_SLUGS } from '@/sanity/lib/queries';
-import styles from '@app/_assets/archive.module.css';
+import styles from '@app/_assets/archive/archive-entry.module.css';
 import { ArchiveEntryArticle, ArchiveEntryMetadata } from '@/app/_components/Archive/ArchiveEntryContent';
 import ArchiveEntryBackdrop from '@/app/_components/Archive/ArchiveEntryBackdrop';
 

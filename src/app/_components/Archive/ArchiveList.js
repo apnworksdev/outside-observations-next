@@ -2,17 +2,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { urlFor } from '@/sanity/lib/image';
-import { client } from '@/sanity/lib/client';
-import { ARCHIVE_ENTRIES_QUERY } from '@/sanity/lib/queries';
+import { getArchiveEntries } from '@app/_data/archive';
 
-import styles from '@app/_assets/archive.module.css';
+import styles from '@app/_assets/archive/archive-page.module.css';
 import ArchiveEntry from '@/app/_components/Archive/ArchiveEntryListRow';
 import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper';
 import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
 
 export default async function ArchiveList({ view: incomingView }) {
   const view = incomingView === 'images' ? 'images' : 'list';
-  const entries = await client.fetch(ARCHIVE_ENTRIES_QUERY);
+  const entries = await getArchiveEntries();
   const additionalEntries = [];
   const posterWidth = 400;
 

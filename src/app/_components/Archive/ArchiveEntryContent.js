@@ -1,7 +1,7 @@
 import Image from 'next/image';
 
 import { urlFor } from '@/sanity/lib/image';
-import styles from '@app/_assets/archive.module.css';
+import styles from '@app/_assets/archive/archive-entry.module.css';
 
 export function ArchiveEntryArticle({ entry, headingId }) {
   const posterWidth = 1200;

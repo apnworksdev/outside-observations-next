@@ -1,0 +1,196 @@
+.archiveNavigation {
+  position: fixed;
+  bottom: var(--padding);
+  right: var(--padding);
+  width: 36px;
+  height: 36px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--fg-color-75);
+  border-radius: 4px;
+  transition:
+  width var(--transition-time) var(--transition-effect),
+  height var(--transition-time) var(--transition-effect),
+  transform var(--transition-time) var(--transition-effect),
+  opacity var(--transition-time) var(--transition-effect);
+  transform-origin: bottom right;
+  mix-blend-mode: darken;
+}
+
+.archiveNavigation[data-presence='hidden'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .archiveNavigation[data-state='closed']:hover {
+    transform: scale(1.1);
+  }
+}
+
+.archiveNavigation[data-state='open'] {
+  width: 242px;
+  height: 242px;
+}
+
+.archiveNavigationToggle {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.archiveNavigationButtons {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.archiveNavigationButtons[data-state='closed'] {
+  pointer-events: none;
+}
+
+.archiveNavigationButtons[data-state='closed'] .archiveNavigationButton {
+  pointer-events: none;
+  z-index: 1;
+}
+
+.archiveNavigationButtons[data-state='open'] .archiveNavigationButton {
+  pointer-events: auto;
+  z-index: 3;
+}
+
+.archiveNavigationButton {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background-color: var(--bg-color);
+  border-radius: 50%;
+  --star-radius: 130%;
+  --scale-factor: 1;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  transform: translate(-50%, -50%);
+  transition: width var(--transition-time) var(--transition-effect), height var(--transition-time) var(--transition-effect), transform var(--transition-time) var(--transition-effect);
+}
+
+.archiveNavigation[data-state='open'] .archiveNavigationButton {
+  --star-radius: 540%;
+  width: 14px;
+  height: 14px;
+}
+
+@media (hover: hover) {
+  .archiveNavigation[data-state='open'] .archiveNavigationButton:hover {
+    --scale-factor: 1.5;
+  }
+}
+.archiveNavigationButtonSearch {
+  transform: translate(-50%, -50%) translateY(calc(-1 * var(--star-radius))) scale(var(--scale-factor));
+}
+
+.archiveNavigationButtonMood {
+  transform: translate(-50%, -50%) translate(calc(-0.951 * var(--star-radius)), calc(-0.309 * var(--star-radius))) scale(var(--scale-factor));
+}
+
+.archiveNavigationButtonUnexpected {
+  transform: translate(-50%, -50%) translate(calc(-0.588 * var(--star-radius)), calc(0.809 * var(--star-radius))) scale(var(--scale-factor));
+}
+
+.archiveNavigationButtonContinue {
+  transform: translate(-50%, -50%) translate(calc(0.588 * var(--star-radius)), calc(0.809 * var(--star-radius))) scale(var(--scale-factor));
+}
+
+.archiveNavigationButtonLive {
+  transform: translate(-50%, -50%) translate(calc(0.951 * var(--star-radius)), calc(-0.309 * var(--star-radius))) scale(var(--scale-factor));
+}
+
+.archiveNavigationLabel {
+  opacity: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.22s var(--transition-effect);
+  transition-delay: 0s;
+  color: var(--bg-color);
+  max-width: 100px;
+  text-align: center;
+}
+
+.archiveNavigationLabel[data-visibility='hidden'] {
+  opacity: 0;
+  transition-delay: 0s;
+}
+
+.archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='true'] {
+  opacity: 1;
+  transition-delay: 0.22s;
+}
+
+.archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='false'] {
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+.archiveNavigationPanel {
+  position: fixed;
+  bottom: calc(var(--padding) + 12px);
+  right: calc(var(--padding) + 270px);
+  width: 280px;
+  padding: calc(var(--gap) * 0.75);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 0.5);
+  border-radius: 8px;
+  background-color: var(--fg-color-75);
+  color: var(--bg-color);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition:
+    opacity 160ms var(--transition-effect),
+    transform 160ms var(--transition-effect);
+  z-index: 1000;
+}
+
+.archiveNavigationPanel[data-presence='hidden'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.archiveNavigationPanel[data-state='open'] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.archiveNavigationPanelContent {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) * 0.5);
+}
+
+.archiveNavigationPanelTitle {
+  margin: 0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.archiveNavigationPanelBody {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}

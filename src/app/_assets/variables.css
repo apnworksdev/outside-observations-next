@@ -15,7 +15,7 @@
   --font-family: 'courier', monospace;
   --font-weight: 400;
   --font-size: 10px;
-  --line-height: 10px;
+  --line-height: 14px;
 
   --arial-narrow-font-family: 'Arial Narrow', sans-serif;
   --arial-font-family: 'Arial', sans-serif;
@@ -44,4 +44,9 @@
   --third-line-offset: calc(var(--padding) + var(--column-width) * 5 + var(--column-gap) * 4 + var(--column-gap-half));
   --fourth-line-offset: calc(var(--padding) + var(--column-width) * 8 + var(--column-gap) * 7 + var(--column-gap-half));
   --fifth-line-offset: calc(var(--padding) + var(--column-width) * 11 + var(--column-gap) * 10 + var(--column-gap-half));
+
+  /* Archive page */
+  --archive-container-top-margin: calc(var(--padding) + var(--bubble-height) * 2 + var(--gap) * 2);
+  --archive-container-bottom-margin: calc(var(--padding) + var(--bubble-height) * 3 + var(--gap) * 3);
+  --unexpected-primary-poster-height: 0px;
 }

@@ -1,5 +1,4 @@
 import ArchiveList from '@/app/_components/Archive/ArchiveList';
-import ArchiveNavigation from '@/app/_components/Archive/ArchiveNavigation';
 
 // Enable ISR - revalidate every 60 seconds
 export const revalidate = 60;
@@ -23,7 +22,6 @@ export default async function Archive({ searchParams }) {
   return (
     <>
       <ArchiveList view={view} />
-      <ArchiveNavigation />
     </>
   );
 };
