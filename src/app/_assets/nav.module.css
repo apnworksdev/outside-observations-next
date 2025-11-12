@@ -86,25 +86,13 @@
   display: none;
 }
 
-body[data-page="archive"] .header {
-  height: 100dvh;
-}
-
-body[data-page="archive"] .navNavigation {
-  height: 100%;
-}
-
-body[data-page="archive"] .navNavigation :global(menu) {
-  height: 100%;
-}
-
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) {
   margin-left: 0;
   position: relative;
 }
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.lab-nav) {
-  margin-top: auto;
+  margin-top: var(--archive-list-height);
 }
 
 :global(body[data-page="archive"]) .archiveNavOptions {

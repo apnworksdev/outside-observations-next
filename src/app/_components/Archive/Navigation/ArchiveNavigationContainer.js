@@ -5,6 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import styles from '@app/_assets/archive/archive-navigation.module.css';
 import ArchiveNavigation from './ArchiveNavigation';
+import ArchiveNavigationMoodPanel from './ArchiveNavigationMoodPanel';
+import ArchiveNavigationSearchPanel from './ArchiveNavigationSearchPanel';
 
 const NAVIGATION_ITEMS = [
   {
@@ -40,6 +42,14 @@ const NAVIGATION_ITEMS = [
 ];
 
 export default function ArchiveNavigationContainer() {
+  /**
+   * This container owns the state machine for the floating navigation control:
+   *   - `isNavigationOpen` tracks the radial menu.
+   *   - `activeItemId` decides which button (if any) owns the detail panel.
+   *   - `panelId` mirrors the rendered panel for accessibility wiring.
+   * We keep the router and pathname handy so interactions can deep-link and so the
+   * navigation hides itself on entry detail pages.
+   */
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [activeItemId, setActiveItemId] = useState(null);
   const [panelId, setPanelId] = useState(null);
@@ -51,6 +61,11 @@ export default function ArchiveNavigationContainer() {
   );
   const isHidden = isArchiveEntryPage;
 
+  /**
+   * Opening and closing the navigation is symmetrical: when users collapse it we clear
+   * the active item and panel id so the next expansion starts from a clean slate. This
+   * makes “Search” behave like a toggle rather than a sticky state.
+   */
   const handleOpenChange = useCallback((nextOpen) => {
     setIsNavigationOpen(nextOpen);
 
@@ -67,10 +82,15 @@ export default function ArchiveNavigationContainer() {
       if (href) {
         router.push(href);
       }
-  },
+    },
     [router]
   );
 
+  /**
+   * Only the items with interactive panels are mapped below. This makes it trivial to
+   * introduce new panels later (e.g. “Continue” or “Live”) by extending the switch.
+   * When the navigation is closed we short-circuit to keep the panel hidden.
+   */
   const panelContent = useMemo(() => {
     if (!isNavigationOpen || !activeItemId) {
       return null;
@@ -80,8 +100,12 @@ export default function ArchiveNavigationContainer() {
       case 'search':
         return {
           id: 'archive-navigation-panel-search',
-          title: 'Search the archive',
-          body: 'Start typing to uncover entries, moods, and connections. (Coming soon.)',
+          Content: ArchiveNavigationSearchPanel,
+        };
+      case 'mood':
+        return {
+          id: 'archive-navigation-panel-mood',
+          Content: ArchiveNavigationMoodPanel,
         };
       default:
         return null;
@@ -90,6 +114,11 @@ export default function ArchiveNavigationContainer() {
 
   const isPanelOpen = Boolean(panelContent);
 
+  /**
+   * A few housekeeping effects keep navigation UX coherent:
+   *   - Update `panelId` whenever the active panel changes so aria-controls stays valid.
+   *   - Collapse the menu automatically on entry pages (they have their own navigation).
+   */
   useEffect(() => {
     if (panelContent) {
       setPanelId(panelContent.id);
@@ -99,6 +128,11 @@ export default function ArchiveNavigationContainer() {
     setPanelId(null);
   }, [panelContent]);
 
+  /**
+   * Entry detail pages hide the global floating navigation entirely. When we detect
+   * such a path we immediately reset state so reopening the archive view later doesn’t
+   * resurrect a stale panel.
+   */
   useEffect(() => {
     if (!isArchiveEntryPage) {
       return;
@@ -128,12 +162,7 @@ export default function ArchiveNavigationContainer() {
         data-presence={isHidden ? 'hidden' : 'visible'}
         aria-hidden={isArchiveEntryPage || !isPanelOpen}
       >
-        {panelContent ? (
-          <div className={styles.archiveNavigationPanelContent}>
-            <h2 className={styles.archiveNavigationPanelTitle}>{panelContent.title}</h2>
-            <p className={styles.archiveNavigationPanelBody}>{panelContent.body}</p>
-          </div>
-        ) : null}
+        {panelContent ? <panelContent.Content /> : null}
       </div>
     </>
   );

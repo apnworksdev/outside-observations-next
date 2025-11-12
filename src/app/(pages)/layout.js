@@ -1,14 +1,14 @@
-import "@app/_assets/variables.css";
-import "@app/_assets/globals.css";
-import styles from "@app/_assets/main.module.css";
+import '@app/_assets/variables.css';
+import '@app/_assets/globals.css';
+import styles from '@app/_assets/main.module.css';
 import HeaderNav from '@app/_components/HeaderNav';
 import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
 import StudioLayoutWrapper from '@/app/_components/StudioLayoutWrapper';
 import { headers } from 'next/headers';
 
 export const metadata = {
-  title: "Outside Observation",
-  description: "Outside Observation",
+  title: 'Outside Observation',
+  description: 'Outside Observation',
 };
 
 export default async function RootLayout({ children }) {
@@ -27,7 +27,7 @@ export default async function RootLayout({ children }) {
         <div data-hide-on-studio="true">
           <div className={styles.linesGrid}>
             {Array.from({ length: 5 }).map((_, index) => (
-              <div className={styles.linesGridItem} key={index}></div>
+              <div className={styles.linesGridItem} key={index} />
             ))}
           </div>
         </div>

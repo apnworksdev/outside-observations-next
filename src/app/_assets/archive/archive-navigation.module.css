@@ -2,14 +2,14 @@
   position: fixed;
   bottom: var(--padding);
   right: var(--padding);
-  width: 36px;
-  height: 36px;
+  width: var(--close-archive-button-size);
+  height: var(--close-archive-button-size);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: var(--fg-color-75);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   transition:
   width var(--transition-time) var(--transition-effect),
   height var(--transition-time) var(--transition-effect),
@@ -31,8 +31,8 @@
 }
 
 .archiveNavigation[data-state='open'] {
-  width: 242px;
-  height: 242px;
+  width: var(--open-archive-button-size);
+  height: var(--open-archive-button-size);
 }
 
 .archiveNavigationToggle {
@@ -145,17 +145,9 @@
 
 .archiveNavigationPanel {
   position: fixed;
-  bottom: calc(var(--padding) + 12px);
-  right: calc(var(--padding) + 270px);
-  width: 280px;
-  padding: calc(var(--gap) * 0.75);
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--gap) * 0.5);
-  border-radius: 8px;
-  background-color: var(--fg-color-75);
-  color: var(--bg-color);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  bottom: var(--padding);
+  right: calc(var(--padding) + var(--open-archive-button-size) + var(--gap));
+  width: calc(var(--column-width) * 3 + var(--column-gap) * 2);
   opacity: 0;
   pointer-events: none;
   transform: translateY(8px);
@@ -179,18 +171,44 @@
 .archiveNavigationPanelContent {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--gap) * 0.5);
+  gap: var(--gap);
+  color: var(--bg-color);
 }
 
-.archiveNavigationPanelTitle {
-  margin: 0;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+.archivePanelWrapper {
+  padding-top: 8px;
+  padding-bottom: 9px;
+  padding-right: 18px;
+  padding-left: 18px;
+  background-color: var(--fg-color-75);
+  border-radius: var(--border-radius);
 }
 
-.archiveNavigationPanelBody {
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.5;
+.archiveNavigationPanelSearch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.archiveNavigationSearchForm {
+  display: flex;
+  gap: var(--padding);
+  width: 100%;
+}
+
+.archiveNavigationSearchInput {
+  flex: 1;
+}
+
+.archiveNavigationSearchInput::placeholder {
+  color: var(--gray-color);
+}
+
+.archiveNavigationSearchButton {
+  width: max-content;
+}
+
+.archiveNavigationPanelNoResults a {
+  text-decoration: underline;
+  font-weight: bold;
 }

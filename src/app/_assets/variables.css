@@ -25,6 +25,7 @@
   --bubble-height: 23px;
   --gap: 1px;
   --item-gap: 3px;
+  --border-radius: 4px;
 
   /* Transitions */
   --transition-time: 0.3s;
@@ -49,4 +50,7 @@
   --archive-container-top-margin: calc(var(--padding) + var(--bubble-height) * 2 + var(--gap) * 2);
   --archive-container-bottom-margin: calc(var(--padding) + var(--bubble-height) * 3 + var(--gap) * 3);
   --unexpected-primary-poster-height: 0px;
+  --archive-list-height: 0px;
+  --close-archive-button-size: 36px;
+  --open-archive-button-size: 242px;
 }

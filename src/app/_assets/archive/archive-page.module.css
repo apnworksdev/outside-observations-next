@@ -21,6 +21,10 @@
   scroll-snap-type: y mandatory;
 }
 
+.containerContent[data-scroll-state='not-needed'] {
+  overflow: visible;
+}
+
 .itemContainer {
   color: var(--bg-color);
   scroll-snap-align: start;
@@ -66,6 +70,11 @@
   gap: var(--column-gap);
 }
 
+.containerLegend[data-visible='false'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .containerLegendColumn {
   width: calc(100% + 6px);
   position: relative;
@@ -80,7 +89,7 @@
   padding-top: 6px;
   padding-bottom: 7px;
   background-color: var(--bg-color-75);
-  border-radius: 4px;
+  border-radius: var(--border-radius);
 }
 
 .itemColumn:nth-child(1),

@@ -1,10 +1,17 @@
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 
 import styles from '@app/_assets/nav.module.css';
 import ArchiveViewToggle from '@/app/_components/Archive/ArchiveViewToggle';
 import NavItem from '@/app/_components/NavItem';
 
-export default function HeaderNav() {
+const VIEW_COOKIE_NAME = 'outside-observations-archive-view';
+
+export default async function HeaderNav() {
+  const cookieStore = await cookies();
+  const cookieValue = cookieStore.get(VIEW_COOKIE_NAME)?.value ?? 'list';
+  const initialView = cookieValue === 'images' || cookieValue === 'list' ? cookieValue : 'list';
+
   return (
     <header id="main-header" className={styles.header}>
       <div className={styles.navTitleContainer}>
@@ -31,7 +38,10 @@ export default function HeaderNav() {
             label="Archive"
           >
             <div className={styles.archiveNavOptions}>
-              <ArchiveViewToggle className={`${styles.archiveNavOption} ${styles.navBubble}`} />
+              <ArchiveViewToggle
+                className={`${styles.archiveNavOption} ${styles.navBubble}`}
+                initialExternalView={initialView}
+              />
               <div className={`${styles.archiveNavOption} ${styles.navBubble}`}>
                 <button type="button">?</button>
               </div>

@@ -1,9 +1,14 @@
 'use client'
 
-import { useEffect } from 'react'
+import { forwardRef, useEffect } from 'react'
 import Script from 'next/script'
 
-export default function ScrollContainerWrapper({ children, className }) {
+const ScrollContainerWrapper = forwardRef(function ScrollContainerWrapper({ children, className, ...rest }, ref) {
+  /**
+   * The custom element that powers the smooth archive scrolling is registered via a
+   * separate script. We poll for its availability after hydration so we can stop the
+   * interval as soon as the definition loads, preventing unnecessary work on rerenders.
+   */
   useEffect(() => {
     if (typeof window !== 'undefined' && !customElements.get('scroll-container')) {
       const checkScript = setInterval(() => {
@@ -19,9 +24,11 @@ export default function ScrollContainerWrapper({ children, className }) {
   return (
     <>
       <Script src="/scroll-container.js" strategy="afterInteractive" />
-      <scroll-container className={className} suppressHydrationWarning>
+      <scroll-container ref={ref} className={className} suppressHydrationWarning {...rest}>
         {children}
       </scroll-container>
     </>
   )
-}
+})
+
+export default ScrollContainerWrapper

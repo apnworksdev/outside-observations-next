@@ -1,4 +1,4 @@
-import ArchiveList from '@/app/_components/Archive/ArchiveList';
+import ArchiveListContent from '@/app/_components/Archive/ArchiveListContent';
 
 // Enable ISR - revalidate every 60 seconds
 export const revalidate = 60;
@@ -16,12 +16,6 @@ export async function generateMetadata() {
   };
 }
 
-export default async function Archive({ searchParams }) {
-  const resolvedSearchParams = await searchParams;
-  const view = resolvedSearchParams?.view === 'images' ? 'images' : 'list';
-  return (
-    <>
-      <ArchiveList view={view} />
-    </>
-  );
-};
+export default function Archive() {
+  return <ArchiveListContent />;
+}
