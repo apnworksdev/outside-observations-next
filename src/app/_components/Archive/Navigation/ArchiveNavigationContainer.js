@@ -155,6 +155,13 @@ export default function ArchiveNavigationContainer() {
         isPanelOpen={isPanelOpen}
         isHidden={isHidden}
       />
+      {!isHidden && (
+        <div
+          className={styles.archiveNavigationGradient}
+          data-state={isNavigationOpen ? 'open' : 'closed'}
+          aria-hidden="true"
+        />
+      )}
       <div
         className={styles.archiveNavigationPanel}
         id={panelId ?? undefined}

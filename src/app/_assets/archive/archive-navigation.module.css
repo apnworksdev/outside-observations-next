@@ -128,6 +128,27 @@
   text-align: center;
 }
 
+.archiveNavigationGradient {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 50vh;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--white-color));
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--transition-time) var(--transition-effect),
+    visibility var(--transition-time) var(--transition-effect);
+  z-index: 900;
+}
+
+.archiveNavigationGradient[data-state='open'] {
+  opacity: 1;
+  visibility: visible;
+}
+
 .archiveNavigationLabel[data-visibility='hidden'] {
   opacity: 0;
   transition-delay: 0s;
