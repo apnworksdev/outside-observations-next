@@ -48,7 +48,7 @@ export default function ArchiveEntryListRow({ entry }) {
       </div>
       <div className={styles.itemColumn}>
         <div className={styles.itemColumnContent}>
-          <p>Image</p>
+          <p>{entry.type ?? 'Image'}</p>
         </div>
       </div>
     </div>

@@ -84,6 +84,72 @@ function multiplyEntries(entries) {
   return multiplied;
 }
 
+function normaliseYearValue(entry) {
+  const { year } = entry ?? {};
+
+  if (typeof year === 'number' && Number.isFinite(year)) {
+    return year;
+  }
+
+  if (typeof year === 'string') {
+    const parsed = parseInt(year, 10);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
+function normaliseStringValue(entry, key) {
+  const value = entry?.[key];
+
+  if (typeof value === 'string') {
+    return value.trim().toLocaleLowerCase();
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value.toString();
+  }
+
+  return value ?? '';
+}
+
+const SORT_ACCESSORS = {
+  year: normaliseYearValue,
+  artName: (entry) => normaliseStringValue(entry, 'artName'),
+  fileName: (entry) => normaliseStringValue(entry, 'fileName'),
+  source: (entry) => normaliseStringValue(entry, 'source'),
+  type: (entry) => normaliseStringValue(entry, 'type'),
+};
+
+function getInitialSorting() {
+  return { column: null, direction: null };
+}
+
+function compareSortValues(valueA, valueB, isAscending) {
+  const bothNumbers =
+    typeof valueA === 'number' &&
+    typeof valueB === 'number' &&
+    Number.isFinite(valueA) &&
+    Number.isFinite(valueB);
+
+  if (bothNumbers) {
+    return isAscending ? valueA - valueB : valueB - valueA;
+  }
+
+  const stringA = typeof valueA === 'string' ? valueA : valueA === null || valueA === undefined ? '' : String(valueA);
+  const stringB = typeof valueB === 'string' ? valueB : valueB === null || valueB === undefined ? '' : String(valueB);
+
+  const comparison = stringA.localeCompare(stringB, undefined, { sensitivity: 'base', numeric: true });
+
+  if (comparison === 0) {
+    return 0;
+  }
+
+  return isAscending ? comparison : -comparison;
+}
+
 export default function ArchiveEntriesProvider({ initialEntries = [], initialView = null, children }) {
   /**
    * All stateful logic for the archive lives inside this provider. It inflates the
@@ -96,6 +162,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   const [view, setViewState] = useState(() => (isValidView(initialView) ? initialView : 'list'));
   const [searchResults, setSearchResultsState] = useState({ active: false, ids: [], orderedIds: [] });
   const [searchStatus, setSearchStatus] = useState({ status: 'idle', query: null, summary: null, error: null });
+  const [sorting, setSorting] = useState(() => getInitialSorting());
   const requestIdRef = useRef(0);
   const pendingSearchPayloadRef = useRef(null);
   const previousPathRef = useRef(null);
@@ -207,6 +274,55 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       .sort((a, b) => getRankForEntry(a) - getRankForEntry(b));
   }, [entries, searchResults]);
 
+  const sortedEntries = useMemo(() => {
+    const column = sorting?.column;
+    const direction = sorting?.direction;
+
+    if (!column || !direction) {
+      return filtered;
+    }
+
+    const accessor = SORT_ACCESSORS[column];
+
+    if (typeof accessor !== 'function') {
+      return filtered;
+    }
+
+    const isAscending = direction === 'asc';
+    const withMeta = filtered.map((entry, index) => ({
+      entry,
+      index,
+      value: accessor(entry),
+    }));
+
+    withMeta.sort((a, b) => {
+      const valueA = a.value;
+      const valueB = b.value;
+
+      if (valueA === valueB) {
+        return a.index - b.index;
+      }
+
+      if (valueA === null || valueA === undefined) {
+        return isAscending ? 1 : -1;
+      }
+
+      if (valueB === null || valueB === undefined) {
+        return isAscending ? -1 : 1;
+      }
+
+      const comparison = compareSortValues(valueA, valueB, isAscending);
+
+      if (comparison === 0) {
+        return a.index - b.index;
+      }
+
+      return comparison;
+    });
+
+    return withMeta.map((item) => item.entry);
+  }, [filtered, sorting]);
+
   const applySearchPayload = useCallback((payload) => {
     if (!payload) {
       return;
@@ -214,6 +330,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
 
     setSearchResultsState(payload.resultsState);
     setSearchStatus(payload.statusState);
+    setSorting(getInitialSorting());
   }, []);
 
   useEffect(() => {
@@ -246,6 +363,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
         requestIdRef.current += 1;
         setSearchResultsState({ active: false, ids: [], orderedIds: [] });
         setSearchStatus({ status: 'idle', query: null, summary: null, error: null });
+        setSorting(getInitialSorting());
         pendingSearchPayloadRef.current = null;
         return;
       }
@@ -353,6 +471,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     requestIdRef.current += 1;
     setSearchResultsState({ active: false, ids: [], orderedIds: [] });
     setSearchStatus({ status: 'idle', query: null, summary: null, error: null });
+    setSorting(getInitialSorting());
     pendingSearchPayloadRef.current = null;
   }, []);
 
@@ -383,14 +502,16 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   const value = useMemo(
     () => ({
       entries,
-      visibleEntries: filtered,
+      visibleEntries: sortedEntries,
       view,
       setView,
       searchStatus,
       runSearch,
       clearSearch,
+      sorting,
+      setSorting,
     }),
-    [clearSearch, entries, filtered, runSearch, searchStatus, setView, view]
+    [clearSearch, entries, runSearch, searchStatus, setView, sortedEntries, sorting, setSorting, view]
   );
 
   return <ArchiveEntriesContext.Provider value={value}>{children}</ArchiveEntriesContext.Provider>;
@@ -407,5 +528,82 @@ export function useArchiveEntries() {
 
 export function useArchiveEntriesSafe() {
   return useContext(ArchiveEntriesContext);
+}
+
+const SORT_DIRECTION_ORDER = ['desc', 'asc', null];
+
+function getNextSortDirection(previousDirection) {
+  const currentIndex = SORT_DIRECTION_ORDER.indexOf(previousDirection ?? null);
+  const nextIndex = (currentIndex + 1) % SORT_DIRECTION_ORDER.length;
+  return SORT_DIRECTION_ORDER[nextIndex];
+}
+
+function getSortAriaLabel(label, direction, customMessages) {
+  const defaults = {
+    desc: `${label} column, sorted descending. Activate to sort ascending.`,
+    asc: `${label} column, sorted ascending. Activate to clear sorting.`,
+    inactive: `${label} column, no sorting applied. Activate to sort descending.`,
+  };
+
+  const messages = { ...defaults, ...(customMessages ?? {}) };
+
+  if (direction === 'desc') {
+    return messages.desc;
+  }
+
+  if (direction === 'asc') {
+    return messages.asc;
+  }
+
+  return messages.inactive;
+}
+
+function getSortIndicator(direction) {
+  if (direction === 'asc') {
+    return '↑';
+  }
+
+  if (direction === 'desc') {
+    return '↓';
+  }
+
+  return '↕';
+}
+
+export function useArchiveSortController(column, { label: customLabel, ariaMessages } = {}) {
+  const { sorting, setSorting } = useArchiveEntries();
+
+  const direction = sorting?.column === column ? sorting?.direction ?? null : null;
+  const label = customLabel ?? column;
+
+  const toggleSort = useCallback(() => {
+    setSorting((previous) => {
+      const prevColumn = previous?.column === column ? column : null;
+      const prevDirection = prevColumn ? previous?.direction ?? null : null;
+      const nextDirection = getNextSortDirection(prevDirection);
+
+      if (nextDirection === null) {
+        return getInitialSorting();
+      }
+
+      return { column, direction: nextDirection };
+    });
+  }, [column, setSorting]);
+
+  const ariaLabel = useMemo(
+    () => getSortAriaLabel(label, direction, ariaMessages),
+    [ariaMessages, direction, label]
+  );
+  const indicator = useMemo(() => getSortIndicator(direction), [direction]);
+  const dataState = direction ?? 'inactive';
+
+  return {
+    column,
+    direction,
+    toggleSort,
+    ariaLabel,
+    indicator,
+    dataState,
+  };
 }
 

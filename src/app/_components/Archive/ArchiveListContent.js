@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { urlFor } from '@/sanity/lib/image';
 
@@ -10,7 +10,7 @@ import styles from '@app/_assets/archive/archive-page.module.css';
 import ArchiveEntry from '@/app/_components/Archive/ArchiveEntryListRow';
 import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
 import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper';
-import { useArchiveEntries } from './ArchiveEntriesProvider';
+import { useArchiveEntries, useArchiveSortController } from './ArchiveEntriesProvider';
 
 function setGlobalArchiveListHeight(value) {
   if (typeof document === 'undefined') {
@@ -28,13 +28,37 @@ const POSTER_WIDTH = 400;
 
 export default function ArchiveListContent() {
   const { view, visibleEntries } = useArchiveEntries();
+  const yearSort = useArchiveSortController('year', {
+    label: 'Year',
+    ariaMessages: {
+      desc: 'Year column, sorted newest to oldest. Activate to sort oldest to newest.',
+      asc: 'Year column, sorted oldest to newest. Activate to clear sorting.',
+      inactive: 'Year column, no sorting applied. Activate to sort newest to oldest.',
+    },
+  });
+  const artNameSort = useArchiveSortController('artName', { label: 'Art Name' });
+  const fileNameSort = useArchiveSortController('fileName', { label: 'File Name' });
+  const sourceSort = useArchiveSortController('source', { label: 'Source/Author' });
+  const typeSort = useArchiveSortController('type', { label: 'Type' });
+  const sortableLegendColumns = useMemo(
+    () => [
+      { key: 'year', label: 'Year', sort: yearSort },
+      { key: 'artName', label: 'Art Name', sort: artNameSort },
+      { key: 'fileName', label: 'File Name', sort: fileNameSort },
+      { key: 'source', label: 'Source/Author', sort: sourceSort },
+    ],
+    [artNameSort, fileNameSort, sourceSort, yearSort]
+  );
   const contentRef = useRef(null);
   const measurementFrameRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [isScrollNeeded, setIsScrollNeeded] = useState(true);
 
   const hasEntries = visibleEntries.length > 0;
-  const visibleEntriesSignature = visibleEntries.map((entry) => entry._id).join('|');
+  const visibleEntriesSignature = useMemo(
+    () => visibleEntries.map((entry) => entry._id).join('|'),
+    [visibleEntries]
+  );
 
   /**
    * The archive layout relies on CSS custom properties that mirror the rendered height.
@@ -190,35 +214,40 @@ export default function ArchiveListContent() {
         data-visible={hasEntries ? 'true' : 'false'}
         aria-hidden={hasEntries ? undefined : 'true'}
       >
-        <div className={styles.containerLegendColumn}>
-          <div className={styles.containerLegendColumnItem}>
-            <p>Year</p>
+        {sortableLegendColumns.map(({ key, label, sort }) => (
+          <div key={key} className={styles.containerLegendColumn}>
+            <button
+              type="button"
+              className={styles.containerLegendColumnButton}
+              onClick={sort.toggleSort}
+              data-sort-state={sort.dataState}
+              aria-label={sort.ariaLabel}
+            >
+              <span>{label}</span>
+              <span aria-hidden="true" className={styles.containerLegendSortIndicator}>
+                {sort.indicator}
+              </span>
+            </button>
           </div>
-        </div>
-        <div className={styles.containerLegendColumn}>
-          <div className={styles.containerLegendColumnItem}>
-            <p>Art Name</p>
-          </div>
-        </div>
-        <div className={styles.containerLegendColumn}>
-          <div className={styles.containerLegendColumnItem}>
-            <p>File Name</p>
-          </div>
-        </div>
-        <div className={styles.containerLegendColumn}>
-          <div className={styles.containerLegendColumnItem}>
-            <p>Source/Author</p>
-          </div>
-        </div>
+        ))}
         <div className={styles.containerLegendColumn}>
           <div className={styles.containerLegendColumnItem}>
             <p>Tags</p>
           </div>
         </div>
         <div className={styles.containerLegendColumn}>
-          <div className={styles.containerLegendColumnItem}>
-            <p>Type</p>
-          </div>
+          <button
+            type="button"
+            className={styles.containerLegendColumnButton}
+            onClick={typeSort.toggleSort}
+            data-sort-state={typeSort.dataState}
+            aria-label={typeSort.ariaLabel}
+          >
+            <span>Type</span>
+            <span aria-hidden="true" className={styles.containerLegendSortIndicator}>
+              {typeSort.indicator}
+            </span>
+          </button>
         </div>
       </div>
     </div>
