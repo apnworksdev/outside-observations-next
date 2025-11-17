@@ -12,5 +12,17 @@ export const structure = (S) =>
             .title('Backfill Tag Slugs')
             .component(TaskButtonsTool)
         ),
-      ...S.documentTypeListItems(),
+      // Site Settings as a singleton - appears as a direct item
+      S.listItem()
+        .title('Site Settings')
+        .icon(() => '⚙️')
+        .child(
+          S.document()
+            .schemaType('siteSettings')
+            .documentId('siteSettings')
+        ),
+      // Filter out siteSettings from default list and add other document types
+      ...S.documentTypeListItems().filter(
+        (listItem) => !['siteSettings'].includes(listItem.getId())
+      ),
     ])

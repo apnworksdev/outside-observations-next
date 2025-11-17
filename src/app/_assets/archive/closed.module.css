@@ -1,0 +1,66 @@
+.container {
+  position: fixed;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  color: var(--white-color);
+  padding: calc(var(--padding) * 2);
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  text-transform: uppercase;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.topContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.closedArchiveImageContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  filter: blur(50px);
+}
+
+.closedArchiveImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.countdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.numberList {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(20, minmax(14px, 1fr));
+  gap: 1px;
+}
+
+.number {
+  opacity: 0.2;
+  transition: opacity var(--transition-time) var(--transition-effect);
+}
+
+.number.active {
+  opacity: 1;
+}

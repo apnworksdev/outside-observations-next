@@ -44,3 +44,14 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && slu
 }`)
 
 export const ARCHIVE_ENTRY_SLUGS = defineQuery(`*[_type == "archiveEntry" && defined(slug.current)][].slug.current`)
+
+export const SITE_SETTINGS_QUERY = defineQuery(`*[_type == "siteSettings"][0] {
+  _id,
+  title,
+  closedArchiveImage{
+    ...,
+    asset,
+    'lqip': asset->metadata.lqip,
+    'dimensions': asset->metadata.dimensions
+  }
+}`)
