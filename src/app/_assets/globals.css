@@ -209,3 +209,20 @@ video {
     display: none!important;
   }
 }
+
+/* ------------------------------------------------------------ */
+
+/*                    PAGE-SPECIFIC STYLES                      */
+
+/* ------------------------------------------------------------ */
+
+body[data-page="archive-entry"] {
+  overflow: hidden;
+  background-color: var(--gray-color);
+}
+
+body[data-page="archive-entry"] .container {
+  opacity: 0;
+  transition: opacity var(--transition-time) var(--transition-effect);
+  pointer-events: none;
+}

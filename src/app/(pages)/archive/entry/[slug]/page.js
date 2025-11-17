@@ -6,11 +6,23 @@ import { ArchiveEntryArticle, ArchiveEntryMetadata } from '@/app/_components/Arc
 import ArchiveEntryBackdrop from '@/app/_components/Archive/ArchiveEntryBackdrop';
 
 export async function generateStaticParams() {
-  const slugs = await client.fetch(ARCHIVE_ENTRY_SLUGS);
-  
-  return slugs.map((slug) => ({
-    slug: slug,
-  }));
+  try {
+    const slugs = await client.fetch(ARCHIVE_ENTRY_SLUGS);
+    
+    // Handle case where fetch returns null/undefined or empty array
+    if (!Array.isArray(slugs)) {
+      return [];
+    }
+    
+    return slugs.map((slug) => ({
+      slug: slug,
+    }));
+  } catch (error) {
+    // If Sanity fetch fails during build, return empty array
+    // This allows the build to succeed and pages will be generated on-demand
+    console.error('Failed to fetch archive entry slugs during build:', error);
+    return [];
+  }
 }
 
 export default async function ArchiveEntryPage({ params }) {
