@@ -163,6 +163,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   const [searchResults, setSearchResultsState] = useState({ active: false, ids: [], orderedIds: [] });
   const [searchStatus, setSearchStatus] = useState({ status: 'idle', query: null, summary: null, error: null });
   const [sorting, setSorting] = useState(() => getInitialSorting());
+  const [selectedMoodTag, setSelectedMoodTag] = useState(null);
   const requestIdRef = useRef(0);
   const pendingSearchPayloadRef = useRef(null);
   const previousPathRef = useRef(null);
@@ -231,48 +232,60 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
    * duplicated entry so the layout stays dense. Once a search is running we filter by
    * the set of matching IDs (supporting both the clone `_id` and the `baseId`) and keep
    * the order consistent with the ranking provided by the vector store.
+   * Also filters by selected mood tag if one is active.
    */
   const filtered = useMemo(() => {
-    if (!searchResults?.active) {
-      return entries;
-    }
+    let result = entries;
 
-    const allowedIds = new Set(searchResults.ids);
+    // Apply search filtering if active
+    if (searchResults?.active) {
+      const allowedIds = new Set(searchResults.ids);
 
-    if (allowedIds.size === 0) {
-      return [];
-    }
-
-    const rankList = searchResults.orderedIds ?? [];
-    const rankMap = new Map();
-
-    for (let index = 0; index < rankList.length; index += 1) {
-      const id = rankList[index];
-      if (!rankMap.has(id)) {
-        rankMap.set(id, index);
+      if (allowedIds.size === 0) {
+        return [];
       }
-    }
 
-    const getRankForEntry = (entry) => {
-      if (!entry) {
+      const rankList = searchResults.orderedIds ?? [];
+      const rankMap = new Map();
+
+      for (let index = 0; index < rankList.length; index += 1) {
+        const id = rankList[index];
+        if (!rankMap.has(id)) {
+          rankMap.set(id, index);
+        }
+      }
+
+      const getRankForEntry = (entry) => {
+        if (!entry) {
+          return Number.POSITIVE_INFINITY;
+        }
+
+        if (rankMap.has(entry._id)) {
+          return rankMap.get(entry._id);
+        }
+
+        if (entry.baseId && rankMap.has(entry.baseId)) {
+          return rankMap.get(entry.baseId);
+        }
+
         return Number.POSITIVE_INFINITY;
-      }
+      };
 
-      if (rankMap.has(entry._id)) {
-        return rankMap.get(entry._id);
-      }
+      result = entries
+        .filter((entry) => allowedIds.has(entry._id) || (entry.baseId && allowedIds.has(entry.baseId)))
+        .sort((a, b) => getRankForEntry(a) - getRankForEntry(b));
+    }
 
-      if (entry.baseId && rankMap.has(entry.baseId)) {
-        return rankMap.get(entry.baseId);
-      }
+    // Apply mood tag filtering if a tag is selected
+    if (selectedMoodTag) {
+      result = result.filter((entry) => {
+        const moodTags = entry.aiMoodTags || [];
+        return moodTags.some((tag) => tag?.name === selectedMoodTag);
+      });
+    }
 
-      return Number.POSITIVE_INFINITY;
-    };
-
-    return entries
-      .filter((entry) => allowedIds.has(entry._id) || (entry.baseId && allowedIds.has(entry.baseId)))
-      .sort((a, b) => getRankForEntry(a) - getRankForEntry(b));
-  }, [entries, searchResults]);
+    return result;
+  }, [entries, searchResults, selectedMoodTag]);
 
   const sortedEntries = useMemo(() => {
     const column = sorting?.column;
@@ -328,6 +341,8 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       return;
     }
 
+    // Clear mood tag filter when applying search results
+    setSelectedMoodTag(null);
     setSearchResultsState(payload.resultsState);
     setSearchStatus(payload.statusState);
     setSorting(getInitialSorting());
@@ -367,6 +382,9 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
         pendingSearchPayloadRef.current = null;
         return;
       }
+
+      // Clear mood tag filter when starting a search
+      setSelectedMoodTag(null);
 
       const currentRequestId = requestIdRef.current + 1;
       requestIdRef.current = currentRequestId;
@@ -475,6 +493,23 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     pendingSearchPayloadRef.current = null;
   }, []);
 
+  const setMoodTag = useCallback(
+    (tagName) => {
+      // Navigate to archive page if not already there
+      if (pathname !== '/archive') {
+        router.push('/archive');
+      }
+      setSelectedMoodTag(tagName);
+      // Clear search when filtering by mood tag
+      clearSearch();
+    },
+    [clearSearch, pathname, router]
+  );
+
+  const clearMoodTag = useCallback(() => {
+    setSelectedMoodTag(null);
+  }, []);
+
   /**
    * When the user leaves the archive we reset any active search so that a future visit
    * starts from the default list view. We keep track of the last pathname visited to
@@ -488,10 +523,11 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
 
     if (previousPathRef.current === '/archive' && pathname !== '/archive') {
       clearSearch();
+      clearMoodTag();
     }
 
     previousPathRef.current = pathname;
-  }, [clearSearch, pathname]);
+  }, [clearSearch, clearMoodTag, pathname]);
 
   /**
    * All pieces of state and helper actions are memoised into a stable object, ensuring
@@ -510,8 +546,11 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       clearSearch,
       sorting,
       setSorting,
+      selectedMoodTag,
+      setMoodTag,
+      clearMoodTag,
     }),
-    [clearSearch, entries, runSearch, searchStatus, setView, sortedEntries, sorting, setSorting, view]
+    [clearSearch, clearMoodTag, entries, runSearch, searchStatus, selectedMoodTag, setMoodTag, setSorting, setView, sortedEntries, sorting, view]
   );
 
   return <ArchiveEntriesContext.Provider value={value}>{children}</ArchiveEntriesContext.Provider>;

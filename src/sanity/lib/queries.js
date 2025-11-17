@@ -20,6 +20,10 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
     _id,
     name
   },
+  aiMoodTags[]->{
+    _id,
+    name
+  },
   aiDescription
 }`)
 
@@ -37,6 +41,10 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && slu
     'dimensions': asset->metadata.dimensions
   },
   tags[]->{
+    _id,
+    name
+  },
+  aiMoodTags[]->{
     _id,
     name
   },

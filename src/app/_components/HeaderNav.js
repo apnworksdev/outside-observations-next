@@ -62,7 +62,7 @@ export default async function HeaderNav() {
             label="Radio"
           />
           <li className={`${styles.navLi} ${styles.navBubble} shop-nav`}>
-            <Link href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Shop</Link>
+            <Link href="https://outside-observations.myshopify.com/">Shop</Link>
           </li>
         </menu>
       </nav>

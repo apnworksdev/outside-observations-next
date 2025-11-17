@@ -189,6 +189,10 @@
   transform: translateY(0);
 }
 
+.archiveNavigationPanel[data-state='open'][data-panel-type='mood'] {
+  width: auto;
+}
+
 .archiveNavigationPanelContent {
   display: flex;
   flex-direction: column;
@@ -232,4 +236,54 @@
 .archiveNavigationPanelNoResults a {
   text-decoration: underline;
   font-weight: bold;
+}
+
+.archiveNavigationMoodPanelContent {
+  height: var(--open-archive-button-size);
+  background-color: var(--fg-color-75);
+  border-radius: var(--border-radius);
+  padding: 12px 18px;
+  color: var(--bg-color);
+}
+
+.archiveNavigationMoodPanelList {
+  display: grid;
+  height: 100%;
+  grid-template-rows: repeat(auto-fill, minmax(14px, 1fr));
+  column-gap: calc(var(--padding) * 2);
+  grid-auto-flow: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.archiveNavigationMoodPanelList li {
+  margin: 0;
+  padding: 0;
+}
+
+.archiveNavigationMoodPanelList button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.archiveNavigationPanelTagIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: .25px solid var(--bg-color);
+  background: transparent;
+  flex-shrink: 0;
+  transition: background-color var(--transition-time) var(--transition-effect);
+}
+
+.archiveNavigationPanelTagIndicatorActive {
+  background-color: var(--bg-color);
 }

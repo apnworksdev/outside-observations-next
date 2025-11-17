@@ -100,11 +100,13 @@ export default function ArchiveNavigationContainer() {
       case 'search':
         return {
           id: 'archive-navigation-panel-search',
+          panelType: 'search',
           Content: ArchiveNavigationSearchPanel,
         };
       case 'mood':
         return {
           id: 'archive-navigation-panel-mood',
+          panelType: 'mood',
           Content: ArchiveNavigationMoodPanel,
         };
       default:
@@ -167,6 +169,7 @@ export default function ArchiveNavigationContainer() {
         id={panelId ?? undefined}
         data-state={isArchiveEntryPage ? 'closed' : isPanelOpen ? 'open' : 'closed'}
         data-presence={isHidden ? 'hidden' : 'visible'}
+        data-panel-type={panelContent?.panelType ?? undefined}
         aria-hidden={isArchiveEntryPage || !isPanelOpen}
       >
         {panelContent ? <panelContent.Content /> : null}
