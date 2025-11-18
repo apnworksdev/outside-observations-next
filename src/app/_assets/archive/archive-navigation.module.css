@@ -99,19 +99,19 @@
   transform: translate(-50%, -50%) translateY(calc(-1 * var(--star-radius))) scale(var(--scale-factor));
 }
 
-.archiveNavigationButtonMood {
+.archiveNavigationButtonLive {
   transform: translate(-50%, -50%) translate(calc(-0.951 * var(--star-radius)), calc(-0.309 * var(--star-radius))) scale(var(--scale-factor));
 }
 
-.archiveNavigationButtonUnexpected {
+.archiveNavigationButtonContinue {
   transform: translate(-50%, -50%) translate(calc(-0.588 * var(--star-radius)), calc(0.809 * var(--star-radius))) scale(var(--scale-factor));
 }
 
-.archiveNavigationButtonContinue {
+.archiveNavigationButtonUnexpected {
   transform: translate(-50%, -50%) translate(calc(0.588 * var(--star-radius)), calc(0.809 * var(--star-radius))) scale(var(--scale-factor));
 }
 
-.archiveNavigationButtonLive {
+.archiveNavigationButtonMood {
   transform: translate(-50%, -50%) translate(calc(0.951 * var(--star-radius)), calc(-0.309 * var(--star-radius))) scale(var(--scale-factor));
 }
 

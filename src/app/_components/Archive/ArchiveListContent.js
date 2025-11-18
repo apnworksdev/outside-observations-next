@@ -189,7 +189,7 @@ export default function ArchiveListContent() {
                         loading="lazy"
                         placeholder={entry?.poster?.lqip ? 'blur' : undefined}
                         blurDataURL={entry?.poster?.lqip || undefined}
-                        onLoadingComplete={handleImageLoad}
+                        onLoad={handleImageLoad}
                       />
                     ) : null}
                   </div>

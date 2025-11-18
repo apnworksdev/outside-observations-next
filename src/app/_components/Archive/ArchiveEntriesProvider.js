@@ -415,20 +415,16 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
           return;
         }
 
-        const matchesAboveThreshold = Array.isArray(result?.images)
-          ? result.images.filter((item) => typeof item?.similarity === 'number' && item.similarity > SIMILARITY_THRESHOLD)
+        // The new API returns images as an array of image ID strings
+        const imageIds = Array.isArray(result?.images)
+          ? result.images.filter((id) => typeof id === 'string' && id.trim().length > 0)
           : [];
-
-        const matchingIds = matchesAboveThreshold
-          .sort((a, b) => (b.similarity ?? 0) - (a.similarity ?? 0))
-          .map((item) => item.id)
-          .filter(Boolean);
 
         const orderedUniqueIds = [];
         const seenIds = new Set();
 
-        for (let index = 0; index < matchingIds.length; index += 1) {
-          const id = matchingIds[index];
+        for (let index = 0; index < imageIds.length; index += 1) {
+          const id = imageIds[index];
           if (!seenIds.has(id)) {
             seenIds.add(id);
             orderedUniqueIds.push(id);

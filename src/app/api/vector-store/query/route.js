@@ -20,7 +20,7 @@ export async function POST(request) {
    * Responsibilities:
    *   - Validate presence of the shared API key.
    *   - Guard against malformed payloads (non-string queries).
-   *   - Forward the request with a similarity threshold when provided.
+   *   - Forward the request with query and maxImages parameters.
    *   - Normalise upstream failures into structured JSON responses so the client can
    *     render friendly fallbacks without exposing implementation details.
    */
@@ -50,12 +50,26 @@ export async function POST(request) {
 
     const vectorStoreQueryUrl = buildApiUrl(VECTOR_STORE_PATH);
 
-    const { query, maxResults = 10, minSimilarity } = await request.json();
-
-    if (!query || typeof query !== 'string') {
-      return NextResponse.json({ error: 'A search query is required.' }, { status: 400 });
+    let requestBody;
+    try {
+      requestBody = await request.json();
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Invalid request body. Expected JSON.' },
+        { status: 400 }
+      );
     }
 
+    const { query, maxImages = 10 } = requestBody;
+
+    if (!query || typeof query !== 'string') {
+      return NextResponse.json(
+        { error: 'A search query is required and must be a string.' },
+        { status: 400 }
+      );
+    }
+
+    // The external API only accepts query and maxImages (no minSimilarity)
     const response = await fetch(vectorStoreQueryUrl, {
       method: 'POST',
       headers: {
@@ -64,7 +78,7 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         query,
-        ...(typeof minSimilarity === 'number' ? { minSimilarity } : {}),
+        maxImages,
       }),
       cache: 'no-store',
     });

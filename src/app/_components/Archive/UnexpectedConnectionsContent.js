@@ -116,7 +116,7 @@ export default function UnexpectedConnectionsContent({
                   blurDataURL={entry.poster?.lqip || undefined}
                   className={styles.unexpectedConnectionsItemPoster}
                   data-primary={isPrimary ? 'true' : 'false'}
-                  onLoadingComplete={isPrimary ? measurePrimaryPosterHeight : undefined}
+                  onLoad={isPrimary ? measurePrimaryPosterHeight : undefined}
                 />
               </div>
             </div>
