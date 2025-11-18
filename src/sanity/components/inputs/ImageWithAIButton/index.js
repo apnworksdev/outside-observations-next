@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react'
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {Button, Card, Flex, Spinner, Stack, Text} from '@sanity/ui'
 import {PatchEvent, set} from 'sanity'
 import {ImageInput, useClient, useFormBuilder, useFormValue} from 'sanity'
@@ -12,6 +12,7 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
 
   const processedAssetRef = useRef(null)
   const isInitializedRef = useRef(false)
+  const propsRef = useRef(props)
 
   const documentValue = useFormValue([])
   const currentAiDescription = documentValue?.aiDescription
@@ -20,8 +21,21 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
   const formBuilder = useFormBuilder()
   const client = useClient({apiVersion: '2025-09-22'})
 
+  // Keep props ref updated - only update when value actually changes
+  const prevValueRef = useRef(props.value)
+  useEffect(() => {
+    // Only update if the actual value changed, not just the props object reference
+    if (prevValueRef.current !== props.value) {
+      propsRef.current = props
+      prevValueRef.current = props.value
+    } else {
+      // Still update the ref object
+      propsRef.current = props
+    }
+  }, [props, props.value])
+
   const handleAIProcess = useCallback(async () => {
-    const currentValue = props.value
+    const currentValue = propsRef.current.value
     if (!currentValue || !currentValue.asset) {
       setError('Please upload an image first')
       return
@@ -172,8 +186,8 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
 
         if (documentOnChange) {
           documentOnChange(patchEvent)
-        } else if (props.onChange) {
-          props.onChange(patchEvent)
+        } else if (propsRef.current.onChange) {
+          propsRef.current.onChange(patchEvent)
         }
       }
 
@@ -188,24 +202,43 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
     } finally {
       setIsProcessing(false)
     }
-  }, [props, currentAiDescription, currentAiMoodTags, formBuilder, client])
+  }, [currentAiDescription, currentAiMoodTags, formBuilder, client])
 
+  // Track the last asset ID to prevent unnecessary effect runs
+  const lastAssetIdRef = useRef(null)
+  
+  // Extract asset ID as a primitive string and memoize it
+  const assetId = useMemo(() => {
+    return props.value?.asset?._ref || props.value?.asset?._id || null
+  }, [props.value?.asset?._ref, props.value?.asset?._id])
+  
   useEffect(() => {
-    const currentValue = props.value
-    const currentAssetId = currentValue?.asset?._ref || currentValue?.asset?._id
+    const currentAssetId = assetId
+
+    // Early return if asset ID hasn't actually changed
+    if (currentAssetId === lastAssetIdRef.current && isInitializedRef.current) {
+      return
+    }
 
     if (!isInitializedRef.current) {
       return
     }
 
-    if (currentAssetId && currentAssetId !== processedAssetRef.current && !isProcessing && currentValue?.asset) {
+    // Only process if asset ID actually changed
+    if (currentAssetId && currentAssetId !== processedAssetRef.current && !isProcessing) {
+      lastAssetIdRef.current = currentAssetId
       processedAssetRef.current = currentAssetId
 
       setTimeout(() => {
         handleAIProcess()
       }, 500)
+    } else if (!currentAssetId) {
+      // Reset when asset is removed
+      if (lastAssetIdRef.current !== null) {
+        lastAssetIdRef.current = null
+      }
     }
-  }, [props.value, isProcessing, handleAIProcess])
+  }, [assetId, isProcessing, handleAIProcess])
 
   useEffect(() => {
     const currentValue = props.value
@@ -217,7 +250,7 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
       }
       isInitializedRef.current = true
     }
-  }, [])
+  }, [props.value])
 
   const hasImage = props.value && props.value.asset
   const canProcess = hasImage && !isProcessing

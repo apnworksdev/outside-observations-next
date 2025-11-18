@@ -1,6 +1,6 @@
 'use client'
 
-import React, {useCallback, useEffect, useMemo, useState} from 'react'
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {Badge, Button, Card, Flex, Spinner, Stack, Text} from '@sanity/ui'
 import {useFormValue} from 'sanity'
 
@@ -36,27 +36,60 @@ const StatusBadge = ({status}) => {
 
 export function VectorStoreStatus() {
   const documentValue = useFormValue([]) || {}
+  
+  // Extract primitive values and memoize them to prevent unnecessary recalculations
   const documentId = documentValue?._id
-  const canonicalId = normalizeId(documentId)
-  const hasDescription =
-    typeof documentValue?.aiDescription === 'string' && documentValue.aiDescription.trim() !== ''
+  const aiDescription = documentValue?.aiDescription
+  
+  // Memoize derived values - these will only change when the actual primitive values change
+  const canonicalId = useMemo(() => normalizeId(documentId), [documentId])
+  const hasDescription = useMemo(() => {
+    return typeof aiDescription === 'string' && aiDescription.trim() !== ''
+  }, [aiDescription])
 
   const [status, setStatus] = useState('unknown')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  
+  // Track what we've already checked to prevent redundant API calls
+  const lastCheckedRef = useRef({canonicalId: null, hasDescription: null})
+  const isCheckingRef = useRef(false)
 
-  const checkStatus = useCallback(async () => {
+  const checkStatus = useCallback(async (forceRefresh = false) => {
+    // If no ID, set status and return immediately
     if (!canonicalId) {
-      setStatus('noId')
+      setStatus((prevStatus) => {
+        if (prevStatus !== 'noId') {
+          return 'noId'
+        }
+        return prevStatus
+      })
       setError(null)
+      lastCheckedRef.current = {canonicalId: '', hasDescription: false}
       return
     }
 
+    // Prevent concurrent checks
+    if (isCheckingRef.current) {
+      return
+    }
+
+    // Check if values have actually changed (skip this check if force refresh)
+    if (!forceRefresh) {
+      const last = lastCheckedRef.current
+      if (last.canonicalId === canonicalId && last.hasDescription === hasDescription) {
+        return
+      }
+    }
+
+    // Mark as checking and update last checked
+    isCheckingRef.current = true
+    lastCheckedRef.current = {canonicalId, hasDescription}
     setLoading(true)
     setError(null)
 
     try {
-      const response = await fetch('/api/vector-store/get-all-images')
+      const response = await fetch(`/api/vector-store/exists/${encodeURIComponent(canonicalId)}`)
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}))
@@ -64,17 +97,12 @@ export function VectorStoreStatus() {
       }
 
       const data = await response.json()
-      const imageIds = Array.isArray(data.imageIds) ? data.imageIds : []
-
-      const found = imageIds.some((id) => {
-        const normalized = normalizeId(id)
-        return normalized === canonicalId
-      })
+      const exists = data.exists === true || data === true
 
       if (!hasDescription) {
         setStatus('noDescription')
       } else {
-        setStatus(found ? 'in' : 'missing')
+        setStatus(exists ? 'in' : 'missing')
       }
     } catch (err) {
       console.error('Vector store status error:', err)
@@ -82,12 +110,34 @@ export function VectorStoreStatus() {
       setError(err.message)
     } finally {
       setLoading(false)
+      isCheckingRef.current = false
     }
   }, [canonicalId, hasDescription])
 
+  // Effect to automatically check when values change
   useEffect(() => {
+    // If no ID, handle separately
+    if (!canonicalId) {
+      setStatus((prevStatus) => {
+        if (prevStatus !== 'noId') {
+          return 'noId'
+        }
+        return prevStatus
+      })
+      setError(null)
+      lastCheckedRef.current = {canonicalId: '', hasDescription: false}
+      return
+    }
+
+    // Only check if values have changed
+    const last = lastCheckedRef.current
+    if (last.canonicalId === canonicalId && last.hasDescription === hasDescription) {
+      return
+    }
+
+    // Perform the check
     checkStatus()
-  }, [checkStatus])
+  }, [canonicalId, hasDescription, checkStatus])
 
   const statusMessage = useMemo(() => {
     switch (status) {
@@ -123,7 +173,7 @@ export function VectorStoreStatus() {
             text={loading ? 'Checking…' : 'Refresh status'}
             tone="primary"
             mode="ghost"
-            onClick={checkStatus}
+            onClick={() => checkStatus(true)}
             disabled={loading || status === 'noId'}
             icon={loading ? Spinner : undefined}
           />

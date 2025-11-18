@@ -10,10 +10,10 @@ You **must** set these environment variables in Netlify's dashboard (Site settin
 - `NEXT_PUBLIC_SANITY_PROJECT_ID` - Your Sanity project ID
 - `NEXT_PUBLIC_SANITY_DATASET` - Your Sanity dataset (usually "production")
 - `OUTSIDE_OBSERVATIONS_API_KEY` - API key for your external AI service
+- `OUTSIDE_OBSERVATIONS_API_BASE_URL` - Base URL for your external AI service (e.g., `https://your-service-id.region.run.app`)
 
 **Optional (have defaults):**
 - `NEXT_PUBLIC_SANITY_API_VERSION` - Defaults to "2025-09-22" if not set
-- `OUTSIDE_OBSERVATIONS_COMPARE_API_URL` - Defaults to the hardcoded URL if not set
 
 **How to set:**
 1. Go to Netlify Dashboard → Your Site → Site settings → Environment variables
@@ -66,7 +66,7 @@ You **must** set these environment variables in Netlify's dashboard (Site settin
 ### ⚠️ Issue 7: External API Calls
 
 **Status:** Your API routes make external calls to:
-- `https://outside-observations-ai-398532801393.us-central1.run.app`
+- `https://your-service-id.region.run.app`
 
 **Note:** Ensure this service allows requests from Netlify's IP ranges. If it has IP restrictions, you may need to whitelist Netlify's IPs.
 

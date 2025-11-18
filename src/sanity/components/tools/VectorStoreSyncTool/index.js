@@ -11,8 +11,10 @@ const normalizeId = (id) => {
   return id.startsWith('drafts.') ? id.slice(7) : id
 }
 
-const fetchArchiveEntriesQuery =
-  '*[_type == "archiveEntry" && defined(aiDescription) && aiDescription != "" && defined(poster.asset)]{_id, aiDescription}'
+// Fetch archive entries - we filter in JavaScript since GROQ's defined() in WHERE clauses
+// can be unreliable with nested references. We only fetch minimal fields needed for filtering.
+// Note: For very large datasets (1000+), consider adding pagination
+const fetchArchiveEntriesQuery = '*[_type == "archiveEntry"]{_id, aiDescription, "posterAssetRef": poster.asset._ref, "posterAssetId": poster.asset._id}'
 
 export function VectorStoreSyncTool() {
   const client = useClient({apiVersion})
@@ -27,7 +29,6 @@ export function VectorStoreSyncTool() {
 
     try {
       const vectorResponse = await fetch('/api/vector-store/get-all-images')
-
       if (!vectorResponse.ok) {
         let errorPayload = {}
         try {
@@ -42,10 +43,33 @@ export function VectorStoreSyncTool() {
       const existingIds = Array.isArray(vectorData.imageIds) ? vectorData.imageIds : []
       const existingIdSet = new Set(existingIds)
       const existingCanonicalSet = new Set(existingIds.map((id) => normalizeId(id)).filter(Boolean))
-
       setMessage('Fetching archive entries from Sanity…')
 
-      const documents = await client.fetch(fetchArchiveEntriesQuery)
+      // Fetch archive entries - we only fetch minimal fields to reduce payload size
+      // For large datasets, this is more efficient than fetching full documents
+      const allDocuments = await client.fetch(fetchArchiveEntriesQuery)
+      const totalCount = allDocuments.length
+      
+      // Filter in JavaScript for entries that have both aiDescription and poster.asset
+      // This is more reliable than GROQ filters with nested references
+      const documents = allDocuments
+        .filter(doc => {
+          // Check if aiDescription exists and is not empty
+          const hasAiDescription = doc.aiDescription && 
+            typeof doc.aiDescription === 'string' && 
+            doc.aiDescription.trim() !== ''
+          
+          // Check if poster.asset exists (using the pre-extracted ref/id fields)
+          const hasPosterAsset = !!(doc.posterAssetRef || doc.posterAssetId)
+          
+          return hasAiDescription && hasPosterAsset
+        })
+        .map(doc => ({
+          _id: doc._id,
+          aiDescription: doc.aiDescription
+        }))
+      
+      const filteredCount = documents.length
 
       if (!documents.length) {
         setMessage('No archive entries with AI descriptions found to index.')
@@ -99,8 +123,11 @@ export function VectorStoreSyncTool() {
       const successIds = []
       const failures = []
 
-      for (const entry of toIndex) {
-        setMessage(`Indexing ${entry.id}…`)
+      // Process entries with progress feedback
+      const totalToIndex = toIndex.length
+      for (let i = 0; i < toIndex.length; i++) {
+        const entry = toIndex[i]
+        setMessage(`Indexing ${i + 1} of ${totalToIndex}: ${entry.id}…`)
 
         try {
           const response = await fetch('/api/vector-store/add-image', {

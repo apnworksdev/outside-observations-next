@@ -15,17 +15,42 @@
  */
 import { NextResponse } from 'next/server'
 
+const AI_SERVICE_PATH = '/api/generate-metadata';
+
+// Helper function to safely construct API URLs
+function buildApiUrl(path) {
+  const baseUrl = process.env.OUTSIDE_OBSERVATIONS_API_BASE_URL;
+  if (!baseUrl) {
+    throw new Error('OUTSIDE_OBSERVATIONS_API_BASE_URL is not configured');
+  }
+  // Remove trailing slash from base URL and ensure path starts with /
+  const cleanBase = baseUrl.replace(/\/+$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+}
+
 export async function POST(request) {
   try {
     // Get API key from server-side environment variable
     // Never use NEXT_PUBLIC_ prefix here - we want this to be server-only
     const apiKey = process.env.OUTSIDE_OBSERVATIONS_API_KEY
+    const baseUrl = process.env.OUTSIDE_OBSERVATIONS_API_BASE_URL
+    
     if (!apiKey) {
       return NextResponse.json(
         { error: 'API key is not configured on the server. Please set OUTSIDE_OBSERVATIONS_API_KEY in your environment variables.' },
         { status: 500 }
       )
     }
+
+    if (!baseUrl) {
+      return NextResponse.json(
+        { error: 'API base URL is not configured on the server. Please set OUTSIDE_OBSERVATIONS_API_BASE_URL in your environment variables.' },
+        { status: 500 }
+      )
+    }
+
+    const aiServiceUrl = buildApiUrl(AI_SERVICE_PATH);
 
     // Parse incoming FormData from the client
     const incomingFormData = await request.formData()
@@ -52,8 +77,6 @@ export async function POST(request) {
     // - Method: POST
     // - Header: X-API-Key with authentication token
     // - Body: multipart/form-data with 'image' field
-    const aiServiceUrl = 'https://outside-observations-ai-398532801393.us-central1.run.app/api/generate-metadata'
-    
     const response = await fetch(aiServiceUrl, {
       method: 'POST',
       headers: {

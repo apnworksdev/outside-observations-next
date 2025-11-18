@@ -1,12 +1,12 @@
 /**
- * Next.js API Route: /api/vector-store/delete-image/[id]
+ * Next.js API Route: /api/vector-store/exists/[id]
  * 
- * This route acts as a secure proxy to delete an image from the vector store.
+ * This route acts as a secure proxy to check if an image exists in the vector store.
  * Keeps the API key server-side.
  */
 import { NextResponse } from 'next/server'
 
-const VECTOR_STORE_PATH = '/api/vector_store/delete_one_image';
+const VECTOR_STORE_PATH = '/api/vector_store/exists';
 
 // Helper function to safely construct API URLs
 function buildApiUrl(path, id = null) {
@@ -22,7 +22,7 @@ function buildApiUrl(path, id = null) {
   return id ? `${url}/${encodeURIComponent(id)}` : url;
 }
 
-export async function DELETE(request, { params }) {
+export async function GET(request, { params }) {
   try {
     // Get API key from server-side environment variable
     const apiKey = process.env.OUTSIDE_OBSERVATIONS_API_KEY
@@ -55,7 +55,7 @@ export async function DELETE(request, { params }) {
     const vectorStoreUrl = buildApiUrl(VECTOR_STORE_PATH, id);
     
     const response = await fetch(vectorStoreUrl, {
-      method: 'DELETE',
+      method: 'GET',
       headers: {
         'X-API-Key': apiKey
       }
@@ -85,7 +85,7 @@ export async function DELETE(request, { params }) {
 
   } catch (error) {
     // Handle network errors, parsing errors, etc.
-    console.error('Error proxying vector store delete request:', error)
+    console.error('Error proxying vector store exists check:', error)
     return NextResponse.json(
       { 
         error: 'Failed to connect to vector store service', 

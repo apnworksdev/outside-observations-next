@@ -27,23 +27,48 @@ export function TagReferenceInput(props) {
   const [error, setError] = useState(null)
   const [tagLabels, setTagLabels] = useState({})
   const inputRef = useRef(null)
+  const lastProcessedIdsRef = useRef(new Set())
 
+  // Extract IDs from value and memoize them as a sorted array for stable comparison
+  const referenceIds = useMemo(() => {
+    const refs = Array.isArray(value) ? value : []
+    const ids = refs.map((ref) => ref?._ref).filter(Boolean).sort()
+    return ids
+  }, [value])
+
+  // Keep references for rendering
   const references = useMemo(() => (Array.isArray(value) ? value : []), [value])
 
   useEffect(() => {
     const controller = new AbortController()
 
+    // Create a stable key from the sorted IDs for comparison
+    const idsKey = referenceIds.join(',')
+    const currentIdsSet = new Set(referenceIds)
+
+    // Check if we've already processed these exact IDs
+    const lastKey = Array.from(lastProcessedIdsRef.current).sort().join(',')
+    if (idsKey === lastKey) {
+      return
+    }
+
     async function fetchLabels() {
-      const ids = references.map((ref) => ref?._ref).filter(Boolean)
-      if (ids.length === 0) {
-        setTagLabels({})
+      if (referenceIds.length === 0) {
+        // Only clear if we actually have labels to clear
+        setTagLabels((prev) => {
+          if (Object.keys(prev).length === 0) {
+            return prev
+          }
+          return {}
+        })
+        lastProcessedIdsRef.current = currentIdsSet
         return
       }
 
       try {
         const data = await client.fetch(
           `*[_type == "tag" && _id in $ids]{_id, name}`,
-          {ids},
+          {ids: referenceIds},
           {signal: controller.signal}
         )
 
@@ -53,7 +78,16 @@ export function TagReferenceInput(props) {
             map[item._id] = item.name || item._id
           }
         })
-        setTagLabels((prev) => ({...map, ...prev}))
+        
+        // Only update if we got new data
+        setTagLabels((prev) => {
+          const hasChanges = referenceIds.some(id => prev[id] !== map[id])
+          if (!hasChanges && Object.keys(prev).length === Object.keys(map).length) {
+            return prev
+          }
+          return {...map, ...prev}
+        })
+        lastProcessedIdsRef.current = currentIdsSet
       } catch (err) {
         if (!controller.signal.aborted) {
           console.error('Failed to load tags:', err)
@@ -66,7 +100,7 @@ export function TagReferenceInput(props) {
     return () => {
       controller.abort()
     }
-  }, [client, references])
+  }, [client, referenceIds])
 
   const handleSubmit = async () => {
     const trimmed = (tagName || '').trim()

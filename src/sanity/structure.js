@@ -1,6 +1,6 @@
 import {TaskButtonsTool} from './components/tools/TaskButtonsTool'
 
-export const structure = (S) =>
+export const structure = (S, context) =>
   S.list()
     .title('Content')
     .items([

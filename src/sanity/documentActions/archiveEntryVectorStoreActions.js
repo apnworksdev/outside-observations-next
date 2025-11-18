@@ -45,7 +45,8 @@ async function removeFromVectorStore(id) {
   }
 }
 
-const wrapAction = (OriginalAction, handler) => {
+const wrapAction = (OriginalAction, handler, options = {}) => {
+  const {checkCancellation = false} = options
   const WrappedAction = (props) => {
     const toast = useToast()
     const [busy, setBusy] = useState(false)
@@ -67,13 +68,29 @@ const wrapAction = (OriginalAction, handler) => {
         setBusy(true)
 
         try {
+          // For delete actions, capture document state before deletion
+          let docBeforeAction = null
+          if (checkCancellation) {
+            docBeforeAction = props.published || props.draft
+          }
+
           if (typeof originalOnHandle === 'function') {
             const maybePromise = originalOnHandle()
             if (maybePromise && typeof maybePromise.then === 'function') {
               await maybePromise
             }
           }
-          await handler({props, toast})
+
+          // For delete actions, check if document still exists (cancellation check)
+          if (checkCancellation) {
+            const docAfterAction = props.published || props.draft
+            if (docAfterAction) {
+              // Document still exists, action was cancelled - don't call handler
+              return
+            }
+          }
+
+          await handler({props, toast, docBeforeAction})
         } catch (error) {
           console.error('Vector store sync error:', error)
           toast?.push({
@@ -159,25 +176,30 @@ export const archiveEntryVectorStoreActions = (prev, context) => {
     }
 
     if (OriginalAction.action === 'delete') {
-      return wrapAction(OriginalAction, async ({props, toast}) => {
-        const doc = props.published || props.draft
-        const canonicalId = normalizeId(doc?._id)
+      return wrapAction(
+        OriginalAction,
+        async ({props, toast, docBeforeAction}) => {
+          // docBeforeAction is captured before the delete action runs
+          // If delete was cancelled, wrapAction will return early and this won't be called
+          const canonicalId = normalizeId(docBeforeAction?._id)
 
-        if (!canonicalId) {
-          return
-        }
+          if (!canonicalId) {
+            return
+          }
 
-        try {
-          await removeFromVectorStore(canonicalId)
-        } catch (error) {
-          console.error('Vector store delete failed:', error)
-          toast?.push({
-            status: 'warning',
-            title: 'Vector store removal failed',
-            description: error.message,
-          })
-        }
-      })
+          try {
+            await removeFromVectorStore(canonicalId)
+          } catch (error) {
+            console.error('Vector store delete failed:', error)
+            toast?.push({
+              status: 'warning',
+              title: 'Vector store removal failed',
+              description: error.message,
+            })
+          }
+        },
+        {checkCancellation: true}
+      )
     }
 
     return OriginalAction

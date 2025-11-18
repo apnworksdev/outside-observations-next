@@ -32,7 +32,6 @@ export default function VectorStorePage() {
       }
 
       const data = await response.json()
-      console.log(data)
       setImages(data.imageIds || [])
       setLastRefresh(new Date().toLocaleTimeString())
       // Clear selections when refreshing
@@ -186,22 +185,27 @@ export default function VectorStorePage() {
             </div>
           ) : (
             <div className={styles.imageList}>
-              {images.map((imageId, index) => (
-                <div 
-                  key={imageId || index} 
-                  className={`${styles.imageItem} ${selectedImages.has(imageId) ? styles.selected : ''}`}
-                >
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={selectedImages.has(imageId)}
-                      onChange={() => handleToggleSelect(imageId)}
-                      className={styles.checkbox}
-                    />
-                    <code>{imageId}</code>
-                  </label>
-                </div>
-              ))}
+              {images.map((imageId, index) => {
+                // Ensure we have a valid ID for the key
+                const safeKey = imageId || `image-${index}`;
+                return (
+                  <div 
+                    key={safeKey} 
+                    className={`${styles.imageItem} ${selectedImages.has(imageId) ? styles.selected : ''}`}
+                  >
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={selectedImages.has(imageId)}
+                        onChange={() => handleToggleSelect(imageId)}
+                        className={styles.checkbox}
+                        disabled={!imageId}
+                      />
+                      <code>{imageId || '(No ID)'}</code>
+                    </label>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

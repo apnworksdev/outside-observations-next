@@ -1,7 +1,18 @@
 import { NextResponse } from 'next/server';
 
-const VECTOR_STORE_QUERY_URL =
-  'https://outside-observations-ai-398532801393.us-central1.run.app/api/vector_store/query';
+const VECTOR_STORE_PATH = '/api/vector_store/query';
+
+// Helper function to safely construct API URLs
+function buildApiUrl(path) {
+  const baseUrl = process.env.OUTSIDE_OBSERVATIONS_API_BASE_URL;
+  if (!baseUrl) {
+    throw new Error('OUTSIDE_OBSERVATIONS_API_BASE_URL is not configured');
+  }
+  // Remove trailing slash from base URL and ensure path starts with /
+  const cleanBase = baseUrl.replace(/\/+$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+}
 
 export async function POST(request) {
   /**
@@ -15,6 +26,8 @@ export async function POST(request) {
    */
   try {
     const apiKey = process.env.OUTSIDE_OBSERVATIONS_API_KEY;
+    const baseUrl = process.env.OUTSIDE_OBSERVATIONS_API_BASE_URL;
+    
     if (!apiKey) {
       return NextResponse.json(
         {
@@ -25,13 +38,25 @@ export async function POST(request) {
       );
     }
 
+    if (!baseUrl) {
+      return NextResponse.json(
+        {
+          error:
+            'API base URL is not configured. Please set OUTSIDE_OBSERVATIONS_API_BASE_URL in your environment variables.',
+        },
+        { status: 500 }
+      );
+    }
+
+    const vectorStoreQueryUrl = buildApiUrl(VECTOR_STORE_PATH);
+
     const { query, maxResults = 10, minSimilarity } = await request.json();
 
     if (!query || typeof query !== 'string') {
       return NextResponse.json({ error: 'A search query is required.' }, { status: 400 });
     }
 
-    const response = await fetch(VECTOR_STORE_QUERY_URL, {
+    const response = await fetch(vectorStoreQueryUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

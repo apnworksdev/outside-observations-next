@@ -2,13 +2,24 @@
 
 import { NextResponse } from 'next/server';
 
-const COMPARISON_API_URL =
-  process.env.OUTSIDE_OBSERVATIONS_COMPARE_API_URL ??
-  'https://outside-observations-ai-398532801393.us-central1.run.app/api/compare-images';
+const COMPARISON_API_PATH = '/api/compare-images';
+
+// Helper function to safely construct API URLs
+function buildApiUrl(path) {
+  const baseUrl = process.env.OUTSIDE_OBSERVATIONS_API_BASE_URL;
+  if (!baseUrl) {
+    throw new Error('OUTSIDE_OBSERVATIONS_API_BASE_URL is not configured');
+  }
+  // Remove trailing slash from base URL and ensure path starts with /
+  const cleanBase = baseUrl.replace(/\/+$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${cleanBase}${cleanPath}`;
+}
 
 export async function POST(request) {
   try {
     const apiKey = process.env.OUTSIDE_OBSERVATIONS_API_KEY;
+    const baseUrl = process.env.OUTSIDE_OBSERVATIONS_API_BASE_URL;
 
     if (!apiKey) {
       return NextResponse.json(
@@ -20,6 +31,18 @@ export async function POST(request) {
       );
     }
 
+    if (!baseUrl) {
+      return NextResponse.json(
+        {
+          error:
+            'API base URL is not configured. Please set OUTSIDE_OBSERVATIONS_API_BASE_URL in your environment variables.',
+        },
+        { status: 500 }
+      );
+    }
+
+    const comparisonApiUrl = buildApiUrl(COMPARISON_API_PATH);
+
     const body = await request.json();
     const { image1, image2 } = body ?? {};
 
@@ -30,7 +53,7 @@ export async function POST(request) {
       );
     }
 
-    const response = await fetch(COMPARISON_API_URL, {
+    const response = await fetch(comparisonApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
