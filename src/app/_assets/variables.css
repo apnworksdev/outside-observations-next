@@ -54,3 +54,12 @@
   --close-archive-button-size: 36px;
   --open-archive-button-size: 242px;
 }
+
+@media (max-width: 768px) {
+  :root {
+    --columns: 6;
+    --first-line-offset: calc(var(--padding) + var(--column-width) * 1  + var(--column-gap) * 0 + var(--column-gap-half));
+    --second-line-offset: calc(var(--padding) + var(--column-width) * 3 + var(--column-gap) * 2 + var(--column-gap-half));
+    --third-line-offset: calc(var(--padding) + var(--column-width) * 5 + var(--column-gap) * 4 + var(--column-gap-half));
+  }
+}

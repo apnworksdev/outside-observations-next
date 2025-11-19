@@ -40,3 +40,10 @@
 :global(body[data-page="archive-entry"]) .linesGridItem {
   background-color: var(--bg-color);
 }
+
+@media (max-width: 768px) {
+  .linesGridItem:nth-child(4),
+  .linesGridItem:nth-child(5) {
+    display: none;
+  }
+}

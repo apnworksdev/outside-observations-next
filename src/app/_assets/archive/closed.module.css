@@ -130,3 +130,22 @@
   bottom: -3px;
   right: -3px;
 }
+
+@media (max-width: 768px) {
+  .container {
+    width: 340px;
+    height: auto;
+  }
+
+  .title {
+    width: 230px;
+  }
+
+  .content {
+    gap: 50px;
+  }
+
+  .numberList {
+    grid-template-columns: repeat(16, minmax(14px, 1fr));
+  }
+}

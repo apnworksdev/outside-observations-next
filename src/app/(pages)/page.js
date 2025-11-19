@@ -98,7 +98,7 @@ export default async function Home() {
         )}
         <div className={styles.content}>
           <div className={styles.topContent}>
-            <h1>A new chapter of Outside Observations is taking shape.</h1>
+            <h1 className={styles.title}>A new chapter of Outside Observations is taking shape.</h1>
             <LaunchCountdown />
           </div>
           <div className={styles.bottomContent}>
