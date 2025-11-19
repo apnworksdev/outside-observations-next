@@ -11,6 +11,13 @@ export const metadata = {
   description: 'Outside Observation',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+};
+
 export default async function RootLayout({ children }) {
   const headersList = await headers();
   const pageType = headersList.get('x-page-type') || 'home';
@@ -20,9 +27,10 @@ export default async function RootLayout({ children }) {
       <body data-page={pageType}>
         <BodyPageTypeUpdater />
         <StudioLayoutWrapper />
-        <div data-hide-on-studio="true">
+        {/* HeaderNav commented out - hiding for launch countdown */}
+        {/* <div data-hide-on-studio="true">
           <HeaderNav />
-        </div>
+        </div> */}
         {children}
         <div data-hide-on-studio="true">
           <div className={styles.linesGrid}>

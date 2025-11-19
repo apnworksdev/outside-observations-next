@@ -3,8 +3,21 @@ import { resolvePageType } from '@/lib/resolvePageType'
 
 export function middleware(request) {
   const pathname = request.nextUrl.pathname
-  const pageType = resolvePageType(pathname)
 
+  // Redirect all URLs except home to home (including studio)
+  if (pathname !== '/') {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  // Original middleware logic - commented out
+  // const pageType = resolvePageType(pathname)
+  // const response = NextResponse.next()
+  // response.headers.set('x-page-type', pageType)
+  // response.headers.set('x-pathname', pathname)
+  // return response
+
+  // For home page, still set headers but use home as page type
+  const pageType = 'home'
   const response = NextResponse.next()
   response.headers.set('x-page-type', pageType)
   response.headers.set('x-pathname', pathname)

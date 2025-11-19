@@ -16,8 +16,7 @@ export const siteSettings = defineType({
       name: 'title',
       title: 'Title',
       type: 'string',
-      initialValue: 'Site Settings',
-      readOnly: true,
+      initialValue: 'Outside Observation',
     }),
     defineField({
       name: 'closedArchiveImage',
@@ -30,8 +29,10 @@ export const siteSettings = defineType({
     }),
   ],
   preview: {
-    select: {
-      title: 'title',
+    prepare() {
+      return {
+        title: 'Site Settings',
+      };
     },
   },
 })

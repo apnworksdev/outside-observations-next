@@ -7,3 +7,29 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# Production branch configuration (live site)
+[context.production]
+  command = "npm run build"
+
+# Main branch configuration (preview/staging)
+[context.branch-deploy]
+  command = "npm run build"
+
+# Preview deployments (pull requests)
+[context.deploy-preview]
+  command = "npm run build"
+
+# Set production branch
+[build.processing]
+  skip_processing = false
+
+# Branch-specific settings
+[context.production.environment]
+  NEXT_PUBLIC_DEPLOYMENT_ENV = "production"
+
+[context.branch-deploy.environment]
+  NEXT_PUBLIC_DEPLOYMENT_ENV = "preview"
+
+[context.deploy-preview.environment]
+  NEXT_PUBLIC_DEPLOYMENT_ENV = "preview"
+

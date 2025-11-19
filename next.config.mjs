@@ -21,6 +21,7 @@ const nextConfig = {
         pathname: '/images/**',
       },
     ],
+    qualities: [75, 90, 100],
   },
   devIndicators: false,
   ...(process.env.NODE_ENV === 'development' && {
