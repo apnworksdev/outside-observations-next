@@ -62,6 +62,7 @@ export default function KlaviyoForm() {
           method="POST"
           onSubmit={handleSubmit}
           noValidate
+          autoComplete="off"
         >
           <input
             type="hidden"
@@ -75,6 +76,9 @@ export default function KlaviyoForm() {
             placeholder={isSubmitting ? 'Subscribing...' : 'Sign up to stay updated'}
             required
             disabled={isSubmitting}
+            autoComplete="off"
+            spellCheck="false"
+            data-form-type="other"
           />
         </form>
       )}
