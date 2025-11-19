@@ -3,6 +3,7 @@ import '@app/_assets/globals.css';
 import styles from '@app/_assets/main.module.css';
 import HeaderNav from '@app/_components/HeaderNav';
 import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
+import BodyFadeIn from '@/app/_helpers/BodyFadeIn';
 import StudioLayoutWrapper from '@/app/_components/StudioLayoutWrapper';
 import { headers } from 'next/headers';
 
@@ -26,6 +27,7 @@ export default async function RootLayout({ children }) {
     <html lang="en">
       <body data-page={pageType}>
         <BodyPageTypeUpdater />
+        <BodyFadeIn />
         <StudioLayoutWrapper />
         {/* HeaderNav commented out - hiding for launch countdown */}
         {/* <div data-hide-on-studio="true">

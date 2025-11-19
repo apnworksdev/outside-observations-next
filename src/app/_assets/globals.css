@@ -67,6 +67,15 @@ body {
   overflow: hidden;
 }
 
+body[data-page="home"] {
+  opacity: 0;
+  transition: opacity var(--transition-time) var(--transition-effect);
+}
+
+body[data-page="home"].blur-ready {
+  opacity: 1;
+}
+
 body.fade-out {
   opacity: 0;
 }

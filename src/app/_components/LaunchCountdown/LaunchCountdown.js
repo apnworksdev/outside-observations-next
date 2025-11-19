@@ -24,12 +24,18 @@ export default function LaunchCountdown() {
 
   useEffect(() => {
     const updateActiveClass = (elementsRef, currentActive, newActive) => {
+      // Remove active class from old element synchronously
       if (currentActive !== null && elementsRef.current[currentActive]) {
         elementsRef.current[currentActive].classList.remove(styles.active);
       }
-      if (newActive !== null && elementsRef.current[newActive]) {
-        elementsRef.current[newActive].classList.add(styles.active);
-      }
+      // Use queueMicrotask to ensure the removal is processed before adding
+      // This prevents both numbers from being visible simultaneously on iOS
+      // while avoiding the delay of requestAnimationFrame
+      queueMicrotask(() => {
+        if (newActive !== null && elementsRef.current[newActive]) {
+          elementsRef.current[newActive].classList.add(styles.active);
+        }
+      });
     };
 
     const calculateTimeLeft = () => {

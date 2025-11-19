@@ -1,9 +1,9 @@
 import LaunchCountdown from '@/app/_components/LaunchCountdown/LaunchCountdown';
 import KlaviyoForm from '@/app/_components/LaunchCountdown/KlaviyoForm';
+import BlurredImage from '@/app/_components/LaunchCountdown/BlurredImage';
 import styles from '@app/_assets/archive/closed.module.css';
 import { client } from '@/sanity/lib/client';
 import { SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
-import Image from 'next/image';
 import { urlFor } from '@/sanity/lib/image';
 
 // Generate metadata for better SEO
@@ -84,12 +84,11 @@ export default async function Home() {
       <div className={styles.container}>
         {hasImage && (
           <div className={styles.closedArchiveImageContainer}>
-            <Image
+            <BlurredImage
               src={urlFor(siteSettings.closedArchiveImage).width(800).url()}
               alt="Outside Observation - Launch Countdown"
               width={800}
               height={800}
-              className={styles.closedArchiveImage}
               priority
               fetchPriority="high"
               quality={90}
