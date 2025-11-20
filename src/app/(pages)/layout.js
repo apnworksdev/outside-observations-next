@@ -38,9 +38,9 @@ export default async function RootLayout({ children }) {
         <BodyFadeIn />
         <StudioLayoutWrapper />
         {/* HeaderNav commented out - hiding for launch countdown */}
-        {/* <div data-hide-on-studio="true">
+        <div data-hide-on-studio="true">
           <HeaderNav />
-        </div> */}
+        </div>
         {children}
         <div data-hide-on-studio="true">
           <div className={styles.linesGrid}>
