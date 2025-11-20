@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { urlForImage } from '@/sanity/lib/image';
+import { urlForImage, sanityImageLoader } from '@/sanity/lib/image';
 
 import styles from '@app/_assets/archive/archive-page.module.css';
 import ArchiveEntry from '@/app/_components/Archive/ArchiveEntryListRow';
@@ -177,6 +177,7 @@ export default function ArchiveListContent() {
                   <div className={styles.archiveEntryImageContainer}>
                     {entry?.poster?.asset?._ref ? (
                       <Image
+                        loader={sanityImageLoader}
                         src={urlForImage(entry.poster)}
                         alt={entry.artName || 'Archive entry poster'}
                         className={styles.archiveEntryImage}
