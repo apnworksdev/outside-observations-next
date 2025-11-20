@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-import { urlFor } from '@/sanity/lib/image';
+import { urlForImage } from '@/sanity/lib/image';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
 export function ArchiveEntryArticle({ entry, headingId }) {
@@ -19,7 +19,7 @@ export function ArchiveEntryArticle({ entry, headingId }) {
         <div className={styles.archiveEntryModalBody}>
           <div className={styles.archiveEntryModalPosterContainer}>
             <Image
-              src={urlFor(entry.poster).width(posterWidth).url()}
+              src={urlForImage(entry.poster)}
               className={styles.archiveEntryModalPoster}
               alt={entry.artName}
               width={posterWidth}

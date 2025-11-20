@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { urlFor } from '@/sanity/lib/image';
+import { urlForImage } from '@/sanity/lib/image';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
 export default function ArchiveEntryListRow({ entry }) {
@@ -25,7 +25,7 @@ export default function ArchiveEntryListRow({ entry }) {
           {entry?.poster?.asset?._ref ? (
             <div className={styles.itemPoster}>
               <Image
-                src={urlFor(entry.poster).width(posterWidth).url()}
+                src={urlForImage(entry.poster)}
                 alt={entry.artName || 'Archive entry poster'}
                 width={posterWidth}
                 height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
