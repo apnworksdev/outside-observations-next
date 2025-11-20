@@ -9,7 +9,15 @@ import { headers } from 'next/headers';
 
 export const metadata = {
   title: 'Outside Observation',
-  description: 'Outside Observation',
+  description: 'A new chapter of Outside Observations is taking shape. Stay updated on our upcoming launch.',
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+    shortcut: '/favicon.ico',
+  },
 };
 
 export const viewport = {

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /archive
+Disallow: /lab
+Disallow: /studio
+Disallow: /vector-store
+Disallow: /api
+

@@ -12,12 +12,9 @@ export async function generateMetadata() {
   const siteTitle = siteSettings?.title || 'Outside Observation';
   const description = 'A new chapter of Outside Observations is taking shape. Stay updated on our upcoming launch.';
   
-  // Get absolute URL for OpenGraph image
+  // Get absolute URL for OpenGraph image (using local file from public folder)
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
-  const ogImage = siteSettings?.closedArchiveImage 
-    ? urlFor(siteSettings.closedArchiveImage).width(1200).height(630).url()
-    : null;
-  const ogImageUrl = ogImage ? (ogImage.startsWith('http') ? ogImage : `${baseUrl}${ogImage}`) : null;
+  const ogImageUrl = `${baseUrl}/share-image.png`; // Change 'og-image.png' to your actual filename
 
   return {
     title: siteTitle,
