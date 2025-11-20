@@ -13,6 +13,11 @@
   command = "npm run build"
 
 # Main branch configuration (preview/staging)
+# This ensures main branch always deploys when pushed
+[context.main]
+  command = "npm run build"
+
+# Other branch deploys configuration (fallback for other branches)
 [context.branch-deploy]
   command = "npm run build"
 
@@ -27,6 +32,9 @@
 # Branch-specific settings
 [context.production.environment]
   NEXT_PUBLIC_DEPLOYMENT_ENV = "production"
+
+[context.main.environment]
+  NEXT_PUBLIC_DEPLOYMENT_ENV = "preview"
 
 [context.branch-deploy.environment]
   NEXT_PUBLIC_DEPLOYMENT_ENV = "preview"
