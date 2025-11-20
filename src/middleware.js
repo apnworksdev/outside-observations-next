@@ -4,6 +4,11 @@ import { resolvePageType } from '@/lib/resolvePageType'
 export function middleware(request) {
   const pathname = request.nextUrl.pathname
 
+  // Redirect /studio to Archive entries list
+  if (pathname === '/studio' || pathname === '/studio/structure') {
+    return NextResponse.redirect(new URL('/studio/structure/archive', request.url))
+  }
+
   // Block vector-store page on deployed environments (only allow on localhost)
   if (pathname.startsWith('/vector-store')) {
     const hostname = request.headers.get('host') || ''
