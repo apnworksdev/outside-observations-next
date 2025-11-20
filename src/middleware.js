@@ -4,20 +4,49 @@ import { resolvePageType } from '@/lib/resolvePageType'
 export function middleware(request) {
   const pathname = request.nextUrl.pathname
 
-  // Redirect all URLs except home to home (including studio)
-  if (pathname !== '/') {
-    return NextResponse.redirect(new URL('/', request.url))
+  // Block vector-store page on deployed environments (only allow on localhost)
+  if (pathname.startsWith('/vector-store')) {
+    const hostname = request.headers.get('host') || ''
+    const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1')
+    
+    if (!isLocalhost) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
   }
 
-  // Original middleware logic - commented out
-  // const pageType = resolvePageType(pathname)
-  // const response = NextResponse.next()
-  // response.headers.set('x-page-type', pageType)
-  // response.headers.set('x-pathname', pathname)
-  // return response
+  // Password protection - only active if SITE_PASSWORD is set
+  const sitePassword = process.env.SITE_PASSWORD
+  const siteUsername = process.env.SITE_USERNAME || 'admin' // Default username
 
-  // For home page, still set headers but use home as page type
-  const pageType = 'home'
+  if (sitePassword) {
+    const authHeader = request.headers.get('authorization')
+
+    if (!authHeader || !authHeader.startsWith('Basic ')) {
+      return new NextResponse('Authentication required', {
+        status: 401,
+        headers: {
+          'WWW-Authenticate': 'Basic realm="Protected Site"',
+        },
+      })
+    }
+
+    // Decode the base64 credentials (using atob for Edge runtime compatibility)
+    const base64Credentials = authHeader.split(' ')[1]
+    const credentials = atob(base64Credentials)
+    const [username, password] = credentials.split(':')
+
+    // Verify credentials
+    if (username !== siteUsername || password !== sitePassword) {
+      return new NextResponse('Invalid credentials', {
+        status: 401,
+        headers: {
+          'WWW-Authenticate': 'Basic realm="Protected Site"',
+        },
+      })
+    }
+  }
+
+  const pageType = resolvePageType(pathname)
   const response = NextResponse.next()
   response.headers.set('x-page-type', pageType)
   response.headers.set('x-pathname', pathname)

@@ -37,7 +37,6 @@ export default async function RootLayout({ children }) {
         <BodyPageTypeUpdater />
         <BodyFadeIn />
         <StudioLayoutWrapper />
-        {/* HeaderNav commented out - hiding for launch countdown */}
         <div data-hide-on-studio="true">
           <HeaderNav />
         </div>

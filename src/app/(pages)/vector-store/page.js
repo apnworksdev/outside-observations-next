@@ -4,6 +4,9 @@
  * This page displays all images currently in the vector store.
  * Useful for debugging and verifying that images are being added correctly.
  * Allows deletion of selected images from the vector store.
+ * 
+ * NOTE: This page is only available on localhost for development.
+ * It is blocked on deployed environments (main branch and production) via middleware.
  */
 'use client'
 
