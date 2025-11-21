@@ -1,7 +1,6 @@
 import Countdown from '@/app/_components/Countdown/Countdown';
 import styles from '@app/_assets/archive/closed.module.css';
-import { client } from '@/sanity/lib/client';
-import { SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
+import { getSiteSettings } from '@/app/_data/archive';
 import Image from 'next/image';
 import { urlFor } from '@/sanity/lib/image';
 
@@ -9,7 +8,7 @@ import { urlFor } from '@/sanity/lib/image';
 export const revalidate = 60;
 
 export default async function ClosedPage() {
-  const siteSettings = await client.fetch(SITE_SETTINGS_QUERY);
+  const siteSettings = await getSiteSettings();
 
   return (
     <div className={styles.container}>

@@ -3,11 +3,17 @@
 import { unstable_cache } from 'next/cache';
 
 import { client } from '@/sanity/lib/client';
-import { ARCHIVE_ENTRIES_QUERY } from '@/sanity/lib/queries';
+import { ARCHIVE_ENTRIES_QUERY, SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
 
 export const getArchiveEntries = unstable_cache(
   async () => client.fetch(ARCHIVE_ENTRIES_QUERY),
   ['archive-entries'],
+  { revalidate: 60 }
+);
+
+export const getSiteSettings = unstable_cache(
+  async () => client.fetch(SITE_SETTINGS_QUERY),
+  ['site-settings'],
   { revalidate: 60 }
 );
 

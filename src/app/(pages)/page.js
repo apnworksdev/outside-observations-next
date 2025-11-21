@@ -1,9 +1,9 @@
-import { client } from '@/sanity/lib/client';
-import { SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
+import { getSiteSettings } from '@/app/_data/archive';
+import CircleAnimation from '@/app/_components/Home/CircleAnimation';
 
 // Generate metadata for better SEO
 export async function generateMetadata() {
-  const siteSettings = await client.fetch(SITE_SETTINGS_QUERY);
+  const siteSettings = await getSiteSettings();
   const siteTitle = siteSettings?.title || 'Outside Observation';
   const description = 'Browse archive entries from Outside Observation';
   
@@ -44,5 +44,9 @@ export async function generateMetadata() {
 export const revalidate = 60;
 
 export default function Home() {
-  return <h1>Hello World</h1>;
+  return (
+    <div>
+      <CircleAnimation />
+    </div>
+  );
 }
