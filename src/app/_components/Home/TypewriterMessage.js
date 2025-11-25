@@ -13,15 +13,46 @@ export default function TypewriterMessage({
   loadingSpeed = 420,
   onComplete,
 }) {
+  const skipToEndRef = useRef(false);
+  const clickHandlerRef = useRef(null);
+  
   const typewriterText = useTypewriter(text, {
     typingSpeed,
     isLoading,
     loadingFrames,
     loadingSpeed,
+    skipToEnd: skipToEndRef,
   });
   
   const prevLengthRef = useRef(0);
   const completedRef = useRef(false);
+
+  // Handle click-to-skip: add listener when typing starts, remove when done
+  useEffect(() => {
+    const isTyping = !isLoading && text && typewriterText.length > 0 && typewriterText !== text;
+    const isComplete = !isLoading && text && typewriterText === text;
+
+    if (isTyping && !clickHandlerRef.current) {
+      // Typing started - add click listener
+      skipToEndRef.current = false;
+      const handleClick = () => {
+        skipToEndRef.current = true;
+      };
+      clickHandlerRef.current = handleClick;
+      document.addEventListener('click', handleClick);
+    } else if (isComplete && clickHandlerRef.current) {
+      // Typing complete - remove click listener
+      document.removeEventListener('click', clickHandlerRef.current);
+      clickHandlerRef.current = null;
+    }
+
+    return () => {
+      if (clickHandlerRef.current) {
+        document.removeEventListener('click', clickHandlerRef.current);
+        clickHandlerRef.current = null;
+      }
+    };
+  }, [typewriterText, text, isLoading]);
 
   // Check if typing is complete and call onComplete
   useEffect(() => {
@@ -36,6 +67,12 @@ export default function TypewriterMessage({
     if (prevLengthRef.current !== text.length) {
       completedRef.current = false;
       prevLengthRef.current = text.length;
+      skipToEndRef.current = false;
+      // Clean up click listener when text changes
+      if (clickHandlerRef.current) {
+        document.removeEventListener('click', clickHandlerRef.current);
+        clickHandlerRef.current = null;
+      }
     }
   }, [typewriterText, text, isLoading, onComplete]);
 

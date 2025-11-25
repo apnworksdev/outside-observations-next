@@ -7,10 +7,11 @@ const DEFAULT_OPTIONS = {
   loadingSpeed: 420,
   loadingFrames: ['.', '..', '...', ''],
   isLoading: false,
+  skipToEnd: null,
 };
 
 export default function useTypewriter(targetText = '', options = {}) {
-  const { typingSpeed, loadingSpeed, loadingFrames, isLoading } = {
+  const { typingSpeed, loadingSpeed, loadingFrames, isLoading, skipToEnd } = {
     ...DEFAULT_OPTIONS,
     ...options,
   };
@@ -80,6 +81,16 @@ export default function useTypewriter(targetText = '', options = {}) {
     let index = 0;
 
     function typeNext() {
+      // Check if skipToEnd is requested
+      if (skipToEnd?.current === true) {
+        setDisplayText(fullText);
+        if (typingTimeoutRef.current !== null) {
+          window.clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = null;
+        }
+        return;
+      }
+
       setDisplayText(fullText.slice(0, index));
 
       if (index < fullText.length) {
@@ -97,7 +108,7 @@ export default function useTypewriter(targetText = '', options = {}) {
         typingTimeoutRef.current = null;
       }
     };
-  }, [isLoading, typingSpeed, targetText]);
+  }, [isLoading, typingSpeed, targetText, skipToEnd]);
 
   useEffect(() => {
     return () => {
