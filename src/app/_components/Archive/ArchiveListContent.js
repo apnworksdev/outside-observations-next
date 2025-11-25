@@ -1,10 +1,9 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { urlForImage, sanityImageLoader } from '@/sanity/lib/image';
+import SanityImage from '@/sanity/components/SanityImage';
 
 import styles from '@app/_assets/archive/archive-page.module.css';
 import ArchiveEntry from '@/app/_components/Archive/ArchiveEntryListRow';
@@ -175,24 +174,20 @@ export default function ArchiveListContent() {
                   className={styles.archiveEntryImageLink}
                 >
                   <div className={styles.archiveEntryImageContainer}>
-                    {entry?.poster?.asset?._ref ? (
-                      <Image
-                        loader={sanityImageLoader}
-                        src={urlForImage(entry.poster)}
-                        alt={entry.artName || 'Archive entry poster'}
-                        className={styles.archiveEntryImage}
-                        width={POSTER_WIDTH}
-                        height={
-                          entry?.poster?.dimensions?.aspectRatio
-                            ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
-                            : POSTER_WIDTH
-                        }
-                        loading="lazy"
-                        placeholder={entry?.poster?.lqip ? 'blur' : undefined}
-                        blurDataURL={entry?.poster?.lqip || undefined}
-                        onLoad={handleImageLoad}
-                      />
-                    ) : null}
+                    <SanityImage
+                      image={entry.poster}
+                      alt={entry.artName || 'Archive entry poster'}
+                      className={styles.archiveEntryImage}
+                      width={POSTER_WIDTH}
+                      height={
+                        entry?.poster?.dimensions?.aspectRatio
+                          ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
+                          : POSTER_WIDTH
+                      }
+                      loading="lazy"
+                      blurDataURL={entry?.poster?.lqip || undefined}
+                      onLoad={handleImageLoad}
+                    />
                   </div>
                 </Link>
               ))}

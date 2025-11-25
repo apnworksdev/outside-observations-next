@@ -1,6 +1,4 @@
-import Image from 'next/image';
-
-import { urlForImage, sanityImageLoader } from '@/sanity/lib/image';
+import SanityImage from '@/sanity/components/SanityImage';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
 export function ArchiveEntryArticle({ entry, headingId }) {
@@ -15,21 +13,18 @@ export function ArchiveEntryArticle({ entry, headingId }) {
           {entry.artName}
         </h1>
       </div>
-      {entry?.poster?.asset?._ref ? (
-        <div className={styles.archiveEntryModalBody}>
-          <div className={styles.archiveEntryModalPosterContainer}>
-            <Image
-              loader={sanityImageLoader}
-              src={urlForImage(entry.poster)}
-              className={styles.archiveEntryModalPoster}
-              alt={entry.artName}
-              width={posterWidth}
-              height={posterHeight}
-              priority
-            />
-          </div>
+      <div className={styles.archiveEntryModalBody}>
+        <div className={styles.archiveEntryModalPosterContainer}>
+          <SanityImage
+            image={entry.poster}
+            alt={entry.artName}
+            width={posterWidth}
+            height={posterHeight}
+            className={styles.archiveEntryModalPoster}
+            priority
+          />
         </div>
-      ) : null}
+      </div>
     </article>
   );
 }

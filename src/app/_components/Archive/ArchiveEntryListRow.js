@@ -1,6 +1,5 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import { urlForImage, sanityImageLoader } from '@/sanity/lib/image';
+import SanityImage from '@/sanity/components/SanityImage';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
 export default function ArchiveEntryListRow({ entry }) {
@@ -22,20 +21,16 @@ export default function ArchiveEntryListRow({ entry }) {
         <div className={styles.itemColumnContent}>
           <p>{entry.fileName}</p>
         </div>
-          {entry?.poster?.asset?._ref ? (
-            <div className={styles.itemPoster}>
-              <Image
-                loader={sanityImageLoader}
-                src={urlForImage(entry.poster)}
-                alt={entry.artName || 'Archive entry poster'}
-                width={posterWidth}
-                height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
-                loading="lazy"
-                placeholder={entry?.poster?.lqip ? 'blur' : undefined}
-                blurDataURL={entry?.poster?.lqip || undefined}
-              />
-            </div>
-          ) : null}
+        <div className={styles.itemPoster}>
+          <SanityImage
+            image={entry.poster}
+            alt={entry.artName || 'Archive entry poster'}
+            width={posterWidth}
+            height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
+            loading="lazy"
+            blurDataURL={entry?.poster?.lqip || undefined}
+          />
+        </div>
       </div>
       <div className={styles.itemColumn}>
         <div className={styles.itemColumnContent}>

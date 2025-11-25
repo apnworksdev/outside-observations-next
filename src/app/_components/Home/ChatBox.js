@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { urlForImage, sanityImageLoader } from '@/sanity/lib/image';
+import SanityImage from '@/sanity/components/SanityImage';
 import { useArchiveEntriesSafe } from '@/app/_components/Archive/ArchiveEntriesProvider';
 import styles from '@app/_assets/home.module.css';
 import TypewriterMessage from './TypewriterMessage';
@@ -314,21 +313,16 @@ export default function ChatBox() {
                       const imageHeight = entry?.poster?.dimensions?.aspectRatio
                         ? Math.round(imageWidth / entry.poster.dimensions.aspectRatio)
                         : imageWidth;
-                      const imageUrl = urlForImage(entry.poster);
-
-                      if (!imageUrl) return null;
 
                       return (
                         <div key={entry._id} className={styles.chatBoxImageContainer}>
-                          <Image
-                            loader={sanityImageLoader}
-                            src={imageUrl}
+                          <SanityImage
+                            image={entry.poster}
                             alt={entry.artName || 'Archive entry poster'}
                             width={imageWidth}
                             height={imageHeight}
                             className={styles.chatBoxImage}
                             loading="lazy"
-                            placeholder={entry?.poster?.lqip ? 'blur' : undefined}
                             blurDataURL={entry?.poster?.lqip || undefined}
                           />
                         </div>
