@@ -1,3 +1,9 @@
+:global(body[data-page="home"]) .header {
+  opacity: 0;
+  transition: opacity var(--transition-time) var(--transition-effect);
+  pointer-events: none;
+}
+
 .header :global(menu) {
   display: flex;
   gap: var(--gap);

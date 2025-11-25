@@ -88,7 +88,7 @@
   padding-left: var(--padding);
   padding-top: 6px;
   padding-bottom: 7px;
-  background-color: var(--bg-color-75);
+  background-color: var(--white-color-75);
   border-radius: var(--border-radius);
 }
 
@@ -97,7 +97,7 @@
   padding-left: var(--padding);
   padding-top: 6px;
   padding-bottom: 7px;
-  background-color: var(--bg-color-75);
+  background-color: var(--white-color-75);
   border-radius: var(--border-radius);
   border: none;
   width: 100%;

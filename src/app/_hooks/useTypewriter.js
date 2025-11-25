@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const DEFAULT_OPTIONS = {
-  typingSpeed: 45,
-  loadingSpeed: 280,
+  typingSpeed: 20,
+  loadingSpeed: 420,
   loadingFrames: ['.', '..', '...', ''],
   isLoading: false,
 };

@@ -1,5 +1,5 @@
 import { getSiteSettings } from '@/app/_data/archive';
-import CircleAnimation from '@/app/_components/Home/CircleAnimation';
+import HomeContent from '@/app/_components/Home/HomeContent';
 
 // Generate metadata for better SEO
 export async function generateMetadata() {
@@ -44,9 +44,5 @@ export async function generateMetadata() {
 export const revalidate = 60;
 
 export default function Home() {
-  return (
-    <div>
-      <CircleAnimation />
-    </div>
-  );
+  return <HomeContent />;
 }

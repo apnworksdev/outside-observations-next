@@ -3,9 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import styles from '@app/_assets/archive/unexpected.module.css';
-import useTypewriter from '@app/_hooks/useTypewriter';
-
-const LOADING_FRAMES = ['.', '..', '...', ''];
+import TypewriterMessage from '@/app/_components/Home/TypewriterMessage';
 
 const initialState = {
   status: 'idle',
@@ -88,18 +86,12 @@ export default function UnexpectedConnectionsComparison({ postersPayload }) {
     return '';
   }, [status, data, error]);
 
-  const typewriterText = useTypewriter(targetText, {
-    typingSpeed: 45,
-    isLoading: status === 'idle' || status === 'loading',
-    loadingFrames: LOADING_FRAMES,
-    loadingSpeed: 420,
-  });
+  const isLoading = status === 'idle' || status === 'loading';
 
   const shouldRender =
     status === 'loading' ||
     status === 'error' ||
-    (status === 'success' && Boolean(data)) ||
-    typewriterText.length > 0;
+    (status === 'success' && Boolean(data));
 
   if (!shouldRender) {
     return null;
@@ -111,7 +103,14 @@ export default function UnexpectedConnectionsComparison({ postersPayload }) {
       aria-live="polite"
       role={status === 'error' ? 'alert' : undefined}
     >
-      <p>{typewriterText}</p>
+      <p>
+        <TypewriterMessage
+          text={targetText}
+          isLoading={isLoading}
+          typingSpeed={20}
+          loadingSpeed={420}
+        />
+      </p>
     </div>
   );
 }

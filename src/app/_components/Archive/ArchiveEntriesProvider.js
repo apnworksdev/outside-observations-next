@@ -348,11 +348,28 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     setSorting(getInitialSorting());
   }, []);
 
+  // Method to set search from existing payload (e.g., from chat with already-fetched image IDs)
+  const setSearchFromPayload = useCallback((payload) => {
+    if (!payload) {
+      return;
+    }
+
+    if (pathname !== '/archive') {
+      // Store in pending ref and navigate
+      pendingSearchPayloadRef.current = payload;
+      router.push('/archive');
+    } else {
+      // Apply directly if already on archive page
+      applySearchPayload(payload);
+    }
+  }, [applySearchPayload, pathname, router]);
+
   useEffect(() => {
     if (pathname !== '/archive') {
       return;
     }
 
+    // Check for pending search from ref (e.g., from navigation within archive or from chat)
     if (pendingSearchPayloadRef.current) {
       applySearchPayload(pendingSearchPayloadRef.current);
       pendingSearchPayloadRef.current = null;
@@ -539,6 +556,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       setView,
       searchStatus,
       runSearch,
+      setSearchFromPayload,
       clearSearch,
       sorting,
       setSorting,
@@ -546,7 +564,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       setMoodTag,
       clearMoodTag,
     }),
-    [clearSearch, clearMoodTag, entries, runSearch, searchStatus, selectedMoodTag, setMoodTag, setSorting, setView, sortedEntries, sorting, view]
+    [clearSearch, clearMoodTag, entries, runSearch, setSearchFromPayload, searchStatus, selectedMoodTag, setMoodTag, setSorting, setView, sortedEntries, sorting, view]
   );
 
   return <ArchiveEntriesContext.Provider value={value}>{children}</ArchiveEntriesContext.Provider>;

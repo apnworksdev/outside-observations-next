@@ -44,7 +44,7 @@
   flex-direction: column;
   max-width: calc(100% + 6px);
   box-sizing: border-box;
-  min-width: 36px;
+  min-width: var(--dots-min-width);
   min-height: var(--bubble-height);
   width: fit-content;
 }
