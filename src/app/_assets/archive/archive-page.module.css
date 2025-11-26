@@ -10,7 +10,7 @@
 
 .containerContent {
   padding: 0 calc(var(--padding) - var(--gap));
-  padding-bottom: calc(10px + 23px);
+  padding-top: 37px;
   display: flex;
   flex-direction: column;
   gap: var(--gap);
@@ -27,7 +27,7 @@
 
 .itemContainer {
   color: var(--bg-color);
-  scroll-snap-align: start;
+  scroll-snap-align: end;
   position: relative;
   overflow: visible;
 }
@@ -62,7 +62,7 @@
 
 .containerLegend {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: var(--padding);
   width: calc(100% - var(--padding) * 2);
   display: grid;
