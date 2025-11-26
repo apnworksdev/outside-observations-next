@@ -99,7 +99,7 @@ export default function ArchiveNavigationSearchPanel() {
       {summary && summary.matches === 0 && summary.original && !hasError ? (
         <div className={`${styles.archiveNavigationPanelNoResults} ${styles.archivePanelWrapper}`}>
           <p>
-            Your search for "{summary.original}" didn't find any files. But that doesn't mean they won't appear.
+            Your search for &quot;{summary.original}&quot; didn&apos;t find any files. But that doesn&apos;t mean they won&apos;t appear.
             Things worth finding take their time. In the meantime, you can keep exploring by <Link href="/">talking with us</Link>.
           </p>
         </div>
