@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
 
 import SanityImage from '@/sanity/components/SanityImage';
 
@@ -26,6 +27,40 @@ function setGlobalArchiveListHeight(value) {
 }
 
 const POSTER_WIDTH = 400;
+
+// Component for archive entry image link with prefetching
+function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
+  const href = `/archive/entry/${entry.slug.current}`;
+  const prefetchHandlers = usePrefetchOnHover(href, 300);
+  // Set priority for first 4 images (above the fold)
+  const isPriority = index < 4;
+
+  return (
+    <Link
+      href={href}
+      className={styles.archiveEntryImageLink}
+      {...prefetchHandlers}
+    >
+      <div className={styles.archiveEntryImageContainer}>
+        <SanityImage
+          image={entry.poster}
+          alt={entry.artName || 'Archive entry poster'}
+          className={styles.archiveEntryImage}
+          width={POSTER_WIDTH}
+          height={
+            entry?.poster?.dimensions?.aspectRatio
+              ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
+              : POSTER_WIDTH
+          }
+          priority={isPriority}
+          loading={isPriority ? undefined : 'lazy'}
+          blurDataURL={entry?.poster?.lqip || undefined}
+          onLoad={onImageLoad}
+        />
+      </div>
+    </Link>
+  );
+}
 
 export default function ArchiveListContent() {
   const { view, visibleEntries, searchStatus } = useArchiveEntries();
@@ -181,29 +216,13 @@ export default function ArchiveListContent() {
           {hasEntries ? (
             view === 'images' ? (
               <MaskScrollWrapper className={`${styles.containerContent} isAtTop`}>
-                {visibleEntries.map((entry) => (
-                  <Link
+                {visibleEntries.map((entry, index) => (
+                  <ArchiveEntryImageLink
                     key={entry._id}
-                    href={`/archive/entry/${entry.slug.current}`}
-                    className={styles.archiveEntryImageLink}
-                  >
-                    <div className={styles.archiveEntryImageContainer}>
-                      <SanityImage
-                        image={entry.poster}
-                        alt={entry.artName || 'Archive entry poster'}
-                        className={styles.archiveEntryImage}
-                        width={POSTER_WIDTH}
-                        height={
-                          entry?.poster?.dimensions?.aspectRatio
-                            ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
-                            : POSTER_WIDTH
-                        }
-                        loading="lazy"
-                        blurDataURL={entry?.poster?.lqip || undefined}
-                        onLoad={handleImageLoad}
-                      />
-                    </div>
-                  </Link>
+                    entry={entry}
+                    index={index}
+                    onImageLoad={handleImageLoad}
+                  />
                 ))}
               </MaskScrollWrapper>
             ) : (
@@ -212,8 +231,8 @@ export default function ArchiveListContent() {
                 className={styles.containerContent}
                 data-scroll-state={isScrollNeeded ? 'needed' : 'not-needed'}
               >
-                {visibleEntries.map((entry) => (
-                  <ArchiveEntry key={entry._id} entry={entry} />
+                {visibleEntries.map((entry, index) => (
+                  <ArchiveEntry key={entry._id} entry={entry} index={index} />
                 ))}
               </ScrollContainerWrapper>
             )

@@ -112,6 +112,8 @@ export default function UnexpectedConnectionsContent({
                   alt={entry.artName || 'Archive entry poster'}
                   width={posterWidth}
                   height={calculatedHeight}
+                  priority={isPrimary}
+                  loading={isPrimary ? undefined : 'lazy'}
                   placeholder={entry.poster?.lqip ? 'blur' : undefined}
                   blurDataURL={entry.poster?.lqip || undefined}
                   className={styles.unexpectedConnectionsItemPoster}

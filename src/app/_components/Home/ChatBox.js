@@ -1,12 +1,74 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import SanityImage from '@/sanity/components/SanityImage';
-import { useArchiveEntriesSafe } from '@/app/_components/Archive/ArchiveEntriesProvider';
+import { useArchiveSearchState } from '@/app/_components/Archive/ArchiveSearchStateProvider';
+import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
 import styles from '@app/_assets/home.module.css';
 import TypewriterMessage from './TypewriterMessage';
+
+// Component for the Explore link with hover prefetching
+function ExploreArchiveLink({ 
+  messageId, 
+  imageIds, 
+  searchQuery, 
+  imageEntries, 
+  navigatingMessageId, 
+  onTriggerSearch 
+}) {
+  const prefetchHandlers = usePrefetchOnHover('/archive', 300);
+
+  return (
+    <Link
+      href="/archive"
+      prefetch={true}
+      onClick={(e) => {
+        e.preventDefault();
+        if (imageIds && searchQuery) {
+          onTriggerSearch(messageId, imageIds, searchQuery);
+        }
+      }}
+      className={`${styles.chatBoxMessage} ${styles.chatBoxImagesMessage} ${navigatingMessageId === messageId ? styles.chatBoxImagesMessageLoading : ''}`}
+      data-sender="bot"
+      aria-label={`Explore ${imageEntries.length} archive entries`}
+      aria-busy={navigatingMessageId === messageId}
+      {...prefetchHandlers}
+    >
+      <div className={styles.chatBoxImagesMessageImages}>
+        {imageEntries.slice(0, 4).map((entry) => {
+          const imageWidth = 300;
+          const imageHeight = entry?.poster?.dimensions?.aspectRatio
+            ? Math.round(imageWidth / entry.poster.dimensions.aspectRatio)
+            : imageWidth;
+
+          return (
+            <div key={entry._id} className={styles.chatBoxImageContainer}>
+              <SanityImage
+                image={entry.poster}
+                alt={entry.artName || 'Archive entry poster'}
+                width={imageWidth}
+                height={imageHeight}
+                className={styles.chatBoxImage}
+                loading="lazy"
+                blurDataURL={entry?.poster?.lqip || undefined}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <div className={styles.chatBoxImagesMessageFooter}>
+        <p className={styles.chatBoxImagesMessageFooterText}>
+          Explore...
+        </p>
+        <p className={styles.chatBoxImagesMessageFooterText}>
+          {imageEntries.length}
+        </p>
+      </div>
+    </Link>
+  );
+}
 
 export default function ChatBox() {
   const [inputValue, setInputValue] = useState('');
@@ -16,27 +78,9 @@ export default function ChatBox() {
   const imagesMessageAddedRef = useRef(new Set());
   const router = useRouter();
   
-  // Get archive entries from context
-  const archiveContext = useArchiveEntriesSafe();
-  
-  // Get setSearchFromPayload function from context (to set search without API call)
-  const setSearchFromPayload = archiveContext?.setSearchFromPayload;
-  
-  // Create a Map for fast lookup by _id (using baseId for duplicates)
-  const entriesMap = useMemo(() => {
-    const entries = archiveContext?.entries || [];
-    const map = new Map();
-    entries.forEach((entry) => {
-      const id = entry?.baseId || entry?._id;
-      if (id) {
-        // Store the first entry we find for each baseId
-        if (!map.has(id)) {
-          map.set(id, entry);
-        }
-      }
-    });
-    return map;
-  }, [archiveContext?.entries]);
+  // Get setSearchPayload from global search state provider
+  // Available from any page since it's in root layout
+  const { setSearchPayload } = useArchiveSearchState();
 
   const messageIdRef = useRef(0);
   
@@ -77,7 +121,7 @@ export default function ChatBox() {
 
   // Function to trigger archive search using already-fetched image IDs (no API call!)
   const triggerArchiveSearch = (messageId, imageIds, searchQuery) => {
-    if (!imageIds || imageIds.length === 0 || !searchQuery || !setSearchFromPayload) return;
+    if (!imageIds || imageIds.length === 0 || !searchQuery) return;
 
     setNavigatingMessageId(messageId);
 
@@ -112,8 +156,12 @@ export default function ChatBox() {
       },
     };
 
-    // Use setSearchFromPayload to apply search without API call
-    setSearchFromPayload(payload);
+    // Set search payload in global provider (available from root layout)
+    setSearchPayload(payload);
+    
+    // Navigate to archive page
+    // ArchiveEntriesProvider will consume the payload on mount
+    router.push('/archive');
   };
 
   // Reset loading state when component unmounts or route changes
@@ -192,16 +240,34 @@ export default function ChatBox() {
         // Extract query for archive search (prefer rewritten_query, fallback to original_query or user message)
         const searchQuery = result?.rewritten_query || result?.original_query || userMessage;
         
-        // Check if response has images and match them with archive entries
+        // Check if response has images and fetch them by ID
         const imageIds = Array.isArray(result?.images) && result.images.length > 0 
           ? result.images.filter((id) => typeof id === 'string' && id.trim().length > 0)
           : [];
 
-        // Match image IDs with archive entries
-        const matchedEntries = imageIds
-          .map((id) => entriesMap.get(id))
-          .filter(Boolean)
-          .filter((entry) => entry?.poster?.asset?._ref); // Only entries with posters
+        // Fetch archive entries by IDs (only if we have image IDs)
+        let matchedEntries = [];
+        if (imageIds.length > 0) {
+          try {
+            const entriesResponse = await fetch('/api/archive-entries/by-ids', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ ids: imageIds }),
+            });
+
+            if (entriesResponse.ok) {
+              const entriesData = await entriesResponse.json();
+              matchedEntries = Array.isArray(entriesData?.entries) ? entriesData.entries : [];
+            } else {
+              console.error('Failed to fetch archive entries by IDs:', entriesResponse.status);
+            }
+          } catch (error) {
+            console.error('Error fetching archive entries by IDs:', error);
+            // Continue without images if fetch fails
+          }
+        }
 
         // Replace loading message with bot response
         setMessages((prevMessages) => {
@@ -314,51 +380,14 @@ export default function ChatBox() {
               
               {/* Images message (rendered as separate message) */}
               {message.isImageMessage && message.imageEntries && (
-                <Link
-                  href="/archive"
-                  prefetch={true}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (message.imageIds && message.searchQuery) {
-                      triggerArchiveSearch(message.id, message.imageIds, message.searchQuery);
-                    }
-                  }}
-                  className={`${styles.chatBoxMessage} ${styles.chatBoxImagesMessage} ${navigatingMessageId === message.id ? styles.chatBoxImagesMessageLoading : ''}`}
-                  data-sender="bot"
-                  aria-label={`Explore ${message.imageEntries.length} archive entries`}
-                  aria-busy={navigatingMessageId === message.id}
-                >
-                  <div className={styles.chatBoxImagesMessageImages}>
-                    {message.imageEntries.slice(0, 4).map((entry) => {
-                      const imageWidth = 300;
-                      const imageHeight = entry?.poster?.dimensions?.aspectRatio
-                        ? Math.round(imageWidth / entry.poster.dimensions.aspectRatio)
-                        : imageWidth;
-
-                      return (
-                        <div key={entry._id} className={styles.chatBoxImageContainer}>
-                          <SanityImage
-                            image={entry.poster}
-                            alt={entry.artName || 'Archive entry poster'}
-                            width={imageWidth}
-                            height={imageHeight}
-                            className={styles.chatBoxImage}
-                            loading="lazy"
-                            blurDataURL={entry?.poster?.lqip || undefined}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className={styles.chatBoxImagesMessageFooter}>
-                    <p className={styles.chatBoxImagesMessageFooterText}>
-                      Explore...
-                    </p>
-                    <p className={styles.chatBoxImagesMessageFooterText}>
-                      {message.imageEntries.length}
-                    </p>
-                  </div>
-                </Link>
+                <ExploreArchiveLink
+                  messageId={message.id}
+                  imageIds={message.imageIds}
+                  searchQuery={message.searchQuery}
+                  imageEntries={message.imageEntries}
+                  navigatingMessageId={navigatingMessageId}
+                  onTriggerSearch={triggerArchiveSearch}
+                />
               )}
             </div>
           );

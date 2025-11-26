@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { useArchiveSearchState } from './ArchiveSearchStateProvider';
 
 const ArchiveEntriesContext = createContext(null);
 
@@ -178,6 +179,9 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   const previousPathRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
+  
+  // Get search state from global provider (set by ChatBox or other components)
+  const { consumeSearchPayload, setSearchPayload: setGlobalSearchPayload, searchPayload: globalSearchPayload } = useArchiveSearchState();
 
   /**
    * `setView` persists the preference and keeps the header toggle in sync by delegating
@@ -358,21 +362,24 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   }, []);
 
   // Method to set search from existing payload (e.g., from chat with already-fetched image IDs)
+  // Uses global search state provider for consistency
   const setSearchFromPayload = useCallback((payload) => {
     if (!payload) {
       return;
     }
 
     if (pathname !== '/archive') {
-      // Store in pending ref and navigate
-      pendingSearchPayloadRef.current = payload;
+      // Use global provider and navigate (consistent with ChatBox approach)
+      setGlobalSearchPayload(payload);
       router.push('/archive');
     } else {
       // Apply directly if already on archive page
       applySearchPayload(payload);
     }
-  }, [applySearchPayload, pathname, router]);
+  }, [applySearchPayload, pathname, router, setGlobalSearchPayload]);
 
+  // Check for search payload from global search state provider (e.g., from ChatBox)
+  // This allows the ChatBox to set search state from any page, and we consume it here
   useEffect(() => {
     if (pathname !== '/archive') {
       return;
@@ -383,7 +390,16 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       applySearchPayload(pendingSearchPayloadRef.current);
       pendingSearchPayloadRef.current = null;
     }
-  }, [applySearchPayload, pathname]);
+
+    // Check for search payload from global provider
+    // Listen to globalSearchPayload changes and consume when available
+    if (globalSearchPayload) {
+      const payload = consumeSearchPayload();
+      if (payload) {
+        applySearchPayload(payload);
+      }
+    }
+  }, [pathname, applySearchPayload, consumeSearchPayload, globalSearchPayload]);
 
   /**
    * `runSearch` wraps the full request lifecycle:

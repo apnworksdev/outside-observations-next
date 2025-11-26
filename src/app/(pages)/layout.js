@@ -5,13 +5,9 @@ import HeaderNav from '@app/_components/HeaderNav';
 import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
 import BodyFadeIn from '@/app/_helpers/BodyFadeIn';
 import StudioLayoutWrapper from '@/app/_components/StudioLayoutWrapper';
-import ArchiveEntriesProvider from '@/app/_components/Archive/ArchiveEntriesProvider';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
-import { getArchiveEntries } from '@app/_data/archive';
-import { cookies } from 'next/headers';
+import { ArchiveSearchStateProvider } from '@/app/_components/Archive/ArchiveSearchStateProvider';
 import { headers } from 'next/headers';
-
-const VIEW_COOKIE_NAME = 'outside-observations-archive-view';
 
 export const metadata = {
   title: 'Outside Observation',
@@ -35,8 +31,6 @@ export const viewport = {
 
 export default async function RootLayout({ children }) {
   let pageType = 'home';
-  let entries = [];
-  let viewCookie = null;
 
   try {
     const headersList = await headers();
@@ -46,33 +40,11 @@ export default async function RootLayout({ children }) {
     // Continue with default pageType
   }
 
-  try {
-    entries = await getArchiveEntries();
-    // Ensure entries is an array
-    if (!Array.isArray(entries)) {
-      console.warn('getArchiveEntries returned non-array, using empty array');
-      entries = [];
-    }
-  } catch (error) {
-    console.error('Failed to fetch archive entries in layout:', error);
-    // Continue with empty array - components should handle this gracefully
-    entries = [];
-  }
-
-  try {
-    const cookieStore = await cookies();
-    viewCookie = cookieStore.get(VIEW_COOKIE_NAME)?.value ?? null;
-  } catch (error) {
-    console.error('Failed to read cookies:', error);
-    // Continue with null - components should handle this gracefully
-    viewCookie = null;
-  }
-
   return (
     <html lang="en">
       <body data-page={pageType}>
         <ErrorBoundary>
-          <ArchiveEntriesProvider initialEntries={entries} initialView={viewCookie}>
+          <ArchiveSearchStateProvider>
             <ErrorBoundary>
               <div data-hide-on-studio="true">
                 <div className={styles.linesGrid}>
@@ -99,7 +71,7 @@ export default async function RootLayout({ children }) {
             <ErrorBoundary>
               {children}
             </ErrorBoundary>
-          </ArchiveEntriesProvider>
+          </ArchiveSearchStateProvider>
         </ErrorBoundary>
       </body>
     </html>

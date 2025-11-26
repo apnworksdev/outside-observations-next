@@ -53,6 +53,25 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && slu
 
 export const ARCHIVE_ENTRY_SLUGS = defineQuery(`*[_type == "archiveEntry" && defined(slug.current)][].slug.current`)
 
+/**
+ * Query to fetch archive entries by IDs - optimized for image display
+ * Only fetches minimal data needed for displaying images in chat
+ */
+export const ARCHIVE_ENTRIES_BY_IDS_QUERY = defineQuery(`*[_type == "archiveEntry" && _id in $ids] {
+  _id,
+  slug {
+    current,
+    _type
+  },
+  artName,
+  poster{
+    ...,
+    asset,
+    'lqip': asset->metadata.lqip,
+    'dimensions': asset->metadata.dimensions
+  }
+}`)
+
 export const SITE_SETTINGS_QUERY = defineQuery(`*[_type == "siteSettings"][0] {
   _id,
   title,

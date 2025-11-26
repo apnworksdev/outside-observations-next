@@ -1,10 +1,17 @@
+'use client';
+
 import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
+import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
-export default function ArchiveEntryListRow({ entry }) {
+export default function ArchiveEntryListRow({ entry, index = 0 }) {
   const hasSlug = entry.slug?.current;
   const posterWidth = 400;
+  const href = hasSlug ? `/archive/entry/${entry.slug.current}` : null;
+  const prefetchHandlers = usePrefetchOnHover(href, 300);
+  // Set priority for first 3 rows (above the fold in list view)
+  const isPriority = index < 3;
   const content = (
     <div className={styles.itemWrapper}>
       <div className={styles.itemColumn}>
@@ -27,7 +34,8 @@ export default function ArchiveEntryListRow({ entry }) {
             alt={entry.artName || 'Archive entry poster'}
             width={posterWidth}
             height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
-            loading="lazy"
+            priority={isPriority}
+            loading={isPriority ? undefined : 'lazy'}
             blurDataURL={entry?.poster?.lqip || undefined}
           />
         </div>
@@ -51,7 +59,11 @@ export default function ArchiveEntryListRow({ entry }) {
   );
 
   return hasSlug ? (
-    <Link href={`/archive/entry/${entry.slug.current}`} className={styles.itemContainer}>
+    <Link 
+      href={href} 
+      className={styles.itemContainer}
+      {...prefetchHandlers}
+    >
       {content}
     </Link>
   ) : (
