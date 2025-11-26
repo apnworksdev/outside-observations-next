@@ -1,17 +1,12 @@
 import Link from 'next/link';
-import { cookies } from 'next/headers';
 
 import styles from '@app/_assets/nav.module.css';
 import ArchiveViewToggle from '@/app/_components/Archive/ArchiveViewToggle';
 import NavItem from '@/app/_components/NavItem';
 
-const VIEW_COOKIE_NAME = 'outside-observations-archive-view';
-
-export default async function HeaderNav() {
-  const cookieStore = await cookies();
-  const cookieValue = cookieStore.get(VIEW_COOKIE_NAME)?.value ?? 'list';
-  const initialView = cookieValue === 'images' || cookieValue === 'list' ? cookieValue : 'list';
-
+export default function HeaderNav() {
+  // Cookie reading is handled client-side by ArchiveViewToggle component
+  // This allows static generation while still reading view preference on the client
   return (
     <header id="main-header" className={styles.header}>
       <div className={styles.navTitleContainer}>
@@ -40,7 +35,6 @@ export default async function HeaderNav() {
             <div className={styles.archiveNavOptions}>
               <ArchiveViewToggle
                 className={`${styles.archiveNavOption} ${styles.navBubble}`}
-                initialExternalView={initialView}
               />
               <div className={`${styles.archiveNavOption} ${styles.navBubble}`}>
                 <button type="button">?</button>

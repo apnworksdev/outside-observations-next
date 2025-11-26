@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useMemo, useRef, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useMemo, useRef, useState, useCallback, useEffect, useLayoutEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useArchiveSearchState } from './ArchiveSearchStateProvider';
 
@@ -169,7 +169,13 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       return [];
     }
   });
-  const [view, setViewState] = useState(() => (isValidView(initialView) ? initialView : 'list'));
+  // Initialize view: Always start with 'list' to match server render and prevent hydration mismatch
+  // The view will be updated from cookie/data attribute in useEffect after mount
+  const [view, setViewState] = useState(() => {
+    // Only use initialView prop if provided (for server-side passing)
+    // Otherwise always default to 'list' to ensure server/client match
+    return isValidView(initialView) ? initialView : 'list';
+  });
   const [searchResults, setSearchResultsState] = useState({ active: false, ids: [], orderedIds: [] });
   const [searchStatus, setSearchStatus] = useState({ status: 'idle', query: null, summary: null, error: null });
   const [sorting, setSorting] = useState(() => getInitialSorting());
@@ -201,11 +207,13 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
 
   /**
    * On mount we synchronise the initial view with any cookie that might have been set
-   * on a previous visit. We also subscribe to the global `VIEW_CHANGE_EVENT` so that
-   * other surfaces (like the header toggle rendered outside this provider) can change
-   * the current view and keep the archive in lockstep.
+   * on a previous visit. We use useLayoutEffect to update synchronously before paint,
+   * preventing any visual flash when the correct view is restored from cookie.
+   * We also subscribe to the global `VIEW_CHANGE_EVENT` so that other surfaces
+   * (like the header toggle rendered outside this provider) can change the current view
+   * and keep the archive in lockstep.
    */
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === 'undefined') {
       return undefined;
     }

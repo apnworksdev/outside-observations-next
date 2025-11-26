@@ -4,10 +4,10 @@ import styles from '@app/_assets/main.module.css';
 import HeaderNav from '@app/_components/HeaderNav';
 import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
 import BodyFadeIn from '@/app/_helpers/BodyFadeIn';
+import BodyHydrationGuard from '@/app/_helpers/BodyHydrationGuard';
 import StudioLayoutWrapper from '@/app/_components/StudioLayoutWrapper';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveSearchStateProvider } from '@/app/_components/Archive/ArchiveSearchStateProvider';
-import { headers } from 'next/headers';
 
 export const metadata = {
   title: 'Outside Observation',
@@ -29,21 +29,14 @@ export const viewport = {
   userScalable: true,
 };
 
-export default async function RootLayout({ children }) {
-  let pageType = 'home';
-
-  try {
-    const headersList = await headers();
-    pageType = headersList.get('x-page-type') || 'home';
-  } catch (error) {
-    console.error('Failed to get headers:', error);
-    // Continue with default pageType
-  }
-
+export default function RootLayout({ children }) {
+  // Page type is set client-side by BodyPageTypeUpdater component
+  // This allows static generation while still setting the correct data-page attribute
   return (
     <html lang="en">
-      <body data-page={pageType}>
+      <body>
         <ErrorBoundary>
+          <BodyHydrationGuard />
           <ArchiveSearchStateProvider>
             <ErrorBoundary>
               <div data-hide-on-studio="true">

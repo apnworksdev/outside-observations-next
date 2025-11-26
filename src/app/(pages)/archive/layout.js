@@ -2,13 +2,9 @@ import ArchiveNavigationContainer from '@/app/_components/Archive/Navigation/Arc
 import ArchiveEntriesProvider from '@/app/_components/Archive/ArchiveEntriesProvider';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { getArchiveEntries } from '@app/_data/archive';
-import { cookies } from 'next/headers';
-
-const VIEW_COOKIE_NAME = 'outside-observations-archive-view';
 
 export default async function ArchiveLayout({ children }) {
   let entries = [];
-  let viewCookie = null;
 
   try {
     entries = await getArchiveEntries();
@@ -23,18 +19,11 @@ export default async function ArchiveLayout({ children }) {
     entries = [];
   }
 
-  try {
-    const cookieStore = await cookies();
-    viewCookie = cookieStore.get(VIEW_COOKIE_NAME)?.value ?? null;
-  } catch (error) {
-    console.error('Failed to read cookies:', error);
-    // Continue with null - components should handle this gracefully
-    viewCookie = null;
-  }
-
+  // Cookie reading is handled client-side by ArchiveEntriesProvider
+  // This allows static generation while still reading view preference on the client
   return (
     <ErrorBoundary>
-      <ArchiveEntriesProvider initialEntries={entries} initialView={viewCookie}>
+      <ArchiveEntriesProvider initialEntries={entries}>
         {children}
         <ArchiveNavigationContainer />
       </ArchiveEntriesProvider>
