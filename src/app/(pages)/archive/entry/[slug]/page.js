@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { unstable_cache } from 'next/cache';
+import { Suspense } from 'react';
 import { client } from '@/sanity/lib/client';
 import { ARCHIVE_ENTRY_QUERY, ARCHIVE_ENTRY_SLUGS } from '@/sanity/lib/queries';
 import styles from '@app/_assets/archive/archive-entry.module.css';
@@ -100,14 +101,22 @@ export default async function ArchiveEntryPage({ params }) {
 
   return (
     <ErrorBoundary fallback={ArchiveEntryErrorFallback}>
-      <ArchiveEntryBackdrop>
-        <div className={styles.archiveEntryContentWrapper}>
-          <ArchiveEntryArticle entry={entry} />
-        </div>
-        <aside className={styles.archiveEntryAside}>
-          <ArchiveEntryMetadata entry={entry} />
-        </aside>
-      </ArchiveEntryBackdrop>
+      <Suspense
+        fallback={
+          <div className={styles.archiveEntryContentWrapper}>
+            <ArchiveEntryArticle entry={entry} />
+          </div>
+        }
+      >
+        <ArchiveEntryBackdrop>
+          <div className={styles.archiveEntryContentWrapper}>
+            <ArchiveEntryArticle entry={entry} />
+          </div>
+          <aside className={styles.archiveEntryAside}>
+            <ArchiveEntryMetadata entry={entry} />
+          </aside>
+        </ArchiveEntryBackdrop>
+      </Suspense>
     </ErrorBoundary>
   );
 }
