@@ -220,6 +220,26 @@ export default function ChatBox() {
           return newMessages;
         });
       } catch (error) {
+        console.error('ChatBox: Error fetching response:', error);
+        
+        // Determine user-friendly error message
+        let errorMessage = 'Sorry, I encountered an error. Please try again.';
+        
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+          errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+        } else if (error.message) {
+          // Use the error message if it's user-friendly, otherwise use default
+          const message = error.message.toLowerCase();
+          if (message.includes('network') || message.includes('fetch')) {
+            errorMessage = 'Network error. Please check your connection and try again.';
+          } else if (message.includes('timeout')) {
+            errorMessage = 'Request timed out. Please try again.';
+          } else if (message.length < 100) {
+            // Use error message if it's short (likely user-friendly)
+            errorMessage = error.message;
+          }
+        }
+        
         // Replace loading message with error message
         setMessages((prevMessages) => {
           const newMessages = [...prevMessages];
@@ -227,8 +247,9 @@ export default function ChatBox() {
           if (newMessages[lastIndex]?.sender === 'bot' && newMessages[lastIndex]?.isLoading) {
             newMessages[lastIndex] = {
               ...newMessages[lastIndex],
-              text: error.message || 'Sorry, I encountered an error. Please try again.',
-              isLoading: false
+              text: errorMessage,
+              isLoading: false,
+              isError: true, // Mark as error for styling
             };
           }
           return newMessages;

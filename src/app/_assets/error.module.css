@@ -1,0 +1,100 @@
+/* Error Display Styles - Matching site design system */
+
+.container {
+  padding: calc(var(--padding) * 2);
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.title {
+  margin-bottom: var(--padding);
+  font-size: inherit;
+  font-weight: inherit;
+  color: var(--fg-color);
+}
+
+.message {
+  margin-bottom: calc(var(--padding) * 1.5);
+  color: var(--fg-color-75);
+}
+
+.actions {
+  display: flex;
+  gap: var(--padding);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.button {
+  padding: var(--padding) calc(var(--padding) * 2);
+  background-color: var(--fg-color-75);
+  color: var(--bg-color);
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+  transition: background-color var(--transition-time) var(--transition-effect);
+}
+
+.button:hover {
+  background-color: var(--fg-color);
+}
+
+.button:active {
+  background-color: var(--fg-color);
+}
+
+.link {
+  padding: var(--padding) calc(var(--padding) * 2);
+  background-color: var(--gray-color);
+  color: var(--fg-color);
+  text-decoration: none;
+  display: inline-block;
+  border-radius: var(--border-radius);
+  font-size: inherit;
+  font-family: inherit;
+  transition: background-color var(--transition-time) var(--transition-effect);
+}
+
+.link:hover {
+  background-color: var(--dark-gray-color);
+}
+
+/* Development error details */
+.details {
+  margin-top: calc(var(--padding) * 2);
+  margin-bottom: calc(var(--padding) * 1.5);
+  text-align: left;
+}
+
+.summary {
+  cursor: pointer;
+  margin-bottom: var(--padding);
+  color: var(--fg-color-75);
+  font-size: inherit;
+}
+
+.pre {
+  padding: var(--padding);
+  background-color: var(--gray-color);
+  overflow: auto;
+  font-size: inherit;
+  font-family: var(--font-family);
+  border-radius: var(--border-radius);
+  color: var(--fg-color);
+  line-height: var(--line-height);
+}
+
+/* Inline Error */
+.inlineError {
+  padding: calc(var(--padding) * 0.75);
+  background-color: var(--gray-color);
+  border: 1px solid var(--dark-gray-color);
+  border-radius: var(--border-radius);
+  color: var(--fg-color);
+  font-size: inherit;
+}
+

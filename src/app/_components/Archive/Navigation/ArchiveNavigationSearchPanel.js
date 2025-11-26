@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import styles from '@app/_assets/archive/archive-navigation.module.css';
 import { useArchiveEntriesSafe } from '@/app/_components/Archive/ArchiveEntriesProvider';
+import { InlineError } from '@/app/_components/ErrorDisplay';
 
 export default function ArchiveNavigationSearchPanel() {
   const archiveEntriesContext = useArchiveEntriesSafe();
@@ -20,6 +21,8 @@ export default function ArchiveNavigationSearchPanel() {
 
   const summary = searchStatus.summary;
   const isLoading = searchStatus.status === 'loading';
+  const hasError = searchStatus.status === 'error';
+  const errorMessage = searchStatus.error;
   const hasZeroMatches = summary && summary.matches === 0;
 
   /**
@@ -86,10 +89,17 @@ export default function ArchiveNavigationSearchPanel() {
           </button>
         </form>
       </div>
-      {summary && summary.matches === 0 && summary.original ? (
+      {hasError && errorMessage ? (
+        <div className={`${styles.archivePanelWrapper}`} style={{ marginTop: '1rem' }}>
+          <InlineError
+            message={`Search failed: ${errorMessage}. Please try again.`}
+          />
+        </div>
+      ) : null}
+      {summary && summary.matches === 0 && summary.original && !hasError ? (
         <div className={`${styles.archiveNavigationPanelNoResults} ${styles.archivePanelWrapper}`}>
           <p>
-            Your search for “{summary.original}” didn’t find any files. But that doesn’t mean they won’t appear.
+            Your search for "{summary.original}" didn't find any files. But that doesn't mean they won't appear.
             Things worth finding take their time. In the meantime, you can keep exploring by <Link href="/">talking with us</Link>.
           </p>
         </div>

@@ -254,3 +254,16 @@
   line-height: 0;
   height: auto;
 }
+
+.errorBanner {
+  padding: var(--padding);
+  margin-bottom: var(--padding);
+  background-color: var(--gray-color);
+  border: 1px solid var(--dark-gray-color);
+  border-radius: var(--border-radius);
+}
+
+.errorBannerText {
+  color: var(--fg-color);
+  margin: 0;
+}

@@ -158,7 +158,16 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
    * We duplicate the entries once and memoise the result so every consumer reads from
    * the same in-memory collection.
    */
-  const [entries] = useState(() => multiplyEntries(initialEntries));
+  // Ensure initialEntries is an array
+  const safeInitialEntries = Array.isArray(initialEntries) ? initialEntries : [];
+  const [entries] = useState(() => {
+    try {
+      return multiplyEntries(safeInitialEntries);
+    } catch (error) {
+      console.error('Failed to multiply entries:', error);
+      return [];
+    }
+  });
   const [view, setViewState] = useState(() => (isValidView(initialView) ? initialView : 'list'));
   const [searchResults, setSearchResultsState] = useState({ active: false, ids: [], orderedIds: [] });
   const [searchStatus, setSearchStatus] = useState({ status: 'idle', query: null, summary: null, error: null });
@@ -422,11 +431,24 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
         });
 
         if (!response.ok) {
-          const errorBody = await response.json().catch(() => ({}));
-          throw new Error(errorBody?.error ?? 'Search failed');
+          let errorMessage = 'Search failed';
+          try {
+            const errorBody = await response.json();
+            errorMessage = errorBody?.error || errorBody?.message || `Search failed: ${response.status}`;
+          } catch (parseError) {
+            // If JSON parsing fails, use status text
+            errorMessage = `Search failed: ${response.status} ${response.statusText || 'Unknown error'}`;
+          }
+          throw new Error(errorMessage);
         }
 
-        const result = await response.json();
+        let result;
+        try {
+          result = await response.json();
+        } catch (parseError) {
+          console.error('Failed to parse search response:', parseError);
+          throw new Error('Invalid response from search service');
+        }
 
         if (requestIdRef.current !== currentRequestId) {
           return;
@@ -477,13 +499,31 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
           return;
         }
 
+        // Determine user-friendly error message
+        let errorMessage = 'Search failed. Please try again.';
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+          errorMessage = 'Unable to connect to search service. Please check your internet connection.';
+        } else if (error.message) {
+          const message = error.message.toLowerCase();
+          if (message.includes('network') || message.includes('fetch')) {
+            errorMessage = 'Network error. Please check your connection and try again.';
+          } else if (message.includes('timeout')) {
+            errorMessage = 'Search request timed out. Please try again.';
+          } else if (message.length < 150) {
+            // Use error message if it's reasonably short
+            errorMessage = error.message;
+          }
+        }
+
+        console.error('Search error:', error);
+
         const payload = {
           resultsState: { active: true, ids: [], orderedIds: [] },
           statusState: {
             status: 'error',
             query: trimmedQuery,
             summary: null,
-            error: error.message ?? 'Search failed',
+            error: errorMessage,
           },
         };
 

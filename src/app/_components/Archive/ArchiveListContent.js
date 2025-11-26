@@ -10,6 +10,8 @@ import ArchiveEntry from '@/app/_components/Archive/ArchiveEntryListRow';
 import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
 import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper';
 import { useArchiveEntries, useArchiveSortController } from './ArchiveEntriesProvider';
+import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
+import { ArchiveListErrorFallback } from '@/app/_components/ErrorFallbacks';
 
 function setGlobalArchiveListHeight(value) {
   if (typeof document === 'undefined') {
@@ -26,7 +28,7 @@ function setGlobalArchiveListHeight(value) {
 const POSTER_WIDTH = 400;
 
 export default function ArchiveListContent() {
-  const { view, visibleEntries } = useArchiveEntries();
+  const { view, visibleEntries, searchStatus } = useArchiveEntries();
   const yearSort = useArchiveSortController('year', {
     label: 'Year',
     ariaMessages: {
@@ -161,92 +163,105 @@ export default function ArchiveListContent() {
     scheduleMeasurement();
   }, [scheduleMeasurement]);
 
+  // Handle error state
+  const hasError = searchStatus?.status === 'error';
+  const errorMessage = searchStatus?.error;
+
   return (
-    <div className={styles.container} data-view={view}>
-      <div ref={contentRef}>
-        {hasEntries ? (
-          view === 'images' ? (
-            <MaskScrollWrapper className={`${styles.containerContent} isAtTop`}>
-              {visibleEntries.map((entry) => (
-                <Link
-                  key={entry._id}
-                  href={`/archive/entry/${entry.slug.current}`}
-                  className={styles.archiveEntryImageLink}
-                >
-                  <div className={styles.archiveEntryImageContainer}>
-                    <SanityImage
-                      image={entry.poster}
-                      alt={entry.artName || 'Archive entry poster'}
-                      className={styles.archiveEntryImage}
-                      width={POSTER_WIDTH}
-                      height={
-                        entry?.poster?.dimensions?.aspectRatio
-                          ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
-                          : POSTER_WIDTH
-                      }
-                      loading="lazy"
-                      blurDataURL={entry?.poster?.lqip || undefined}
-                      onLoad={handleImageLoad}
-                    />
-                  </div>
-                </Link>
-              ))}
-            </MaskScrollWrapper>
-          ) : (
-            <ScrollContainerWrapper
-              ref={scrollContainerRef}
-              className={styles.containerContent}
-              data-scroll-state={isScrollNeeded ? 'needed' : 'not-needed'}
-            >
-              {visibleEntries.map((entry) => (
-                <ArchiveEntry key={entry._id} entry={entry} />
-              ))}
-            </ScrollContainerWrapper>
-          )
-        ) : null}
-      </div>
-      <div
-        className={styles.containerLegend}
-        data-visible={hasEntries ? 'true' : 'false'}
-        aria-hidden={hasEntries ? undefined : 'true'}
-      >
-        {sortableLegendColumns.map(({ key, label, sort }) => (
-          <div key={key} className={styles.containerLegendColumn}>
+    <ErrorBoundary fallback={ArchiveListErrorFallback}>
+      <div className={styles.container} data-view={view}>
+        {hasError && errorMessage && (
+          <div className={styles.errorBanner}>
+            <p className={styles.errorBannerText}>
+              Search error: {errorMessage}. Please try a different search.
+            </p>
+          </div>
+        )}
+        <div ref={contentRef}>
+          {hasEntries ? (
+            view === 'images' ? (
+              <MaskScrollWrapper className={`${styles.containerContent} isAtTop`}>
+                {visibleEntries.map((entry) => (
+                  <Link
+                    key={entry._id}
+                    href={`/archive/entry/${entry.slug.current}`}
+                    className={styles.archiveEntryImageLink}
+                  >
+                    <div className={styles.archiveEntryImageContainer}>
+                      <SanityImage
+                        image={entry.poster}
+                        alt={entry.artName || 'Archive entry poster'}
+                        className={styles.archiveEntryImage}
+                        width={POSTER_WIDTH}
+                        height={
+                          entry?.poster?.dimensions?.aspectRatio
+                            ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
+                            : POSTER_WIDTH
+                        }
+                        loading="lazy"
+                        blurDataURL={entry?.poster?.lqip || undefined}
+                        onLoad={handleImageLoad}
+                      />
+                    </div>
+                  </Link>
+                ))}
+              </MaskScrollWrapper>
+            ) : (
+              <ScrollContainerWrapper
+                ref={scrollContainerRef}
+                className={styles.containerContent}
+                data-scroll-state={isScrollNeeded ? 'needed' : 'not-needed'}
+              >
+                {visibleEntries.map((entry) => (
+                  <ArchiveEntry key={entry._id} entry={entry} />
+                ))}
+              </ScrollContainerWrapper>
+            )
+          ) : null}
+        </div>
+        <div
+          className={styles.containerLegend}
+          data-visible={hasEntries ? 'true' : 'false'}
+          aria-hidden={hasEntries ? undefined : 'true'}
+        >
+          {sortableLegendColumns.map(({ key, label, sort }) => (
+            <div key={key} className={styles.containerLegendColumn}>
+              <button
+                type="button"
+                className={styles.containerLegendColumnButton}
+                onClick={sort.toggleSort}
+                data-sort-state={sort.dataState}
+                aria-label={sort.ariaLabel}
+              >
+                <span>{label}</span>
+                <span aria-hidden="true" className={styles.containerLegendSortIndicator}>
+                  {sort.indicator}
+                </span>
+              </button>
+            </div>
+          ))}
+          <div className={styles.containerLegendColumn}>
+            <div className={styles.containerLegendColumnItem}>
+              <p>Tags</p>
+            </div>
+          </div>
+          <div className={styles.containerLegendColumn}>
             <button
               type="button"
               className={styles.containerLegendColumnButton}
-              onClick={sort.toggleSort}
-              data-sort-state={sort.dataState}
-              aria-label={sort.ariaLabel}
+              onClick={typeSort.toggleSort}
+              data-sort-state={typeSort.dataState}
+              aria-label={typeSort.ariaLabel}
             >
-              <span>{label}</span>
+              <span>Type</span>
               <span aria-hidden="true" className={styles.containerLegendSortIndicator}>
-                {sort.indicator}
+                {typeSort.indicator}
               </span>
             </button>
           </div>
-        ))}
-        <div className={styles.containerLegendColumn}>
-          <div className={styles.containerLegendColumnItem}>
-            <p>Tags</p>
-          </div>
-        </div>
-        <div className={styles.containerLegendColumn}>
-          <button
-            type="button"
-            className={styles.containerLegendColumnButton}
-            onClick={typeSort.toggleSort}
-            data-sort-state={typeSort.dataState}
-            aria-label={typeSort.ariaLabel}
-          >
-            <span>Type</span>
-            <span aria-hidden="true" className={styles.containerLegendSortIndicator}>
-              {typeSort.indicator}
-            </span>
-          </button>
         </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
 

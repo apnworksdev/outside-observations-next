@@ -6,6 +6,7 @@ import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
 import BodyFadeIn from '@/app/_helpers/BodyFadeIn';
 import StudioLayoutWrapper from '@/app/_components/StudioLayoutWrapper';
 import ArchiveEntriesProvider from '@/app/_components/Archive/ArchiveEntriesProvider';
+import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { getArchiveEntries } from '@app/_data/archive';
 import { cookies } from 'next/headers';
 import { headers } from 'next/headers';
@@ -33,31 +34,73 @@ export const viewport = {
 };
 
 export default async function RootLayout({ children }) {
-  const headersList = await headers();
-  const pageType = headersList.get('x-page-type') || 'home';
-  const entries = await getArchiveEntries();
-  const cookieStore = await cookies();
-  const viewCookie = cookieStore.get(VIEW_COOKIE_NAME)?.value ?? null;
+  let pageType = 'home';
+  let entries = [];
+  let viewCookie = null;
+
+  try {
+    const headersList = await headers();
+    pageType = headersList.get('x-page-type') || 'home';
+  } catch (error) {
+    console.error('Failed to get headers:', error);
+    // Continue with default pageType
+  }
+
+  try {
+    entries = await getArchiveEntries();
+    // Ensure entries is an array
+    if (!Array.isArray(entries)) {
+      console.warn('getArchiveEntries returned non-array, using empty array');
+      entries = [];
+    }
+  } catch (error) {
+    console.error('Failed to fetch archive entries in layout:', error);
+    // Continue with empty array - components should handle this gracefully
+    entries = [];
+  }
+
+  try {
+    const cookieStore = await cookies();
+    viewCookie = cookieStore.get(VIEW_COOKIE_NAME)?.value ?? null;
+  } catch (error) {
+    console.error('Failed to read cookies:', error);
+    // Continue with null - components should handle this gracefully
+    viewCookie = null;
+  }
 
   return (
     <html lang="en">
       <body data-page={pageType}>
-        <ArchiveEntriesProvider initialEntries={entries} initialView={viewCookie}>
-          <div data-hide-on-studio="true">
-            <div className={styles.linesGrid}>
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div className={styles.linesGridItem} key={index} />
-              ))}
-            </div>
-          </div>
-          <BodyPageTypeUpdater />
-          <BodyFadeIn />
-          <StudioLayoutWrapper />
-          <div data-hide-on-studio="true">
-            <HeaderNav />
-          </div>
-          {children}
-        </ArchiveEntriesProvider>
+        <ErrorBoundary>
+          <ArchiveEntriesProvider initialEntries={entries} initialView={viewCookie}>
+            <ErrorBoundary>
+              <div data-hide-on-studio="true">
+                <div className={styles.linesGrid}>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <div className={styles.linesGridItem} key={index} />
+                  ))}
+                </div>
+              </div>
+            </ErrorBoundary>
+            <ErrorBoundary>
+              <BodyPageTypeUpdater />
+            </ErrorBoundary>
+            <ErrorBoundary>
+              <BodyFadeIn />
+            </ErrorBoundary>
+            <ErrorBoundary>
+              <StudioLayoutWrapper />
+            </ErrorBoundary>
+            <ErrorBoundary>
+              <div data-hide-on-studio="true">
+                <HeaderNav />
+              </div>
+            </ErrorBoundary>
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </ArchiveEntriesProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
