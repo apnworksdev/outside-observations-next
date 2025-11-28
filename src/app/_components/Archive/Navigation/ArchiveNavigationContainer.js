@@ -1,12 +1,15 @@
 'use client';
 
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import styles from '@app/_assets/archive/archive-navigation.module.css';
+import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import ArchiveNavigation from './ArchiveNavigation';
 import ArchiveNavigationMoodPanel from './ArchiveNavigationMoodPanel';
 import ArchiveNavigationSearchPanel from './ArchiveNavigationSearchPanel';
+import VisitorNotificationToast from '@/app/_components/VisitorNotificationToast';
+import { useVisitorCount } from '@/app/_components/VisitorCountProvider';
 
 const NAVIGATION_ITEMS = [
   {
@@ -53,8 +56,12 @@ export default function ArchiveNavigationContainer() {
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [activeItemId, setActiveItemId] = useState(null);
   const [panelId, setPanelId] = useState(null);
+  const [isNavigationHovered, setIsNavigationHovered] = useState(false);
+  const [externalLabelChange, setExternalLabelChange] = useState(null);
+  const lastShownNotificationRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
+  const { notifications } = useVisitorCount();
   const isArchiveEntryPage = useMemo(
     () => (pathname ? pathname.startsWith('/archive/entry/') : false),
     [pathname]
@@ -77,6 +84,11 @@ export default function ArchiveNavigationContainer() {
 
   const handleItemSelect = useCallback(
     (itemId, href) => {
+      // Don't open panel for live button (it shows count on hover instead)
+      if (itemId === 'live') {
+        return;
+      }
+
       setActiveItemId((current) => (current === itemId ? null : itemId));
 
       if (href) {
@@ -88,8 +100,9 @@ export default function ArchiveNavigationContainer() {
 
   /**
    * Only the items with interactive panels are mapped below. This makes it trivial to
-   * introduce new panels later (e.g. “Continue” or “Live”) by extending the switch.
+   * introduce new panels later (e.g. "Continue") by extending the switch.
    * When the navigation is closed we short-circuit to keep the panel hidden.
+   * Note: The "live" button shows count on hover instead of opening a panel.
    */
   const panelContent = useMemo(() => {
     if (!isNavigationOpen || !activeItemId) {
@@ -132,7 +145,7 @@ export default function ArchiveNavigationContainer() {
 
   /**
    * Entry detail pages hide the global floating navigation entirely. When we detect
-   * such a path we immediately reset state so reopening the archive view later doesn’t
+   * such a path we immediately reset state so reopening the archive view later doesn't
    * resurrect a stale panel.
    */
   useEffect(() => {
@@ -145,6 +158,41 @@ export default function ArchiveNavigationContainer() {
     setPanelId(null);
   }, [isArchiveEntryPage]);
 
+  /**
+   * When navigation is open and a new visitor joins, show the notification
+   * in the label instead of the toast (which is hidden when navigation is open)
+   * The navigation component will handle reverting to "Explore" after 3 seconds
+   */
+  useEffect(() => {
+    if (!isNavigationOpen || notifications.length === 0) {
+      return;
+    }
+
+    // Get the most recent notification
+    const latestNotification = notifications[0];
+    
+    // Validate notification has required fields
+    if (!latestNotification || typeof latestNotification !== 'object') {
+      return;
+    }
+    
+    // Only show visitor_joined notifications that we haven't shown yet
+    if (
+      latestNotification.type === 'visitor_joined' && 
+      latestNotification.message &&
+      typeof latestNotification.message === 'string' &&
+      typeof latestNotification.timestamp === 'number' &&
+      latestNotification.timestamp !== lastShownNotificationRef.current
+    ) {
+      // Mark this notification as shown
+      lastShownNotificationRef.current = latestNotification.timestamp;
+      
+      // Change label to show notification
+      // The navigation component will handle reverting to "Explore" after 3 seconds
+      setExternalLabelChange(latestNotification.message);
+    }
+  }, [notifications, isNavigationOpen]);
+
   return (
     <>
       <ArchiveNavigation
@@ -156,6 +204,9 @@ export default function ArchiveNavigationContainer() {
         panelId={panelId}
         isPanelOpen={isPanelOpen}
         isHidden={isHidden}
+        onMouseEnter={() => !isNavigationOpen && setIsNavigationHovered(true)}
+        onMouseLeave={() => setIsNavigationHovered(false)}
+        externalLabelChange={externalLabelChange}
       />
       {!isHidden && (
         <div
@@ -174,6 +225,13 @@ export default function ArchiveNavigationContainer() {
       >
         {panelContent ? <panelContent.Content /> : null}
       </div>
+      <ErrorBoundary>
+        <VisitorNotificationToast 
+          isNavigationOpen={isNavigationOpen}
+          isPanelOpen={isPanelOpen}
+          isNavigationHovered={isNavigationHovered}
+        />
+      </ErrorBoundary>
     </>
   );
 }

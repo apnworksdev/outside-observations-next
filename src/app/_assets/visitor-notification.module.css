@@ -1,0 +1,42 @@
+.visitorNotificationToast {
+  position: fixed;
+  right: calc(var(--padding) + var(--close-archive-button-size) + var(--gap));
+  bottom: calc(var(--padding) + var(--close-archive-button-size) / 2);
+  transform: translateY(50%);
+  background-color: var(--fg-color-75);
+  z-index: 10000;
+  animation: slideUpFadeIn 0.3s ease-out;
+  animation-fill-mode: both;
+  pointer-events: none;
+  color: var(--bg-color);
+  padding: 4px 5px 5px 5px;
+  border-radius: var(--border-radius);
+  transition: right 0.2s ease;
+}
+
+.visitorNotificationToast[data-navigation-closed="true"][data-navigation-hovered="true"] {
+  right: calc(var(--padding) + var(--close-archive-button-size) + var(--gap) + 3px);
+}
+
+@keyframes slideUpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(50%);
+  }
+}
+
+@keyframes slideDownFadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+}
+

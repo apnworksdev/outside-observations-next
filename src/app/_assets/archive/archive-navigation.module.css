@@ -28,6 +28,11 @@
   .archiveNavigation[data-state='closed']:hover {
     transform: scale(1.1);
   }
+  
+  /* Signal to notification that navigation is being hovered */
+  .archiveNavigation[data-state='closed']:hover {
+    --archive-nav-hovered: 1;
+  }
 }
 
 .archiveNavigation[data-state='open'] {

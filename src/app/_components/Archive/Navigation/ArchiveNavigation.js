@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useReducer, useRef, useState } from 'react';
 
 import styles from '@app/_assets/archive/archive-navigation.module.css';
+import { useVisitorCount } from '@/app/_components/VisitorCountProvider';
 
 const DEFAULT_LABEL = 'Explore';
 
@@ -15,10 +16,15 @@ export default function ArchiveNavigation({
   panelId = null,
   isPanelOpen = false,
   isHidden = false,
+  onMouseEnter = () => {},
+  onMouseLeave = () => {},
+  externalLabelChange = null,
 }) {
   const hasLabelAppearedRef = useRef(false);
   const labelFadeTimeoutRef = useRef(null);
+  const externalLabelRevertTimerRef = useRef(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const { visitorCount, fetchVisitorCount } = useVisitorCount();
   const [labelState, dispatchLabelState] = useReducer(
     (state, action) => {
       switch (action.type) {
@@ -147,8 +153,34 @@ export default function ArchiveNavigation({
     }, 300);
   }, [clearLabelFadeTimeout, dispatchLabelState]);
 
-  const requestLabelChange = (label) => {
+  const requestLabelChange = (label, itemId) => {
     if (!isOpen || isHidden) {
+      return;
+    }
+
+    // Special handling for live button - show count on hover
+    if (itemId === 'live') {
+      // OPTIMIZATION: Fetch count on-demand when hovering (lazy loading)
+      // This avoids fetching count on every heartbeat
+      // Check explicitly for null/undefined (0 is a valid count)
+      if (visitorCount !== null && visitorCount !== undefined && typeof visitorCount === 'number') {
+        const countLabel = visitorCount === 1 
+          ? '1 user researching' 
+          : `${visitorCount} users researching`;
+        
+        dispatchLabelState({
+          type: 'REQUEST_CHANGE',
+          payload: { nextLabel: countLabel },
+        });
+      } else {
+        // Fetch count on-demand if not loaded yet
+        fetchVisitorCount();
+        // Show default label while fetching
+        dispatchLabelState({
+          type: 'REQUEST_CHANGE',
+          payload: { nextLabel: label },
+        });
+      }
       return;
     }
 
@@ -194,6 +226,51 @@ export default function ArchiveNavigation({
     };
   }, [clearLabelFadeTimeout]);
 
+  // Handle external label changes (e.g., visitor notifications when navigation is open)
+  useEffect(() => {
+    // Clear any existing revert timer when externalLabelChange changes
+    if (externalLabelRevertTimerRef.current) {
+      clearTimeout(externalLabelRevertTimerRef.current);
+      externalLabelRevertTimerRef.current = null;
+    }
+
+    if (!isOpen || isHidden || !externalLabelChange) {
+      // If externalLabelChange becomes null, revert to default
+      if (!externalLabelChange && isOpen && !isHidden) {
+        dispatchLabelState({
+          type: 'REQUEST_CHANGE',
+          payload: { nextLabel: DEFAULT_LABEL },
+        });
+      }
+      return;
+    }
+
+    // Change label to show notification
+    dispatchLabelState({
+      type: 'REQUEST_CHANGE',
+      payload: { nextLabel: externalLabelChange },
+    });
+
+    // Revert to "Explore" after 3 seconds
+    externalLabelRevertTimerRef.current = setTimeout(() => {
+      // Only revert if navigation is still open
+      if (isOpen && !isHidden) {
+        dispatchLabelState({
+          type: 'REQUEST_CHANGE',
+          payload: { nextLabel: DEFAULT_LABEL },
+        });
+      }
+      externalLabelRevertTimerRef.current = null;
+    }, 3000);
+
+    return () => {
+      if (externalLabelRevertTimerRef.current) {
+        clearTimeout(externalLabelRevertTimerRef.current);
+        externalLabelRevertTimerRef.current = null;
+      }
+    };
+  }, [externalLabelChange, isOpen, isHidden]);
+
   return (
     <nav
       className={styles.archiveNavigation}
@@ -201,6 +278,8 @@ export default function ArchiveNavigation({
       data-presence={isHidden ? 'hidden' : 'visible'}
       aria-label="Archive navigation"
       aria-hidden={isHidden}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <button
         type="button"
@@ -229,9 +308,9 @@ export default function ArchiveNavigation({
             aria-pressed={activeItemId === id ? 'true' : 'false'}
             aria-controls={panelId ?? undefined}
             aria-expanded={activeItemId === id && isPanelOpen ? 'true' : 'false'}
-            onMouseEnter={() => requestLabelChange(label)}
+            onMouseEnter={() => requestLabelChange(label, id)}
             onMouseLeave={() => requestLabelChange(DEFAULT_LABEL)}
-            onFocus={() => requestLabelChange(label)}
+            onFocus={() => requestLabelChange(label, id)}
             onBlur={() => requestLabelChange(DEFAULT_LABEL)}
             onClick={() => onItemSelect(id, href)}
           />

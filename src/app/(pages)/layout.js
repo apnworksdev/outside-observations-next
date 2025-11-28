@@ -5,9 +5,11 @@ import HeaderNav from '@app/_components/HeaderNav';
 import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
 import BodyFadeIn from '@/app/_helpers/BodyFadeIn';
 import BodyHydrationGuard from '@/app/_helpers/BodyHydrationGuard';
+import VisitorTracker from '@/app/_helpers/VisitorTracker';
 import StudioLayoutWrapper from '@/app/_components/StudioLayoutWrapper';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveSearchStateProvider } from '@/app/_components/Archive/ArchiveSearchStateProvider';
+import { VisitorCountProvider } from '@/app/_components/VisitorCountProvider';
 
 export const metadata = {
   title: 'Outside Observation',
@@ -37,7 +39,8 @@ export default function RootLayout({ children }) {
       <body>
         <ErrorBoundary>
           <BodyHydrationGuard />
-          <ArchiveSearchStateProvider>
+          <VisitorCountProvider>
+            <ArchiveSearchStateProvider>
             <ErrorBoundary>
               <div data-hide-on-studio="true">
                 <div className={styles.linesGrid}>
@@ -54,6 +57,9 @@ export default function RootLayout({ children }) {
               <BodyFadeIn />
             </ErrorBoundary>
             <ErrorBoundary>
+              <VisitorTracker />
+            </ErrorBoundary>
+            <ErrorBoundary>
               <StudioLayoutWrapper />
             </ErrorBoundary>
             <ErrorBoundary>
@@ -64,7 +70,8 @@ export default function RootLayout({ children }) {
             <ErrorBoundary>
               {children}
             </ErrorBoundary>
-          </ArchiveSearchStateProvider>
+            </ArchiveSearchStateProvider>
+          </VisitorCountProvider>
         </ErrorBoundary>
       </body>
     </html>
