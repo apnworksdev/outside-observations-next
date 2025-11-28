@@ -71,6 +71,15 @@ export default function VisitorTracker() {
       });
 
       if (!response.ok) {
+        // If Redis is not configured, fail silently (graceful degradation)
+        // The visitor tracking feature will simply not work, but the site continues to function
+        if (response.status === 500) {
+          const errorData = await response.json().catch(() => ({}));
+          // Only log in development to avoid cluttering production console
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[Visitor Tracker] Visitor tracking unavailable:', errorData.error || 'Server error');
+          }
+        }
         return;
       }
 

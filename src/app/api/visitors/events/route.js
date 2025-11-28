@@ -5,18 +5,26 @@ import { Redis } from '@upstash/redis';
 let redis = null;
 
 function getRedis() {
-  const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Support both naming conventions
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_TOKEN;
 
   if (!redisUrl || !redisToken) {
-    throw new Error('Upstash Redis is not configured');
+    const missingVars = [];
+    if (!redisUrl) missingVars.push('UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_URL');
+    if (!redisToken) missingVars.push('UPSTASH_REDIS_REST_TOKEN or UPSTASH_REDIS_TOKEN');
+    throw new Error(`Upstash Redis is not configured. Missing: ${missingVars.join(', ')}`);
   }
 
   if (!redis) {
-    redis = new Redis({
-      url: redisUrl,
-      token: redisToken,
-    });
+    try {
+      redis = new Redis({
+        url: redisUrl,
+        token: redisToken,
+      });
+    } catch (error) {
+      throw new Error(`Failed to initialize Redis client: ${error.message}`);
+    }
   }
 
   return redis;
@@ -31,9 +39,21 @@ function getRedis() {
  */
 export async function GET() {
   try {
-    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    // Check for Redis configuration (support both naming conventions)
+    const hasRedisUrl = !!(process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_URL);
+    const hasRedisToken = !!(process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_TOKEN);
+    
+    if (!hasRedisUrl || !hasRedisToken) {
+      console.error('[Visitors Events API] Missing Redis configuration:', {
+        hasRedisUrl,
+        hasRedisToken,
+        envVars: Object.keys(process.env).filter(k => k.includes('UPSTASH') || k.includes('REDIS')),
+      });
       return NextResponse.json(
-        { error: 'Visitor tracking is not configured' },
+        { 
+          error: 'Visitor tracking is not configured',
+          details: `Missing: ${!hasRedisUrl ? 'UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_URL' : ''} ${!hasRedisToken ? 'UPSTASH_REDIS_REST_TOKEN or UPSTASH_REDIS_TOKEN' : ''}`.trim(),
+        },
         { status: 500 }
       );
     }
@@ -96,14 +116,18 @@ export async function GET() {
       events,
     });
   } catch (error) {
-    // Only log in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error in /api/visitors/events:', error);
-    }
+    // Log error for debugging (always log to help diagnose production issues)
+    console.error('[Visitors Events API] Error:', {
+      message: error.message,
+      hasRedisUrl: !!(process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_URL),
+      hasRedisToken: !!(process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_TOKEN),
+      stack: error.stack,
+    });
+    
     return NextResponse.json(
       { 
         error: 'Failed to get visitor events', 
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined 
+        details: error.message // Always include details for debugging
       },
       { status: 500 }
     );

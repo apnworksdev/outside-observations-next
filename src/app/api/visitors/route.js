@@ -10,11 +10,14 @@ function getRedis() {
   // Support both naming conventions:
   // - UPSTASH_REDIS_URL / UPSTASH_REDIS_TOKEN (standard)
   // - UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN (Upstash dashboard naming)
-  const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_TOKEN;
 
   if (!redisUrl || !redisToken) {
-    throw new Error('Upstash Redis is not configured. Please set UPSTASH_REDIS_URL (or UPSTASH_REDIS_REST_URL) and UPSTASH_REDIS_TOKEN (or UPSTASH_REDIS_REST_TOKEN) environment variables.');
+    const missingVars = [];
+    if (!redisUrl) missingVars.push('UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_URL');
+    if (!redisToken) missingVars.push('UPSTASH_REDIS_REST_TOKEN or UPSTASH_REDIS_TOKEN');
+    throw new Error(`Upstash Redis is not configured. Missing: ${missingVars.join(', ')}`);
   }
 
   if (!redis) {
@@ -158,10 +161,19 @@ export async function POST(request) {
     const errorMessage = error.message || 'Unknown error';
     const isConfigError = errorMessage.includes('not configured') || errorMessage.includes('initialize Redis');
     
+    // Log error for debugging (always log in production to help diagnose issues)
+    console.error('[Visitors API] Error:', {
+      message: errorMessage,
+      isConfigError,
+      hasRedisUrl: !!process.env.UPSTASH_REDIS_REST_URL || !!process.env.UPSTASH_REDIS_URL,
+      hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN || !!process.env.UPSTASH_REDIS_TOKEN,
+      stack: error.stack,
+    });
+    
     return NextResponse.json(
       { 
         error: isConfigError ? 'Visitor tracking is not configured' : 'Failed to process visitor tracking request',
-        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+        details: errorMessage, // Always include details for debugging
       },
       { status: 500 }
     );
@@ -191,10 +203,19 @@ export async function GET() {
     const errorMessage = error.message || 'Unknown error';
     const isConfigError = errorMessage.includes('not configured') || errorMessage.includes('initialize Redis');
     
+    // Log error for debugging
+    console.error('[Visitors API GET] Error:', {
+      message: errorMessage,
+      isConfigError,
+      hasRedisUrl: !!process.env.UPSTASH_REDIS_REST_URL || !!process.env.UPSTASH_REDIS_URL,
+      hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN || !!process.env.UPSTASH_REDIS_TOKEN,
+      stack: error.stack,
+    });
+    
     return NextResponse.json(
       { 
         error: isConfigError ? 'Visitor tracking is not configured' : 'Failed to get visitor count',
-        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+        details: errorMessage, // Always include details for debugging
       },
       { status: 500 }
     );

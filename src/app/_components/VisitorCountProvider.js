@@ -42,9 +42,13 @@ export function VisitorCountProvider({ children }) {
           setVisitorCount(data.count);
           setLastUpdated(Date.now());
         }
+      } else {
+        // If Redis is not configured, fail silently (graceful degradation)
+        // The count will remain null, and the UI will show default label
       }
     } catch (error) {
-      // Silently handle errors
+      // Silently handle errors (network issues, etc.)
+      // Visitor tracking is optional, so we don't want to break the site
     }
   }, []);
 
