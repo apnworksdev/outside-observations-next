@@ -75,6 +75,7 @@ export default function ChatBox() {
   const [isLoading, setIsLoading] = useState(false);
   const [navigatingMessageId, setNavigatingMessageId] = useState(null);
   const textareaRef = useRef(null);
+  const chatBoxContentRef = useRef(null);
   const imagesMessageAddedRef = useRef(new Set());
   const router = useRouter();
   
@@ -180,6 +181,74 @@ export default function ChatBox() {
       router.prefetch('/archive');
     }
   }, [messages, router]);
+
+  // Auto-scroll to bottom when messages change or during typewriter animation
+  useEffect(() => {
+    const chatBoxContent = chatBoxContentRef.current;
+    if (!chatBoxContent) return;
+
+    // Scroll immediately when messages change
+    chatBoxContent.scrollTop = chatBoxContent.scrollHeight;
+
+    let lastScrollHeight = chatBoxContent.scrollHeight;
+    let rafId = null;
+    let needsCheck = false;
+
+    const checkAndScroll = () => {
+      if (!chatBoxContent || !needsCheck) {
+        rafId = null;
+        return;
+      }
+      
+      needsCheck = false;
+      
+      // Batch all layout reads together to avoid layout thrashing
+      const currentScrollHeight = chatBoxContent.scrollHeight;
+      const currentScrollTop = chatBoxContent.scrollTop;
+      const clientHeight = chatBoxContent.clientHeight;
+      
+      // Only auto-scroll if content height changed AND user is near the bottom
+      if (currentScrollHeight !== lastScrollHeight) {
+        const isNearBottom = currentScrollTop + clientHeight >= currentScrollHeight - 100;
+        
+        if (isNearBottom) {
+          chatBoxContent.scrollTop = currentScrollHeight;
+        }
+        
+        lastScrollHeight = currentScrollHeight;
+      }
+      
+      rafId = null;
+    };
+
+    // Use MutationObserver to watch for text content changes (typewriter updates)
+    // Check for browser support (though MutationObserver is widely supported)
+    if (typeof MutationObserver === 'undefined') {
+      return;
+    }
+
+    const observer = new MutationObserver(() => {
+      // Schedule check on next animation frame (batched with browser paint)
+      if (!needsCheck && !rafId) {
+        needsCheck = true;
+        rafId = requestAnimationFrame(checkAndScroll);
+      }
+    });
+
+    // Observe changes to text content (for typewriter)
+    observer.observe(chatBoxContent, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => {
+      observer.disconnect();
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, [messages]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -328,7 +397,7 @@ export default function ChatBox() {
 
   return (
     <div className={styles.chatBox}>
-      <div className={styles.chatBoxContent}>
+      <div ref={chatBoxContentRef} className={styles.chatBoxContent}>
         {messages.map((message) => {
           const messageKey = message.id;
           const hasImages = message.imageEntries && message.imageEntries.length > 0;
@@ -416,6 +485,8 @@ export default function ChatBox() {
             <span>Send</span>
           </button>
         </form>
+        <div className={`${styles.chatBoxLine} ${styles.topLine}`} />
+        <div className={`${styles.chatBoxLine} ${styles.bottomLine}`} />
         <div className={`${styles.chatBoxCircle} ${styles.topRightCircle}`} />
         <div className={`${styles.chatBoxCircle} ${styles.bottomRightCircle}`} />
         <div className={`${styles.chatBoxCircle} ${styles.bottomLeftCircle}`} />

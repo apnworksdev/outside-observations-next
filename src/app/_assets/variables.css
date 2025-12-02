@@ -23,6 +23,7 @@
   --optima-font-family: 'Optima', sans-serif;
 
   --padding: 9px;
+  --responsive-padding: var(--padding);
   --bubble-height: 23px;
   --dots-min-width: 36px;
   --gap: 1px;
@@ -59,6 +60,8 @@
 
 @media (max-width: 768px) {
   :root {
+    --responsive-padding: 4px;
+
     --columns: 6;
     --first-line-offset: calc(var(--padding) + var(--column-width) * 1  + var(--column-gap) * 0 + var(--column-gap-half));
     --second-line-offset: calc(var(--padding) + var(--column-width) * 3 + var(--column-gap) * 2 + var(--column-gap-half));
