@@ -290,7 +290,7 @@
     display: none;
   }
 
-  :global(body[data-page="archive-entry"]) :global(.help-nav) {
+  :global(body[data-page="archive-entry"]) .archiveNavOptions :global(.help-nav) {
     display: none;
   }
 }
