@@ -194,7 +194,17 @@ export default function ArchiveNavigationContainer() {
   }, [notifications, isNavigationOpen]);
 
   return (
-    <>
+    <div className={styles.archiveNavigationContainer}>
+      <div
+        className={styles.archiveNavigationPanel}
+        id={panelId ?? undefined}
+        data-state={isArchiveEntryPage ? 'closed' : isPanelOpen ? 'open' : 'closed'}
+        data-presence={isHidden ? 'hidden' : 'visible'}
+        data-panel-type={panelContent?.panelType ?? undefined}
+        aria-hidden={isArchiveEntryPage || !isPanelOpen}
+      >
+        {panelContent ? <panelContent.Content /> : null}
+      </div>
       <ArchiveNavigation
         isOpen={isHidden ? false : isNavigationOpen}
         onOpenChange={handleOpenChange}
@@ -215,16 +225,6 @@ export default function ArchiveNavigationContainer() {
           aria-hidden="true"
         />
       )}
-      <div
-        className={styles.archiveNavigationPanel}
-        id={panelId ?? undefined}
-        data-state={isArchiveEntryPage ? 'closed' : isPanelOpen ? 'open' : 'closed'}
-        data-presence={isHidden ? 'hidden' : 'visible'}
-        data-panel-type={panelContent?.panelType ?? undefined}
-        aria-hidden={isArchiveEntryPage || !isPanelOpen}
-      >
-        {panelContent ? <panelContent.Content /> : null}
-      </div>
       <ErrorBoundary>
         <VisitorNotificationToast 
           isNavigationOpen={isNavigationOpen}
@@ -232,7 +232,7 @@ export default function ArchiveNavigationContainer() {
           isNavigationHovered={isNavigationHovered}
         />
       </ErrorBoundary>
-    </>
+    </div>
   );
 }
 

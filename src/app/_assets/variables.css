@@ -50,7 +50,7 @@
   --fifth-line-offset: calc(var(--padding) + var(--column-width) * 11 + var(--column-gap) * 10 + var(--column-gap-half));
 
   /* Archive page */
-  --archive-container-top-margin: calc(var(--padding) + var(--bubble-height) * 2 + var(--gap) * 2);
+  --archive-container-top-margin: calc(var(--responsive-padding) + var(--bubble-height) * 2 + var(--gap) * 2);
   --archive-container-bottom-margin: calc(var(--padding) + var(--bubble-height) * 3 + var(--gap) * 3);
   --unexpected-primary-poster-height: 0px;
   --archive-list-height: 0px;
@@ -66,5 +66,7 @@
     --first-line-offset: calc(var(--padding) + var(--column-width) * 1  + var(--column-gap) * 0 + var(--column-gap-half));
     --second-line-offset: calc(var(--padding) + var(--column-width) * 3 + var(--column-gap) * 2 + var(--column-gap-half));
     --third-line-offset: calc(var(--padding) + var(--column-width) * 5 + var(--column-gap) * 4 + var(--column-gap-half));
+
+    --close-archive-button-size: 62px;
   }
 }

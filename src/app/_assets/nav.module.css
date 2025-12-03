@@ -4,6 +4,12 @@
   pointer-events: none;
 }
 
+:global(body[data-page="home"].home-animation-complete) .header {
+  opacity: 1;
+  transition-delay: var(--transition-time);
+  pointer-events: auto;
+}
+
 .header :global(menu) {
   display: flex;
   gap: var(--gap);
@@ -95,6 +101,8 @@
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) {
   margin-left: 0;
   position: relative;
+  display: flex;
+  gap: var(--gap);
 }
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.lab-nav) {
@@ -102,11 +110,12 @@
 }
 
 :global(body[data-page="archive"]) .archiveNavOptions {
-  position: absolute;
-  bottom: 0;
-  left: calc(100% + 1px);
   display: flex;
-  gap: 1px;
+  gap: var(--gap);
+}
+
+:global(body[data-page="archive"]) .backToArchiveButton {
+  display: none;
 }
 
 :global(body[data-page="archive"]) .archiveNavOption {
@@ -134,10 +143,163 @@
 
 /* ------------------------------------------------------------ */
 
-body[data-page="unexpected-connections"] .navBubble {
+:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) {
+  margin-left: 0;
+  position: relative;
+  display: flex;
+  gap: var(--gap);
+}
+
+:global(body[data-page="unexpected-connections"]) .archiveNavOptions {
+  display: flex;
+  gap: var(--gap);
+}
+
+:global(body[data-page="unexpected-connections"]) .archiveNavOption {
+  display: none;
+}
+
+:global(body[data-page="unexpected-connections"]) .navBubble {
   background-color: var(--fg-color-75);
 }
 
 :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.lab-nav) {
   margin-top: calc(var(--unexpected-primary-poster-height) + var(--gap));
+}
+
+@media screen and (max-width: 768px) {
+
+  .header {
+    padding: var(--responsive-padding);
+  }
+  
+  .navMenuMobile {
+    display: flex;
+  }
+
+  .navTitleSpan {
+    display: inline-block;
+    vertical-align: bottom;
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: max-width .3s ease;
+  }
+
+  .navTitleSpan.outside {
+    margin-right: 0;
+  }
+
+  .navNavigation {
+    height: 0;
+    overflow-y: hidden;
+    overflow-x: visible;
+    transition: height var(--transition-time) var(--transition-effect);
+  }
+
+  :global(body[data-page="archive"]) .navNavigation .navLi:global(.lab-nav),
+  :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.lab-nav) {
+    margin-top: 0;
+  }
+
+  :global(body.mobile-nav-open) .navNavigation {
+    height: calc(var(--bubble-height) * 4 + var(--gap) * 3);
+    overflow-y: hidden;
+    overflow-x: visible;
+    pointer-events: auto;
+  }
+
+  :global(body.mobile-nav-open) .navTitleSpan {
+    max-width: 70px;
+  }
+
+  :global(body.mobile-nav-open) .navTitleSpan.outside {
+    margin-right: 4px;
+  }
+
+  :global(body[data-page="archive"]) .navNavigation,
+  :global(body[data-page="unexpected-connections"]) .navNavigation,
+  :global(body[data-page="archive-entry"]) .navNavigation {
+    height: auto;
+  }
+
+  :global(body[data-page="archive"]) .navLi,
+  :global(body[data-page="unexpected-connections"]) .navLi,
+  :global(body[data-page="archive-entry"]) .navLi {
+    height: 0;
+    overflow: hidden;
+    transition: height var(--transition-time) var(--transition-effect);
+  }
+
+  :global(body[data-page="archive"]) .navLi:global(.archive-nav),
+  :global(body[data-page="unexpected-connections"]) .navLi:global(.archive-nav),
+  :global(body[data-page="archive-entry"]) .navLi:global(.archive-nav) {
+    height: auto;
+  }
+
+  :global(body[data-page="archive"]) .navLi:global(.archive-nav) .navLink,
+  :global(body[data-page="unexpected-connections"]) .navLi:global(.archive-nav) .navLink,
+  :global(body[data-page="archive-entry"]) .navLi:global(.archive-nav) .navLink {
+    width: 0;
+    padding-right: 0;
+    padding-left: 0;
+    overflow: hidden;
+    transition: width var(--transition-time) var(--transition-effect),
+    padding-right var(--transition-time) var(--transition-effect),
+    padding-left var(--transition-time) var(--transition-effect);
+  }
+
+  :global(body[data-page="archive"].mobile-nav-open) .navLi,
+  :global(body[data-page="unexpected-connections"].mobile-nav-open) .navLi,
+  :global(body[data-page="archive-entry"].mobile-nav-open) .navLi {
+    height: var(--bubble-height);
+  }
+
+  :global(body[data-page="archive"].mobile-nav-open) .navLi:global(.archive-nav) .navLink,
+  :global(body[data-page="unexpected-connections"].mobile-nav-open) .navLi:global(.archive-nav) .navLink
+  :global(body[data-page="archive-entry"].mobile-nav-open) .navLi:global(.archive-nav) .navLink {
+    width: 60px;
+    padding-right: var(--padding);
+    padding-left: var(--padding);
+  }
+
+  :global(body[data-page="archive-entry"]) .header {
+    z-index: 1001;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  :global(body[data-page="archive-entry"]) .navBubble {
+    color: var(--fg-color);
+    background-color: var(--white-color);
+  }
+
+  :global(body[data-page="archive-entry"]) .navNavigation .navLi:global(.archive-nav) {
+    margin-left: 0;
+    position: relative;
+    display: flex;
+    gap: var(--gap);
+  }
+
+  :global(body[data-page="archive-entry"]) .archiveNavOptions {
+    display: flex;
+    gap: var(--gap);
+  }
+
+  :global(body[data-page="archive-entry"]) .archiveNavOption {
+    display: none;
+  }
+
+  :global(body[data-page="archive-entry"]) :global(.help-nav) {
+    display: none;
+  }
+}
+
+@keyframes appear {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }

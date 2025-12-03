@@ -13,7 +13,7 @@ const isExternalLink = (href) => {
   return href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//');
 };
 
-export default function NavItem({ href = '', label = '', children = null, section = '', className = '', ...rest }) {
+export default function NavItem({ href = '', label = '', children = null, section = '', className = '', innerNavBubble = true, ...rest }) {
   const pathname = usePathname() ?? '';
   const isExternal = isExternalLink(href);
 
@@ -30,7 +30,7 @@ export default function NavItem({ href = '', label = '', children = null, sectio
       data-nav-section={section || undefined}
       data-active={isActive ? 'true' : 'false'}
     >
-      <Link href={href} aria-current={isActive ? 'page' : undefined} {...rest} className={styles.navLink}>
+      <Link href={href} aria-current={isActive ? 'page' : undefined} {...rest} className={`${styles.navLink} ${innerNavBubble ? styles.navBubble : ''}`}>
         {label}
       </Link>
       {children}

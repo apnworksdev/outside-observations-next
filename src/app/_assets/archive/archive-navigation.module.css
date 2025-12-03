@@ -1,10 +1,17 @@
-.archiveNavigation {
+.archiveNavigationContainer {
   position: fixed;
   bottom: var(--padding);
   right: var(--padding);
-  width: var(--close-archive-button-size);
-  height: var(--close-archive-button-size);
+  display: flex;
+
+  gap: var(--gap);
+  align-items: flex-end;
   z-index: 1000;
+}
+
+.archiveNavigation {
+  position: relative;  width: var(--close-archive-button-size);
+  height: var(--close-archive-button-size);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -100,6 +107,7 @@
     --scale-factor: 1.5;
   }
 }
+
 .archiveNavigationButtonSearch {
   transform: translate(-50%, -50%) translateY(calc(-1 * var(--star-radius))) scale(var(--scale-factor));
 }
@@ -137,7 +145,7 @@
   position: fixed;
   left: 0;
   bottom: 0;
-  width: 100%;
+  width: 100vw;
   height: 50vh;
   pointer-events: none;
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--white-color));
@@ -146,7 +154,7 @@
   transition:
     opacity var(--transition-time) var(--transition-effect),
     visibility var(--transition-time) var(--transition-effect);
-  z-index: 900;
+  z-index: -1;
 }
 
 .archiveNavigationGradient[data-state='open'] {
@@ -170,28 +178,31 @@
 }
 
 .archiveNavigationPanel {
-  position: fixed;
-  bottom: var(--padding);
-  right: calc(var(--padding) + var(--open-archive-button-size) + var(--gap));
+  position: relative;
   width: calc(var(--column-width) * 3 + var(--column-gap) * 2);
+  max-height: 0;
   opacity: 0;
   pointer-events: none;
+  overflow: hidden;
   transform: translateY(8px);
   transition:
     opacity 160ms var(--transition-effect),
-    transform 160ms var(--transition-effect);
-  z-index: 1000;
+    transform 160ms var(--transition-effect),
+    max-height 160ms var(--transition-effect);
+  align-self: flex-end;
 }
 
 .archiveNavigationPanel[data-presence='hidden'] {
   opacity: 0;
   pointer-events: none;
+  max-height: 0;
 }
 
 .archiveNavigationPanel[data-state='open'] {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0);
+  max-height: 1000px; /* Large enough to accommodate panel content */
 }
 
 .archiveNavigationPanel[data-state='open'][data-panel-type='mood'] {
@@ -228,10 +239,29 @@
 
 .archiveNavigationSearchInput {
   flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--bg-color);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  -webkit-text-fill-color: var(--bg-color);
+  opacity: 1;
 }
 
 .archiveNavigationSearchInput::placeholder {
   color: var(--gray-color);
+  opacity: 1;
+  -webkit-text-fill-color: var(--gray-color);
+}
+
+.archiveNavigationSearchInput:-webkit-autofill,
+.archiveNavigationSearchInput:-webkit-autofill:hover,
+.archiveNavigationSearchInput:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--bg-color);
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .archiveNavigationSearchButton {
@@ -292,3 +322,83 @@
 .archiveNavigationPanelTagIndicatorActive {
   background-color: var(--bg-color);
 }
+
+.archiveNavigationButtonLabel {
+  display: none;
+}
+
+:global(body[data-page="archive-entry"]) .archiveNavigationContainer {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .archiveNavigationContainer {
+    flex-direction: column-reverse;
+  }
+
+  .archiveNavigationButton {
+    --star-radius: 130%;
+    width: 12px;
+    height: 12px;
+  }
+
+  .archiveNavigationGradient {
+    height: calc(var(--close-archive-button-size) + var(--padding));
+    opacity: 1;
+    visibility: visible;
+    transition: height var(--transition-time) var(--transition-effect);
+  }
+
+  .archiveNavigation[data-state='open'] + .archiveNavigationGradient {
+    height: 50vh;
+  }
+
+  .archiveNavigation[data-state='open'] .archiveNavigationButton {
+    background-color: transparent;
+    animation: buttonBackgroundAnimation var(--transition-time) var(--transition-effect) 2s forwards;
+  }
+
+  .archiveNavigation[data-state='open'] .archiveNavigationButtonLabel {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--bg-color);
+    text-align: center;
+    opacity: 1;
+    animation: hideLabelAfterDelay var(--transition-time) var(--transition-effect) 2s forwards;
+  }
+
+  .archiveNavigation[data-state='open'] .archiveNavigationLabel {
+    opacity: 0;
+    visibility: hidden;
+    animation: showLabelAfterDelay var(--transition-time) var(--transition-effect) 2s forwards;
+  }
+
+  .archiveNavigationPanel {
+    width: 100%;
+  }
+}
+
+@keyframes buttonBackgroundAnimation {
+  to {
+    background-color: var(--bg-color);
+  }
+}
+
+@keyframes hideLabelAfterDelay {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes showLabelAfterDelay {
+  to {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+

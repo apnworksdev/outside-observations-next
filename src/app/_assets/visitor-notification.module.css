@@ -1,7 +1,7 @@
 .visitorNotificationToast {
-  position: fixed;
-  right: calc(var(--padding) + var(--close-archive-button-size) + var(--gap));
-  bottom: calc(var(--padding) + var(--close-archive-button-size) / 2);
+  position: absolute;
+  right: calc(var(--close-archive-button-size) + var(--gap));
+  bottom: calc(var(--close-archive-button-size) / 2);
   transform: translateY(50%);
   background-color: var(--fg-color-75);
   z-index: 10000;
@@ -15,7 +15,7 @@
 }
 
 .visitorNotificationToast[data-navigation-closed="true"][data-navigation-hovered="true"] {
-  right: calc(var(--padding) + var(--close-archive-button-size) + var(--gap) + 3px);
+  right: calc(var(--close-archive-button-size) + var(--gap) + 3px);
 }
 
 @keyframes slideUpFadeIn {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CircleAnimation from '@/app/_components/Home/CircleAnimation';
 import ChatBox from '@/app/_components/Home/ChatBox';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
@@ -9,6 +9,20 @@ import styles from '@app/_assets/error.module.css';
 
 export default function HomeContent() {
   const [animationComplete, setAnimationComplete] = useState(false);
+
+  // Add class to body when animation completes
+  useEffect(() => {
+    if (animationComplete) {
+      document.body.classList.add('home-animation-complete');
+    } else {
+      document.body.classList.remove('home-animation-complete');
+    }
+
+    // Cleanup: remove class on unmount
+    return () => {
+      document.body.classList.remove('home-animation-complete');
+    };
+  }, [animationComplete]);
 
   return (
     <ErrorBoundary fallback={HomeErrorFallback}>

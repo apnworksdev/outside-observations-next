@@ -313,7 +313,9 @@ export default function ArchiveNavigation({
             onFocus={() => requestLabelChange(label, id)}
             onBlur={() => requestLabelChange(DEFAULT_LABEL)}
             onClick={() => onItemSelect(id, href)}
-          />
+          >
+            <span className={styles.archiveNavigationButtonLabel}>{label}</span>
+          </button>
         ))}
       </div>
       <p

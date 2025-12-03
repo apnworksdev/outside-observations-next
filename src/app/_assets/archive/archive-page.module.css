@@ -6,6 +6,7 @@
   margin-top: var(--archive-container-top-margin);
   position: relative;
   z-index: 1;
+  transition: margin-top var(--transition-time) var(--transition-effect);
 }
 
 .containerContent {
@@ -242,7 +243,7 @@
   grid-column: span 2;
   width: 100%;
   height: 100%;
-  padding: 0 var(--padding);
+  padding: 0 var(--responsive-padding);
   position: relative;
   display: flex;
   align-items: center;
@@ -266,4 +267,57 @@
 .errorBannerText {
   color: var(--fg-color);
   margin: 0;
+}
+
+@media (max-width: 768px) {
+  :global(body.mobile-nav-open) .container {
+    margin-top: calc(var(--archive-container-top-margin) + var(--bubble-height) * 3 + var(--gap) * 3);
+  }
+
+  .containerLegend {
+    display: none;
+  }
+
+  .containerContent {
+    padding-top: 0;
+    padding-bottom: calc(var(--close-archive-button-size) + var(--padding));
+    max-height: calc(100dvh - var(--gap) - var(--archive-container-top-margin));
+  }
+
+  .itemContainer {
+    scroll-snap-align: start;
+  }
+
+  .itemColumnFileName, .itemColumnType, .itemColumnTags {
+    display: none;
+  }
+
+  .itemColumn.itemColumnArtName {
+    grid-column: 1 / 4;
+    width: calc(100% + 6px + 5px);
+    right: 8px;
+    order: 1;
+  }
+
+  .itemColumn.itemColumnSource {
+    grid-column: 4 / 6;
+    order: 2;
+  }
+
+  .itemColumn.itemColumnYear {
+    grid-column: 6 / 7;
+    order: 3;
+    right: 3px;
+  }
+
+  .container[data-view="images"] .containerContent {
+    row-gap: calc(var(--column-gap) * 2);
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: calc(var(--close-archive-button-size) + var(--padding));
+  }
+
+  .container[data-view="images"] .archiveEntryImageContainer {
+    grid-column: span 3;
+  }
 }

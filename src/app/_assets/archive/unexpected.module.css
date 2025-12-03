@@ -8,8 +8,11 @@
 
 .unexpectedConnectionsGrid {
   display: grid;
-  grid-template-columns: repeat(var(--columns), 1fr);
+  /* Use minmax(0, 1fr) instead of 1fr - fixes Safari grid sizing issues */
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   gap: var(--column-gap);
+  min-width: 0;
+  width: 100%;
 }
 
 .unexpectedConnectionsItem {
@@ -17,6 +20,7 @@
   flex-direction: column;
   gap: var(--gap);
   grid-column: span 3;
+  min-width: 0;
   width: calc(100% + 6px);
   position: relative;
   right: 3px;
@@ -71,4 +75,33 @@
   padding-bottom: 5px;
   width: max-content;
   max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .unexpectedConnectionsGrid {
+    row-gap: var(--gap);
+  }
+
+  .unexpectedConnectionsItem {
+    order: 2;
+  }
+
+  .unexpectedConnectionsItem:nth-child(2) {
+    width: calc(100% + 11px);
+  }
+
+  .unexpectedConnectionsComparisonItem {
+    order: 1;
+    grid-column: span 6;
+    max-width: calc(100% + 6px + 10px);
+    right: 8px;
+  }
+
+  .unexpectedConnectionsContainer {
+    transition: padding-top var(--transition-time) var(--transition-effect);
+  }
+
+  :global(body[data-page="unexpected-connections"].mobile-nav-open) .unexpectedConnectionsContainer {
+    padding-top: calc(var(--archive-container-top-margin) + var(--bubble-height) * 3 + var(--gap) * 3);
+  }
 }

@@ -14,17 +14,17 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
   const isPriority = index < 3;
   const content = (
     <div className={styles.itemWrapper}>
-      <div className={styles.itemColumn}>
+      <div className={`${styles.itemColumn} ${styles.itemColumnYear}`}>
         <div className={styles.itemColumnContent}>
           <p>{entry.year}</p>
         </div>
       </div>
-      <div className={styles.itemColumn}>
+      <div className={`${styles.itemColumn} ${styles.itemColumnArtName}`}>
         <div className={styles.itemColumnContent}>
           <p>{entry.artName}</p>
         </div>
       </div>
-      <div className={styles.itemColumn}>
+      <div className={`${styles.itemColumn} ${styles.itemColumnFileName}`}>
         <div className={styles.itemColumnContent}>
           <p>{entry.fileName}</p>
         </div>
@@ -40,17 +40,17 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
           />
         </div>
       </div>
-      <div className={styles.itemColumn}>
+      <div className={`${styles.itemColumn} ${styles.itemColumnSource}`}>
         <div className={styles.itemColumnContent}>
           <p>{entry.source}</p>
         </div>
       </div>
-      <div className={styles.itemColumn}>
+      <div className={`${styles.itemColumn} ${styles.itemColumnTags}`}>
         <div className={styles.itemColumnContent}>
           <p>{entry.tags.map((tag) => tag.name).join(', ')}</p>
         </div>
       </div>
-      <div className={styles.itemColumn}>
+      <div className={`${styles.itemColumn} ${styles.itemColumnType}`}>
         <div className={styles.itemColumnContent}>
           <p>{entry.type ?? 'Image'}</p>
         </div>

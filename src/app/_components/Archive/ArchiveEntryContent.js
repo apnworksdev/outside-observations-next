@@ -32,22 +32,22 @@ export function ArchiveEntryArticle({ entry, headingId }) {
 export function ArchiveEntryMetadata({ entry }) {
   return (
     <div className={styles.archiveEntryModalAsideContent}>
-      <div className={styles.archiveEntryModalAsideContentItem}>
+      <div className={`${styles.archiveEntryModalAsideContentItem} ${styles.archiveEntryModalAsideYear}`}>
         <p>{entry.year}</p>
       </div>
-      <div className={styles.archiveEntryModalAsideContentItem}>
+      <div className={`${styles.archiveEntryModalAsideContentItem} ${styles.archiveEntryModalAsideArtName}`}>
         <p>{entry.artName}</p>
       </div>
-      <div className={styles.archiveEntryModalAsideContentItem}>
+      <div className={`${styles.archiveEntryModalAsideContentItem} ${styles.archiveEntryModalAsideFileName}`}>
         <p>{entry.fileName}</p>
       </div>
-      <div className={styles.archiveEntryModalAsideContentItem}>
+      <div className={`${styles.archiveEntryModalAsideContentItem} ${styles.archiveEntryModalAsideSource}`}>
         <p>{entry.source}</p>
       </div>
-      <div className={styles.archiveEntryModalAsideContentItem}>
+      <div className={`${styles.archiveEntryModalAsideContentItem} ${styles.archiveEntryModalAsideTags}`}>
         <p>{entry.tags.map((tag) => tag.name).join(', ')}</p>
       </div>
-      <div className={styles.archiveEntryModalAsideContentItem}>
+      <div className={`${styles.archiveEntryModalAsideContentItem} ${styles.archiveEntryModalAsideType}`}>
         <p>Image</p>
       </div>
     </div>
