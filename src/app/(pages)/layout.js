@@ -1,10 +1,8 @@
 import '@app/_assets/variables.css';
 import '@app/_assets/globals.css';
 import styles from '@app/_assets/main.module.css';
-import HeaderNav from '@app/_components/HeaderNav';
 import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
 import BodyFadeIn from '@/app/_helpers/BodyFadeIn';
-import StudioLayoutWrapper from '@/app/_components/StudioLayoutWrapper';
 import { headers } from 'next/headers';
 
 export const metadata = {
@@ -36,18 +34,11 @@ export default async function RootLayout({ children }) {
       <body data-page={pageType}>
         <BodyPageTypeUpdater />
         <BodyFadeIn />
-        <StudioLayoutWrapper />
-        {/* HeaderNav commented out - hiding for launch countdown */}
-        {/* <div data-hide-on-studio="true">
-          <HeaderNav />
-        </div> */}
         {children}
-        <div data-hide-on-studio="true">
-          <div className={styles.linesGrid}>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div className={styles.linesGridItem} key={index} />
-            ))}
-          </div>
+        <div className={styles.linesGrid}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div className={styles.linesGridItem} key={index} />
+          ))}
         </div>
       </body>
     </html>

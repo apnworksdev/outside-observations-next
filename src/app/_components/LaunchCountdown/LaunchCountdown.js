@@ -8,8 +8,8 @@ const MS_PER_MINUTE = MS_PER_SECOND * 60;
 const MS_PER_HOUR = MS_PER_MINUTE * 60;
 const MS_PER_DAY = MS_PER_HOUR * 24;
 
-// December 3rd, 2025 at 12:00 PM (noon)
-const LAUNCH_DATE = new Date('2025-12-03T12:00:00');
+// January 21st, 2026 at 12:00 PM (noon)
+const LAUNCH_DATE = new Date('2026-01-21T12:00:00');
 
 export default function LaunchCountdown() {
   const daysListRef = useRef(null);
@@ -78,7 +78,7 @@ export default function LaunchCountdown() {
   const formatNumber = (num) => num.toString().padStart(2, '0');
 
   // Generate arrays for display
-  const days = Array.from({ length: 31 }, (_, i) => i); // 0-99 days
+  const days = Array.from({ length: 60 }, (_, i) => i); // 0-99 days
   const hours = Array.from({ length: 24 }, (_, i) => i); // 0-23 hours
   const minutes = Array.from({ length: 60 }, (_, i) => i); // 0-59 minutes
   const seconds = Array.from({ length: 60 }, (_, i) => i); // 0-59 seconds
