@@ -18,7 +18,7 @@ function isValidView(value) {
 
 function readViewCookie() {
   if (typeof document === 'undefined') {
-    return 'list';
+    return 'images';
   }
 
   const cookieString = document.cookie || '';
@@ -28,12 +28,12 @@ function readViewCookie() {
     .find((entry) => entry.startsWith(`${VIEW_COOKIE_NAME}=`));
 
   if (!cookieEntry) {
-    return 'list';
+    return 'images';
   }
 
   const [, value = ''] = cookieEntry.split('=');
   const decoded = decodeURIComponent(value);
-  return isValidView(decoded) ? decoded : 'list';
+  return isValidView(decoded) ? decoded : 'images';
 }
 
 function writeViewCookie(view) {
@@ -169,12 +169,12 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       return [];
     }
   });
-  // Initialize view: Always start with 'list' to match server render and prevent hydration mismatch
+  // Initialize view: Always start with 'images' to match server render and prevent hydration mismatch
   // The view will be updated from cookie/data attribute in useEffect after mount
   const [view, setViewState] = useState(() => {
     // Only use initialView prop if provided (for server-side passing)
-    // Otherwise always default to 'list' to ensure server/client match
-    return isValidView(initialView) ? initialView : 'list';
+    // Otherwise always default to 'images' to ensure server/client match
+    return isValidView(initialView) ? initialView : 'images';
   });
   const [searchResults, setSearchResultsState] = useState({ active: false, ids: [], orderedIds: [] });
   const [searchStatus, setSearchStatus] = useState({ status: 'idle', query: null, summary: null, error: null });
@@ -589,7 +589,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
 
   /**
    * When the user leaves the archive we reset any active search so that a future visit
-   * starts from the default list view. We keep track of the last pathname visited to
+   * starts from the default images view. We keep track of the last pathname visited to
    * detect the transition reliably on client navigation.
    */
   useEffect(() => {

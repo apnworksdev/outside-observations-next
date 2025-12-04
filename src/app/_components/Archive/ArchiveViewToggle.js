@@ -12,7 +12,7 @@ import styles from '@app/_assets/nav.module.css';
 
 function readViewCookie() {
   if (typeof document === 'undefined') {
-    return 'list';
+    return 'images';
   }
 
   const cookieEntry = document.cookie
@@ -21,15 +21,15 @@ function readViewCookie() {
     .find((entry) => entry.startsWith(`${VIEW_COOKIE_NAME}=`));
 
   if (!cookieEntry) {
-    return 'list';
+    return 'images';
   }
 
   const [, value = ''] = cookieEntry.split('=');
   const decoded = decodeURIComponent(value);
-  return decoded === 'images' || decoded === 'list' ? decoded : 'list';
+  return decoded === 'images' || decoded === 'list' ? decoded : 'images';
 }
 
-export default function ArchiveViewToggle({ className, initialExternalView = 'list' }) {
+export default function ArchiveViewToggle({ className, initialExternalView = 'images' }) {
   const archiveContext = useArchiveEntriesSafe();
   const [externalView, setExternalView] = useState(initialExternalView);
   const isomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
@@ -93,19 +93,19 @@ export default function ArchiveViewToggle({ className, initialExternalView = 'li
       <p>View: </p>
       <button
         type="button"
-        aria-pressed={currentView === 'list'}
-        className={styles.archiveViewToggleButton}
-        onClick={() => handleSetView('list')}
-      >
-        List
-      </button>
-      <button
-        type="button"
         aria-pressed={currentView === 'images'}
         className={styles.archiveViewToggleButton}
         onClick={() => handleSetView('images')}
       >
         Images
+      </button>
+      <button
+        type="button"
+        aria-pressed={currentView === 'list'}
+        className={styles.archiveViewToggleButton}
+        onClick={() => handleSetView('list')}
+      >
+        List
       </button>
     </div>
   );
