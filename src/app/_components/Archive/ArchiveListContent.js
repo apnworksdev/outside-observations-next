@@ -42,21 +42,30 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
       {...prefetchHandlers}
     >
       <div className={styles.archiveEntryImageContainer}>
-        <SanityImage
-          image={entry.poster}
-          alt={entry.artName || 'Archive entry poster'}
-          className={styles.archiveEntryImage}
-          width={POSTER_WIDTH}
-          height={
-            entry?.poster?.dimensions?.aspectRatio
-              ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
-              : POSTER_WIDTH
-          }
-          priority={isPriority}
-          loading={isPriority ? undefined : 'lazy'}
-          blurDataURL={entry?.poster?.lqip || undefined}
-          onLoad={onImageLoad}
-        />
+        <div className={styles.archiveEntryImageWrapper}>
+          <SanityImage
+            image={entry.poster}
+            alt={entry.artName || 'Archive entry poster'}
+            className={styles.archiveEntryImage}
+            width={POSTER_WIDTH}
+            height={
+              entry?.poster?.dimensions?.aspectRatio
+                ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
+                : POSTER_WIDTH
+            }
+            priority={isPriority}
+            loading={isPriority ? undefined : 'lazy'}
+            blurDataURL={entry?.poster?.lqip || undefined}
+            onLoad={onImageLoad}
+          />
+          <div className={styles.archiveEntryImageOverlay}>
+            <div className={styles.archiveEntryImageOverlayContent}>
+              <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.year}</p></div>
+              <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.source}</p></div>
+              <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.artName}</p></div>
+            </div>
+          </div>
+        </div>
       </div>
     </Link>
   );

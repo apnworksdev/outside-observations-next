@@ -250,10 +250,60 @@
   justify-content: center;
 }
 
+.container[data-view="images"] .archiveEntryImageWrapper {
+  position: relative;
+  display: flex;
+}
+
 .container[data-view="images"] .archiveEntryImage {
   width: 100%;
   line-height: 0;
   height: auto;
+}
+
+.container[data-view="images"] .archiveEntryImageOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-color-75);
+  border: 0.5px solid var(--gray-color);
+  z-index: 1;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  padding: var(--padding);
+  opacity: 0;
+  transition: opacity var(--transition-time) var(--transition-effect);
+  pointer-events: none;
+}
+
+.container[data-view="images"] .archiveEntryImageWrapper:hover .archiveEntryImageOverlay {
+  opacity: 1;
+}
+
+.container[data-view="images"] .archiveEntryImageOverlayContent {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.container[data-view="images"] .archiveEntryImageOverlayContentItem {
+  min-height: var(--bubble-height);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-right: var(--padding);
+  padding-left: var(--padding);
+  padding-top: 6px;
+  padding-bottom: 7px;
+  background-color: var(--gray-color);
+  color: var(--fg-color);
+  width: fit-content;
+  flex: 0 0 auto;
 }
 
 .errorBanner {
