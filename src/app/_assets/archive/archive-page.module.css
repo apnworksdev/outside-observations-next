@@ -224,7 +224,7 @@
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  padding-bottom: 0;
+  padding-bottom: calc(var(--padding) - var(--gap));
 }
 
 .container[data-view="images"] .containerContent:global(.isAtTop) {

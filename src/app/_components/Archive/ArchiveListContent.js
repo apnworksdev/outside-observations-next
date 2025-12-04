@@ -36,12 +36,12 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
   const isPriority = index < 4;
 
   return (
-    <Link
-      href={href}
-      className={styles.archiveEntryImageLink}
-      {...prefetchHandlers}
-    >
-      <div className={styles.archiveEntryImageContainer}>
+    <div className={styles.archiveEntryImageContainer}>
+      <Link
+        href={href}
+        className={styles.archiveEntryImageLink}
+        {...prefetchHandlers}
+      >
         <div className={styles.archiveEntryImageWrapper}>
           <SanityImage
             image={entry.poster}
@@ -66,8 +66,8 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
             </div>
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 }
 
