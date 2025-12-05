@@ -6,8 +6,8 @@ export const aiAutoFillAction = {
   title: 'Generate AI Content',
   icon: () => '🤖',
   
-  // Only show this action if there's an image uploaded
-  hidden: ({document}) => !document?.poster?.asset,
+  // Only show this action if there's an image uploaded and mediaType is 'image'
+  hidden: ({document}) => !document?.poster?.asset || document?.mediaType !== 'image',
   
   onHandle: async ({draft, published, patch}) => {
     try {
@@ -16,6 +16,11 @@ export const aiAutoFillAction = {
       
       if (!currentDoc?.poster?.asset) {
         throw new Error('Please upload an image first')
+      }
+
+      // Only process AI for images, not for videos
+      if (currentDoc?.mediaType !== 'image') {
+        throw new Error('AI processing is only available for images')
       }
 
       // Check if AI fields are already filled

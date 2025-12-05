@@ -1,11 +1,18 @@
+/**
+ * MediaWithAIButton - Unified component for image and video uploads with AI processing
+ * 
+ * Supports both image and video files. Automatically detects field type and processes accordingly.
+ * Note: Video processing depends on API support - currently images work, videos are pending API update.
+ */
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {Button, Card, Flex, Spinner, Stack, Text} from '@sanity/ui'
 import {PatchEvent, set} from 'sanity'
-import {ImageInput, useClient, useFormBuilder, useFormValue} from 'sanity'
+import {ImageInput, FileInput, useClient, useFormBuilder, useFormValue} from 'sanity'
 
 import {urlFor} from '../../../lib/image'
+import {projectId, dataset} from '../../../env'
 
-export const ImageWithAIButton = React.forwardRef((props, ref) => {
+export const MediaWithAIButton = React.forwardRef((props, ref) => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState(null)
   const [lastProcessed, setLastProcessed] = useState(null)
@@ -17,9 +24,22 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
   const documentValue = useFormValue([])
   const currentAiDescription = documentValue?.aiDescription
   const currentAiMoodTags = documentValue?.aiMoodTags
+  const mediaType = documentValue?.mediaType
 
   const formBuilder = useFormBuilder()
   const client = useClient({apiVersion: '2025-09-22'})
+
+  // Determine if this is an image or file field based on schema type
+  const isImageField = props.schemaType?.name === 'image'
+  const isVideoField = props.schemaType?.name === 'file'
+  
+  // Determine expected media type based on field type and document mediaType
+  const expectedMediaType = isImageField ? 'image' : 'video'
+  const shouldProcessAI = mediaType === expectedMediaType
+
+  // Media type labels
+  const mediaLabel = isImageField ? 'image' : 'video'
+  const mediaLabelCapitalized = isImageField ? 'Image' : 'Video'
 
   // Keep props ref updated - only update when value actually changes
   const prevValueRef = useRef(props.value)
@@ -37,7 +57,14 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
   const handleAIProcess = useCallback(async () => {
     const currentValue = propsRef.current.value
     if (!currentValue || !currentValue.asset) {
-      setError('Please upload an image first')
+      setError(`Please upload a ${mediaLabel} first`)
+      return
+    }
+
+    // Verify media type matches
+    const currentMediaType = documentValue?.mediaType
+    if (currentMediaType !== expectedMediaType) {
+      setError(`AI processing is only available for ${mediaLabel}s when media type is set to "${mediaLabelCapitalized}"`)
       return
     }
 
@@ -46,48 +73,87 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
 
     try {
       const currentAsset = currentValue.asset
-      let imageUrl = currentAsset?.url
+      let mediaUrl = currentAsset?.url
 
-      if (!imageUrl) {
-        imageUrl = urlFor(currentValue).url()
+      // For images, try using urlFor helper first
+      if (isImageField && !mediaUrl) {
+        mediaUrl = urlFor(currentValue).url()
       }
 
-      if (!imageUrl) {
-        throw new Error('Cannot determine image URL. Please check that the image is properly uploaded.')
-      }
-
-      if (!imageUrl.includes('dl=') && !imageUrl.includes('download')) {
-        try {
-          const urlObj = new URL(imageUrl)
-          urlObj.searchParams.set('dl', '')
-          imageUrl = urlObj.toString()
-        } catch {
-          imageUrl = imageUrl.includes('?') ? `${imageUrl}&dl=` : `${imageUrl}?dl=`
+      // For file assets (videos), we need to fetch the asset document to get the URL
+      if (!isImageField && !mediaUrl) {
+        const assetRef = currentAsset?._ref || currentAsset?._id
+        
+        if (assetRef) {
+          try {
+            // Fetch the asset document to get the URL
+            const assetDoc = await client.fetch(
+              `*[_id == $ref][0]{url, originalFilename, mimeType}`,
+              {ref: assetRef}
+            )
+            
+            if (assetDoc?.url) {
+              mediaUrl = assetDoc.url
+            } else if (projectId && dataset) {
+              // Fallback: construct URL from asset reference
+              // Sanity file URLs follow pattern: https://cdn.sanity.io/files/{projectId}/{dataset}/{assetId}
+              const assetId = assetRef.replace('file-', '').replace('sanity-fileAsset-', '')
+              mediaUrl = `https://cdn.sanity.io/files/${projectId}/${dataset}/${assetId}`
+            }
+          } catch (fetchError) {
+            console.error('Error fetching file asset:', fetchError)
+            // Last resort: try constructing URL from asset reference
+            if (projectId && dataset) {
+              const assetId = assetRef.replace('file-', '').replace('sanity-fileAsset-', '')
+              mediaUrl = `https://cdn.sanity.io/files/${projectId}/${dataset}/${assetId}`
+            }
+          }
         }
       }
 
-      const imageResponse = await fetch(imageUrl)
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to fetch image from Sanity: ${imageResponse.status}`)
+      if (!mediaUrl) {
+        throw new Error(`Cannot determine ${mediaLabel} URL. Please check that the ${mediaLabel} is properly uploaded.`)
       }
 
-      const contentType = imageResponse.headers.get('content-type')
-      if (!contentType?.startsWith('image/')) {
-        throw new Error(`Failed to fetch image: received ${contentType} instead of image.`)
+      // Ensure we get the download URL
+      if (!mediaUrl.includes('dl=') && !mediaUrl.includes('download')) {
+        try {
+          const urlObj = new URL(mediaUrl)
+          urlObj.searchParams.set('dl', '')
+          mediaUrl = urlObj.toString()
+        } catch {
+          mediaUrl = mediaUrl.includes('?') ? `${mediaUrl}&dl=` : `${mediaUrl}?dl=`
+        }
       }
 
-      const imageBlob = await imageResponse.blob()
-      const imageType = contentType || imageBlob.type || 'image/jpeg'
-      const extension = imageType.split('/')[1]?.split(';')[0] || 'jpg'
+      const mediaResponse = await fetch(mediaUrl)
+      if (!mediaResponse.ok) {
+        throw new Error(`Failed to fetch ${mediaLabel} from Sanity: ${mediaResponse.status}`)
+      }
+
+      const contentType = mediaResponse.headers.get('content-type')
+      const expectedContentType = isImageField ? 'image/' : 'video/'
+      
+      if (!contentType?.startsWith(expectedContentType)) {
+        throw new Error(`Failed to fetch ${mediaLabel}: received ${contentType} instead of ${mediaLabel}.`)
+      }
+
+      const mediaBlob = await mediaResponse.blob()
+      const mediaMimeType = contentType || mediaBlob.type || (isImageField ? 'image/jpeg' : 'video/mp4')
+      const extension = mediaMimeType.split('/')[1]?.split(';')[0] || (isImageField ? 'jpg' : 'mp4')
+      const assetRefPattern = isImageField ? 'image-' : 'file-'
+      const defaultFilename = isImageField ? `image.${extension}` : `video.${extension}`
+      
       const filename =
         currentAsset.originalFilename ||
-        currentAsset._ref?.replace('image-', '').replace('-', '.') ||
-        `image.${extension}`
+        currentAsset._ref?.replace(assetRefPattern, '').replace('-', '.') ||
+        defaultFilename
 
-      const imageFile = new File([imageBlob], filename, {type: imageType})
+      const mediaFile = new File([mediaBlob], filename, {type: mediaMimeType})
 
       const formData = new FormData()
-      formData.append('image', imageFile)
+      // API accepts both image and video in the "image" key
+      formData.append('image', mediaFile)
 
       const response = await fetch('/api/generate-metadata', {
         method: 'POST',
@@ -102,7 +168,14 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
         } catch {
           throw new Error(`API call failed: ${response.status} - ${errorText}`)
         }
-        throw new Error(errorData.error || errorData.message || `API call failed: ${response.status}`)
+        
+        // Build a comprehensive error message
+        let errorMessage = errorData.error || errorData.message || `API call failed: ${response.status}`
+        if (errorData.details) {
+          errorMessage += `\n\nDetails: ${errorData.details}`
+        }
+        
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
@@ -202,7 +275,7 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
     } finally {
       setIsProcessing(false)
     }
-  }, [currentAiDescription, currentAiMoodTags, formBuilder, client])
+  }, [currentAiDescription, currentAiMoodTags, formBuilder, client, documentValue, isImageField, expectedMediaType, mediaLabel, mediaLabelCapitalized])
 
   // Track the last asset ID to prevent unnecessary effect runs
   const lastAssetIdRef = useRef(null)
@@ -224,8 +297,8 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
       return
     }
 
-    // Only process if asset ID actually changed
-    if (currentAssetId && currentAssetId !== processedAssetRef.current && !isProcessing) {
+    // Only process if asset ID actually changed and mediaType matches
+    if (currentAssetId && currentAssetId !== processedAssetRef.current && !isProcessing && shouldProcessAI) {
       lastAssetIdRef.current = currentAssetId
       processedAssetRef.current = currentAssetId
 
@@ -238,7 +311,7 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
         lastAssetIdRef.current = null
       }
     }
-  }, [assetId, isProcessing, handleAIProcess])
+  }, [assetId, isProcessing, handleAIProcess, shouldProcessAI])
 
   useEffect(() => {
     const currentValue = props.value
@@ -252,14 +325,17 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
     }
   }, [props.value])
 
-  const hasImage = props.value && props.value.asset
-  const canProcess = hasImage && !isProcessing
+  const hasMedia = props.value && props.value.asset
+  const canProcess = hasMedia && !isProcessing && shouldProcessAI
+
+  // Select the appropriate input component
+  const InputComponent = isImageField ? ImageInput : FileInput
 
   return (
     <Stack space={3}>
-      <ImageInput {...props} ref={ref} />
+      <InputComponent {...props} ref={ref} />
 
-      {hasImage && (
+      {hasMedia && shouldProcessAI && (
         <Card padding={3} tone="primary">
           <Stack space={2}>
             <Text size={1} weight="medium">
@@ -349,4 +425,5 @@ export const ImageWithAIButton = React.forwardRef((props, ref) => {
   )
 })
 
-ImageWithAIButton.displayName = 'ImageWithAIButton'
+MediaWithAIButton.displayName = 'MediaWithAIButton'
+
