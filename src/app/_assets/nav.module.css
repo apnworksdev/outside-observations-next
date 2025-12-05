@@ -25,27 +25,7 @@
   color: var(--white-color);
   width: fit-content;
   pointer-events: auto;
-}
-
-.navLi.navBubble[data-active="true"] {
-  margin-left: 0;
-}
-
-.navLi.navBubble[data-active="true"] .navLink {
-  position: relative;
-  padding-left: 11px;
-}
-
-.navLi.navBubble[data-active="true"] .navLink::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  left: 0;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--bg-color);
+  transition: background-color var(--transition-time) var(--transition-effect);
 }
 
 .header {
@@ -86,6 +66,66 @@
 
 .navNavigation .navLi {
   margin-left: var(--padding);
+  transition: margin-left var(--transition-time) var(--transition-effect), margin-top var(--transition-time) var(--transition-effect);
+}
+
+/* ------------------------------------------------------------ */
+
+/*                         NAV CSS LOGIC                        */
+
+/* ------------------------------------------------------------ */
+
+.navLink {
+  position: relative;
+  transition: padding-left var(--transition-time) var(--transition-effect), background-color var(--transition-time) var(--transition-effect);
+}
+
+@media (hover: hover) {
+  .navLink:hover {
+    padding-left: calc(var(--padding) * 2);
+  }
+
+  .archiveViewToggleButton:hover,
+  :global(.help-nav) .navBubble:hover,
+  .backToArchiveButton .navBubble:hover {
+    font-weight: 700;
+    font-style: italic;
+    /* text-decoration: underline; */
+    text-transform: uppercase;
+  }
+}
+
+:global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav),
+:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav),
+:global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) {
+  margin-left: 0;
+}
+
+:global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav),
+:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) {
+  position: relative;
+  display: flex;
+  gap: var(--gap);
+}
+
+:global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) .navLink,
+:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) .navLink,
+:global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) .navLink {
+  padding-left: calc(var(--padding) * 2);
+}
+
+:global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) .navLink::before,
+:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) .navLink::before,
+:global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) .navLink::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: var(--padding);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--bg-color);
 }
 
 /* ------------------------------------------------------------ */
@@ -96,13 +136,6 @@
 
 .archiveNavOptions {
   display: none;
-}
-
-:global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) {
-  margin-left: 0;
-  position: relative;
-  display: flex;
-  gap: var(--gap);
 }
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.lab-nav) {
@@ -142,13 +175,6 @@
 /*                  UNEXPECTED CONNECTIONS PAGE                 */
 
 /* ------------------------------------------------------------ */
-
-:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) {
-  margin-left: 0;
-  position: relative;
-  display: flex;
-  gap: var(--gap);
-}
 
 :global(body[data-page="unexpected-connections"]) .archiveNavOptions {
   display: flex;

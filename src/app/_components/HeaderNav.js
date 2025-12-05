@@ -37,8 +37,8 @@ export default function HeaderNav() {
               <div className={styles.backToArchiveButton}>
                 <Link href="/archive" className={styles.navBubble}>Back</Link>
               </div>
-              <div className={`${styles.navBubble} help-nav`}>
-                <button type="button">?</button>
+              <div className="help-nav">
+                <button className={styles.navBubble} type="button">?</button>
               </div>
             </div>
           </NavItem>
@@ -58,9 +58,15 @@ export default function HeaderNav() {
             rel="noreferrer"
             label="Radio"
           />
-          <li className={`${styles.navLi} shop-nav`}>
-            <Link href="https://outside-observations.myshopify.com/" className={styles.navBubble}>Shop</Link>
-          </li>
+          <NavItem
+            className={`${styles.navLi} shop-nav`}
+            innerNavBubble={true}
+            href="https://outside-observations.myshopify.com/"
+            section="shop"
+            target="_blank"
+            rel="noreferrer"
+            label="Shop"
+          />
         </menu>
       </nav>
     </header>
