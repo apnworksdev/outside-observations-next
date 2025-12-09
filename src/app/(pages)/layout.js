@@ -3,13 +3,13 @@ import '@app/_assets/globals.css';
 import styles from '@app/_assets/main.module.css';
 import HeaderNav from '@app/_components/HeaderNav';
 import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
-import BodyFadeIn from '@/app/_helpers/BodyFadeIn';
 import BodyHydrationGuard from '@/app/_helpers/BodyHydrationGuard';
 import VisitorTracker from '@/app/_helpers/VisitorTracker';
 import StudioLayoutWrapper from '@/app/_components/StudioLayoutWrapper';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveSearchStateProvider } from '@/app/_components/Archive/ArchiveSearchStateProvider';
 import { VisitorCountProvider } from '@/app/_components/VisitorCountProvider';
+import PageTransition from '@/app/_components/PageTransition';
 
 export const metadata = {
   title: 'Outside Observation',
@@ -41,35 +41,32 @@ export default function RootLayout({ children }) {
           <BodyHydrationGuard />
           <VisitorCountProvider>
             <ArchiveSearchStateProvider>
-            <ErrorBoundary>
-              <div data-hide-on-studio="true">
-                <div className={styles.linesGrid}>
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <div className={styles.linesGridItem} key={index} />
-                  ))}
+              <ErrorBoundary>
+                <div data-hide-on-studio="true">
+                  <div className={styles.linesGrid}>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <div className={styles.linesGridItem} key={index} />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </ErrorBoundary>
-            <ErrorBoundary>
-              <BodyPageTypeUpdater />
-            </ErrorBoundary>
-            <ErrorBoundary>
-              <BodyFadeIn />
-            </ErrorBoundary>
-            <ErrorBoundary>
-              <VisitorTracker />
-            </ErrorBoundary>
-            <ErrorBoundary>
-              <StudioLayoutWrapper />
-            </ErrorBoundary>
-            <ErrorBoundary>
-              <div data-hide-on-studio="true">
-                <HeaderNav />
-              </div>
-            </ErrorBoundary>
-            <ErrorBoundary>
-              {children}
-            </ErrorBoundary>
+              </ErrorBoundary>
+              <ErrorBoundary>
+                <BodyPageTypeUpdater />
+              </ErrorBoundary>
+              <ErrorBoundary>
+                <VisitorTracker />
+              </ErrorBoundary>
+              <ErrorBoundary>
+                <StudioLayoutWrapper />
+              </ErrorBoundary>
+              <ErrorBoundary>
+                <PageTransition>
+                  <div data-hide-on-studio="true">
+                    <HeaderNav />
+                  </div>
+                  {children}
+                </PageTransition>
+              </ErrorBoundary>
             </ArchiveSearchStateProvider>
           </VisitorCountProvider>
         </ErrorBoundary>

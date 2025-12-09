@@ -12,7 +12,7 @@ export default function HeaderNav() {
     <header id="main-header" className={styles.header}>
       <div className={styles.navTitleContainer}>
         <div className={styles.navTitle}>
-          <Link href="/" className={styles.navBubble}>
+          <Link href="/" className={styles.navBubble} data-transition="nav">
             O
             <span className={`${styles.navTitleSpan} ${styles.outside}`}>utside</span>
             O
@@ -35,7 +35,7 @@ export default function HeaderNav() {
                 className={`${styles.archiveNavOption} ${styles.navBubble}`}
               />
               <div className={styles.backToArchiveButton}>
-                <Link href="/archive" className={styles.navBubble}>Back</Link>
+                <Link href="/archive" className={styles.navBubble} data-transition="nav">Back</Link>
               </div>
               <div className="help-nav">
                 <button className={styles.navBubble} type="button">?</button>

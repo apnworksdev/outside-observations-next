@@ -30,7 +30,13 @@ export default function NavItem({ href = '', label = '', children = null, sectio
       data-nav-section={section || undefined}
       data-active={isActive ? 'true' : 'false'}
     >
-      <Link href={href} aria-current={isActive ? 'page' : undefined} {...rest} className={`${styles.navLink} ${innerNavBubble ? styles.navBubble : ''}`}>
+      <Link 
+        href={href} 
+        aria-current={isActive ? 'page' : undefined} 
+        data-transition={!isExternal ? 'nav' : undefined}
+        {...rest} 
+        className={`${styles.navLink} ${innerNavBubble ? styles.navBubble : ''}`}
+      >
         {label}
       </Link>
       {children}
