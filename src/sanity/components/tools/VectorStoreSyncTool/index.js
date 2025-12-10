@@ -28,7 +28,7 @@ export function VectorStoreSyncTool() {
     setDetails('')
 
     try {
-      const vectorResponse = await fetch('/api/vector-store/get-all-images')
+      const vectorResponse = await fetch('/api/vector-store/get-all-items')
       if (!vectorResponse.ok) {
         let errorPayload = {}
         try {
@@ -130,7 +130,7 @@ export function VectorStoreSyncTool() {
         setMessage(`Indexing ${i + 1} of ${totalToIndex}: ${entry.id}…`)
 
         try {
-          const response = await fetch('/api/vector-store/add-image', {
+          const response = await fetch('/api/vector-store/add-new-item', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

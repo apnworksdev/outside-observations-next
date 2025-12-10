@@ -6,7 +6,7 @@ const normalizeId = (id) => {
 }
 
 async function addToVectorStore({id, description}) {
-  const response = await fetch('/api/vector-store/add-image', {
+  const response = await fetch('/api/vector-store/add-new-item', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -28,7 +28,7 @@ async function addToVectorStore({id, description}) {
 }
 
 async function removeFromVectorStore(id) {
-  const response = await fetch(`/api/vector-store/delete-image/${encodeURIComponent(id)}`, {
+  const response = await fetch(`/api/vector-store/delete-item/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   })
 

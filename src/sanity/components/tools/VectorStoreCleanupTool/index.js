@@ -28,7 +28,7 @@ export function VectorStoreCleanupTool() {
 
     try {
       // Get all IDs from vector store
-      const vectorResponse = await fetch('/api/vector-store/get-all-images')
+      const vectorResponse = await fetch('/api/vector-store/get-all-items')
       if (!vectorResponse.ok) {
         let errorPayload = {}
         try {
@@ -107,7 +107,7 @@ export function VectorStoreCleanupTool() {
         setMessage(`Removing ${i + 1} of ${orphanedIds.length}: ${orphanedId}…`)
 
         try {
-          const response = await fetch(`/api/vector-store/delete-image/${encodeURIComponent(orphanedId)}`, {
+          const response = await fetch(`/api/vector-store/delete-item/${encodeURIComponent(orphanedId)}`, {
             method: 'DELETE',
           })
 

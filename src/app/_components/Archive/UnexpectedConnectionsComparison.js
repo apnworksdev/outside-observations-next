@@ -15,7 +15,7 @@ export default function UnexpectedConnectionsComparison({ postersPayload }) {
   const [{ status, data, error }, setState] = useState(initialState);
 
   useEffect(() => {
-    if (!postersPayload?.image1 || !postersPayload?.image2) {
+    if (!postersPayload?.item1 || !postersPayload?.item2) {
       return;
     }
 
@@ -26,7 +26,7 @@ export default function UnexpectedConnectionsComparison({ postersPayload }) {
       setState({ status: 'loading', data: null, error: null });
 
       try {
-        const response = await fetch('/api/compare-images', {
+        const response = await fetch('/api/compare-items', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

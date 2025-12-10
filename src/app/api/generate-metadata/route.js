@@ -63,7 +63,7 @@ export async function POST(request) {
     // Parse incoming FormData from the client
     console.log('[generate-metadata] Parsing FormData...')
     const incomingFormData = await request.formData()
-    const imageFile = incomingFormData.get('image')
+    const imageFile = incomingFormData.get('file')
     
     console.log('[generate-metadata] File received:', {
       hasFile: !!imageFile,
@@ -125,11 +125,11 @@ export async function POST(request) {
     const formData = new FormData()
     // Ensure we preserve the MIME type by explicitly setting it
     // The third parameter (filename) helps preserve the file extension which aids in type detection
-    formData.append('image', blob, filename)
+    formData.append('file', blob, filename)
     
     // Log what we're sending to help debug
     console.log('[generate-metadata] FormData prepared:', {
-      fieldName: 'image',
+      fieldName: 'file',
       blobType: blob.type,
       blobSize: blob.size,
       filename: filename,
@@ -140,7 +140,7 @@ export async function POST(request) {
     // The service expects:
     // - Method: POST
     // - Header: X-API-Key with authentication token
-    // - Body: multipart/form-data with 'image' field
+    // - Body: multipart/form-data with 'file' field
     // The service should auto-detect file type from MIME type and/or file extension
     console.log('[generate-metadata] Calling AI service...')
     let response

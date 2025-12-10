@@ -43,7 +43,7 @@ You **must** set these environment variables in Netlify's dashboard (Site settin
 
 **Status:** Your API routes use server-side environment variables correctly (not `NEXT_PUBLIC_`), which is good.
 
-**Note:** One route (`/api/compare-images/route.js`) uses `'use server'` directive, which is fine for Next.js 15 on Netlify.
+**Note:** One route (`/api/compare-items/route.js`) uses `'use server'` directive, which is fine for Next.js 15 on Netlify.
 
 ### ⚠️ Issue 4: Build Command
 

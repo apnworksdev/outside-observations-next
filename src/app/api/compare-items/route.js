@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 
-const COMPARISON_API_PATH = '/api/compare-images';
+const COMPARISON_API_PATH = '/api/compare-items';
 
 // Helper function to safely construct API URLs
 function buildApiUrl(path) {
@@ -44,11 +44,11 @@ export async function POST(request) {
     const comparisonApiUrl = buildApiUrl(COMPARISON_API_PATH);
 
     const body = await request.json();
-    const { image1, image2 } = body ?? {};
+    const { item1, item2 } = body ?? {};
 
-    if (!image1 || !image2) {
+    if (!item1 || !item2) {
       return NextResponse.json(
-        { error: 'Both image1 and image2 payloads are required.' },
+        { error: 'Both item1 and item2 payloads are required.' },
         { status: 400 }
       );
     }
@@ -59,7 +59,7 @@ export async function POST(request) {
         'Content-Type': 'application/json',
         'X-API-Key': apiKey,
       },
-      body: JSON.stringify({ image1, image2 }),
+      body: JSON.stringify({ item1, item2 }),
       cache: 'no-store',
     });
 
@@ -90,10 +90,8 @@ export async function POST(request) {
   } catch (error) {
     console.error('Unexpected connections comparison proxy failed:', error);
     return NextResponse.json(
-      { error: 'Failed to compare images.', details: error.message },
+      { error: 'Failed to compare items.', details: error.message },
       { status: 500 }
     );
   }
 }
-
-

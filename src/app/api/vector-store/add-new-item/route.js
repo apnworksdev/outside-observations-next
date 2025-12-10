@@ -1,12 +1,16 @@
 /**
- * Next.js API Route: /api/vector-store/get-all-images
+ * Next.js API Route: /api/vector-store/add-new-item
  * 
- * This route acts as a secure proxy to get all images from the vector store.
- * Keeps the API key server-side.
+ * This route acts as a secure proxy between the Sanity Studio client component
+ * and the external vector store service. It handles:
+ * 
+ * 1. Server-side API key management (keeps key out of client-side code)
+ * 2. Request formatting for the vector store API (calls /api/vector_store/add_new_item)
+ * 3. Error handling and response formatting
  */
 import { NextResponse } from 'next/server'
 
-const VECTOR_STORE_PATH = '/api/vector_store/get_all_images';
+const VECTOR_STORE_PATH = '/api/vector_store/add_new_item';
 
 // Helper function to safely construct API URLs
 function buildApiUrl(path) {
@@ -20,7 +24,7 @@ function buildApiUrl(path) {
   return `${cleanBase}${cleanPath}`;
 }
 
-export async function GET() {
+export async function POST(request) {
   try {
     // Get API key from server-side environment variable
     const apiKey = process.env.OUTSIDE_OBSERVATIONS_API_KEY
@@ -40,13 +44,30 @@ export async function GET() {
       )
     }
 
-    // Forward request to external vector store service
     const vectorStoreUrl = buildApiUrl(VECTOR_STORE_PATH);
+
+    // Parse request body
+    const body = await request.json()
+    const { id, description } = body
+
+    if (!id || !description) {
+      return NextResponse.json(
+        { error: 'Both id and description are required' },
+        { status: 400 }
+      )
+    }
+
+    // Forward request to external vector store service
     const response = await fetch(vectorStoreUrl, {
-      method: 'GET',
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'X-API-Key': apiKey
-      }
+      },
+      body: JSON.stringify({
+        id: id,
+        description: description
+      })
     })
 
     // Handle errors from vector store service

@@ -20,7 +20,7 @@ export async function POST(request) {
    * Responsibilities:
    *   - Validate presence of the shared API key.
    *   - Guard against malformed payloads (non-string queries).
-   *   - Forward the request with query and maxImages parameters.
+   *   - Forward the request with query and maxItems parameters.
    *   - Normalise upstream failures into structured JSON responses so the client can
    *     render friendly fallbacks without exposing implementation details.
    */
@@ -60,7 +60,7 @@ export async function POST(request) {
       );
     }
 
-    const { query, maxImages = 10 } = requestBody;
+    const { query, maxItems = 10 } = requestBody;
 
     if (!query || typeof query !== 'string') {
       return NextResponse.json(
@@ -69,7 +69,7 @@ export async function POST(request) {
       );
     }
 
-    // The external API only accepts query and maxImages (no minSimilarity)
+    // The external API only accepts query and maxItems (no minSimilarity)
     const response = await fetch(vectorStoreQueryUrl, {
       method: 'POST',
       headers: {
@@ -78,7 +78,7 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         query,
-        maxImages,
+        maxItems,
       }),
       cache: 'no-store',
     });

@@ -47,7 +47,7 @@ export default async function UnexpectedConnectionsPage() {
   const comparisonPayload =
     preparedPosters.length >= 2
       ? {
-          image1: {
+          item1: {
             id: preparedPosters[0].entry._id,
             name: preparedPosters[0].entry.artName ?? 'Archive Entry',
             description:
@@ -55,7 +55,7 @@ export default async function UnexpectedConnectionsPage() {
               `Archive entry ${preparedPosters[0].entry.artName ?? preparedPosters[0].entry._id}`,
             mood_tags: preparedPosters[0].moodTags,
           },
-          image2: {
+          item2: {
             id: preparedPosters[1].entry._id,
             name: preparedPosters[1].entry.artName ?? 'Archive Entry',
             description:

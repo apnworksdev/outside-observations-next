@@ -1,16 +1,13 @@
 /**
- * Next.js API Route: /api/vector-store/add-image
+ * Next.js API Route: /api/vector-store/get-all-items
  * 
- * This route acts as a secure proxy between the Sanity Studio client component
- * and the external vector store service. It handles:
- * 
- * 1. Server-side API key management (keeps key out of client-side code)
- * 2. Request formatting for the vector store API
- * 3. Error handling and response formatting
+ * This route acts as a secure proxy to get all items from the vector store.
+ * Calls external API: /api/vector_store/get_all_items
+ * Keeps the API key server-side.
  */
 import { NextResponse } from 'next/server'
 
-const VECTOR_STORE_PATH = '/api/vector_store/add_new_image';
+const VECTOR_STORE_PATH = '/api/vector_store/get_all_items';
 
 // Helper function to safely construct API URLs
 function buildApiUrl(path) {
@@ -24,7 +21,7 @@ function buildApiUrl(path) {
   return `${cleanBase}${cleanPath}`;
 }
 
-export async function POST(request) {
+export async function GET() {
   try {
     // Get API key from server-side environment variable
     const apiKey = process.env.OUTSIDE_OBSERVATIONS_API_KEY
@@ -44,30 +41,13 @@ export async function POST(request) {
       )
     }
 
-    const vectorStoreUrl = buildApiUrl(VECTOR_STORE_PATH);
-
-    // Parse request body
-    const body = await request.json()
-    const { id, description } = body
-
-    if (!id || !description) {
-      return NextResponse.json(
-        { error: 'Both id and description are required' },
-        { status: 400 }
-      )
-    }
-
     // Forward request to external vector store service
+    const vectorStoreUrl = buildApiUrl(VECTOR_STORE_PATH);
     const response = await fetch(vectorStoreUrl, {
-      method: 'POST',
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'X-API-Key': apiKey
-      },
-      body: JSON.stringify({
-        id: id,
-        description: description
-      })
+      }
     })
 
     // Handle errors from vector store service
@@ -104,4 +84,3 @@ export async function POST(request) {
     )
   }
 }
-

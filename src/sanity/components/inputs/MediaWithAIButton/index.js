@@ -152,8 +152,8 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
       const mediaFile = new File([mediaBlob], filename, {type: mediaMimeType})
 
       const formData = new FormData()
-      // API accepts both image and video in the "image" key
-      formData.append('image', mediaFile)
+      // API accepts both image and video in the "file" key
+      formData.append('file', mediaFile)
 
       const response = await fetch('/api/generate-metadata', {
         method: 'POST',

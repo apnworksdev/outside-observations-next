@@ -1,12 +1,13 @@
 /**
- * Next.js API Route: /api/vector-store/delete-image/[id]
+ * Next.js API Route: /api/vector-store/delete-item/[id]
  * 
- * This route acts as a secure proxy to delete an image from the vector store.
+ * This route acts as a secure proxy to delete an item from the vector store.
+ * Calls external API: /api/vector_store/delete_one_item/:id
  * Keeps the API key server-side.
  */
 import { NextResponse } from 'next/server'
 
-const VECTOR_STORE_PATH = '/api/vector_store/delete_one_image';
+const VECTOR_STORE_PATH = '/api/vector_store/delete_one_item';
 
 // Helper function to safely construct API URLs
 function buildApiUrl(path, id = null) {
@@ -42,11 +43,11 @@ export async function DELETE(request, { params }) {
       )
     }
 
-    // Get image ID from route parameters (await params in Next.js 15+)
+    // Get item ID from route parameters (await params in Next.js 15+)
     const { id } = await params
     if (!id) {
       return NextResponse.json(
-        { error: 'Image ID is required' },
+        { error: 'Item ID is required' },
         { status: 400 }
       )
     }
