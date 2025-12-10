@@ -1,74 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import SanityImage from '@/sanity/components/SanityImage';
 import { useArchiveSearchState } from '@/app/_components/Archive/ArchiveSearchStateProvider';
-import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
+import { loadChatFromStorage } from '@/app/_helpers/chatStorage';
+import { useChatStorage } from '@/app/_hooks/useChatStorage';
 import styles from '@app/_assets/home.module.css';
 import TypewriterMessage from './TypewriterMessage';
-
-// Component for the Explore link with hover prefetching
-function ExploreArchiveLink({ 
-  messageId, 
-  imageIds, 
-  searchQuery, 
-  imageEntries, 
-  navigatingMessageId, 
-  onTriggerSearch 
-}) {
-  const prefetchHandlers = usePrefetchOnHover('/archive', 300);
-
-  return (
-    <Link
-      href="/archive"
-      prefetch={true}
-      onClick={(e) => {
-        e.preventDefault();
-        if (imageIds && searchQuery) {
-          onTriggerSearch(messageId, imageIds, searchQuery);
-        }
-      }}
-      className={`${styles.chatBoxMessage} ${styles.chatBoxImagesMessage} ${navigatingMessageId === messageId ? styles.chatBoxImagesMessageLoading : ''}`}
-      data-sender="bot"
-      aria-label={`Explore ${imageEntries.length} archive entries`}
-      aria-busy={navigatingMessageId === messageId}
-      {...prefetchHandlers}
-    >
-      <div className={styles.chatBoxImagesMessageImages}>
-        {imageEntries.slice(0, 4).map((entry) => {
-          const imageWidth = 300;
-          const imageHeight = entry?.poster?.dimensions?.aspectRatio
-            ? Math.round(imageWidth / entry.poster.dimensions.aspectRatio)
-            : imageWidth;
-
-          return (
-            <div key={entry._id} className={styles.chatBoxImageContainer}>
-              <SanityImage
-                image={entry.poster}
-                alt={entry.artName || 'Archive entry poster'}
-                width={imageWidth}
-                height={imageHeight}
-                className={styles.chatBoxImage}
-                loading="lazy"
-                blurDataURL={entry?.poster?.lqip || undefined}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className={styles.chatBoxImagesMessageFooter}>
-        <p className={styles.chatBoxImagesMessageFooterText}>
-          Explore...
-        </p>
-        <p className={styles.chatBoxImagesMessageFooterText}>
-          {imageEntries.length}
-        </p>
-      </div>
-    </Link>
-  );
-}
+import ExploreArchiveLink from './ExploreArchiveLink';
 
 export default function ChatBox() {
   const [inputValue, setInputValue] = useState('');
@@ -85,15 +24,36 @@ export default function ChatBox() {
 
   const messageIdRef = useRef(0);
   
-  const [messages, setMessages] = useState([
-    {
-      id: messageIdRef.current++,
-      text: 'Welcome to Outside Observations®, how can I help you?',
-      sender: 'bot',
-      isLoading: false
+  // Initialize messages - try to load from localStorage first
+  const [messages, setMessages] = useState(() => {
+    // Try to load saved chat on initial mount
+    if (typeof window !== 'undefined') {
+      const sessionId = sessionStorage.getItem('visitor_session_id');
+      if (sessionId) {
+        const savedMessages = loadChatFromStorage(sessionId);
+        if (savedMessages && savedMessages.length > 0) {
+          // Restore messageIdRef to be higher than the highest saved message ID
+          const ids = savedMessages.map(msg => msg.id || 0).filter(id => typeof id === 'number');
+          const maxId = ids.length > 0 ? Math.max(...ids) : 0;
+          messageIdRef.current = maxId + 1;
+          // Mark all loaded messages as loaded (skip animation)
+          return savedMessages.map(msg => ({ ...msg, isLoaded: true }));
+        }
+      }
     }
-  ]);
+    // Default welcome message if no saved chat
+    return [
+      {
+        id: messageIdRef.current++,
+        text: 'Welcome to Outside Observations®, how can I help you?',
+        sender: 'bot',
+        isLoading: false
+      }
+    ];
+  });
 
+  // Use custom hook for chat storage persistence
+  useChatStorage(messages, setMessages, messageIdRef);
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
@@ -165,7 +125,7 @@ export default function ChatBox() {
     router.push('/archive');
   };
 
-  // Reset loading state when component unmounts or route changes
+  // Reset loading state on unmount
   useEffect(() => {
     return () => {
       setNavigatingMessageId(null);
@@ -410,36 +370,41 @@ export default function ChatBox() {
                 <div data-sender={message.sender} className={styles.chatBoxMessage}>
                   <p className={styles.chatBoxMessageText}>
                     {message.sender === 'bot' ? (
-                      <TypewriterMessage
-                        text={message.text}
-                        isLoading={message.isLoading}
-                        onComplete={
-                          hasImages && !imagesAlreadyAdded
-                            ? () => {
-                                // Mark images as added for this message
-                                imagesMessageAddedRef.current.add(messageKey);
-                                // Add a new message with images after typewriter completes
-                                setMessages((prevMessages) => {
-                                  const currentIndex = prevMessages.findIndex((m) => m.id === messageKey);
-                                  if (currentIndex === -1) return prevMessages;
-                                  
-                                  const newMessages = [...prevMessages];
-                                  // Insert images message right after the current text message
-                                  newMessages.splice(currentIndex + 1, 0, {
-                                    id: messageIdRef.current++,
-                                    sender: 'bot',
-                                    isLoading: false,
-                                    imageEntries: message.imageEntries,
-                                    imageIds: message.imageIds,
-                                    searchQuery: message.searchQuery,
-                                    isImageMessage: true
+                      // Skip animation for loaded messages - show text immediately
+                      message.isLoaded ? (
+                        message.text
+                      ) : (
+                        <TypewriterMessage
+                          text={message.text}
+                          isLoading={message.isLoading}
+                          onComplete={
+                            hasImages && !imagesAlreadyAdded
+                              ? () => {
+                                  // Mark images as added for this message
+                                  imagesMessageAddedRef.current.add(messageKey);
+                                  // Add a new message with images after typewriter completes
+                                  setMessages((prevMessages) => {
+                                    const currentIndex = prevMessages.findIndex((m) => m.id === messageKey);
+                                    if (currentIndex === -1) return prevMessages;
+                                    
+                                    const newMessages = [...prevMessages];
+                                    // Insert images message right after the current text message
+                                    newMessages.splice(currentIndex + 1, 0, {
+                                      id: messageIdRef.current++,
+                                      sender: 'bot',
+                                      isLoading: false,
+                                      imageEntries: message.imageEntries,
+                                      imageIds: message.imageIds,
+                                      searchQuery: message.searchQuery,
+                                      isImageMessage: true
+                                    });
+                                    return newMessages;
                                   });
-                                  return newMessages;
-                                });
-                              }
-                            : undefined
-                        }
-                      />
+                                }
+                              : undefined
+                          }
+                        />
+                      )
                     ) : (
                       message.text
                     )}
