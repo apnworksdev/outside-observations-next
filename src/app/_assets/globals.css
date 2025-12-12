@@ -67,26 +67,13 @@ body {
   overflow: hidden;
   /* Hide content until React has hydrated and view preference is loaded */
   opacity: 0;
-  transition: opacity 0.2s ease-in;
+  /* GSAP handles all transitions now */
+  /* transition: opacity 0.2s ease-in; */
 }
 
-/* Show content after hydration (except home page which has its own fade-in) */
-body.hydrated:not([data-page="home"]) {
+/* Show content after hydration (except home page - GSAP controls it completely) */
+body.hydrated {
   opacity: 1;
-}
-
-/* Home page has its own fade-in logic */
-body[data-page="home"] {
-  opacity: 0;
-  transition: opacity var(--transition-time) var(--transition-effect);
-}
-
-body[data-page="home"].blur-ready {
-  opacity: 1;
-}
-
-body.fade-out {
-  opacity: 0;
 }
 
 ul,
@@ -241,6 +228,7 @@ body[data-page="archive-entry"] {
 
 body[data-page="archive-entry"] .container {
   opacity: 0;
-  transition: opacity var(--transition-time) var(--transition-effect);
+  /* GSAP handles all transitions now */
+  /* transition: opacity var(--transition-time) var(--transition-effect); */
   pointer-events: none;
 }

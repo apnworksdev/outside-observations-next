@@ -4,6 +4,16 @@ import { resolvePageType } from '@/lib/resolvePageType'
 export function middleware(request) {
   const pathname = request.nextUrl.pathname
 
+  // Redirect home page to archive if user has visited before (check cookie)
+  // This ensures first-time visitors see the home page animation, while returning
+  // visitors are immediately redirected to archive without any flash of content
+  if (pathname === '/') {
+    const hasVisitedCookie = request.cookies.get('has_visited_website')
+    if (hasVisitedCookie?.value === 'true') {
+      return NextResponse.redirect(new URL('/archive', request.url))
+    }
+  }
+
   // Redirect /studio to Archive entries list
   if (pathname === '/studio' || pathname === '/studio/structure') {
     return NextResponse.redirect(new URL('/studio/structure/archive', request.url))
@@ -15,7 +25,8 @@ export function middleware(request) {
     const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1')
     
     if (!isLocalhost) {
-      return NextResponse.redirect(new URL('/', request.url))
+      // Redirect directly to archive to avoid double redirect (home redirects to archive for returning visitors)
+      return NextResponse.redirect(new URL('/archive', request.url))
     }
   }
 

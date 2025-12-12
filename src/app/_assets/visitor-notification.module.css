@@ -11,7 +11,8 @@
   color: var(--bg-color);
   padding: 4px 5px 5px 5px;
   border-radius: var(--border-radius);
-  transition: right 0.2s ease;
+  /* GSAP handles all transitions now */
+  /* transition: right 0.2s ease; */
 }
 
 .visitorNotificationToast[data-navigation-closed="true"][data-navigation-hovered="true"] {

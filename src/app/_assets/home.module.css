@@ -63,6 +63,29 @@
   top: calc(50% + -70.71px);
 }
 
+.firstVisitText {
+  font-size: var(--font-size);
+  font-weight: var(--font-weight);
+  color: var(--fg-color);
+  text-align: center;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+.firstVisitTextCreate,
+.firstVisitTextInvest {
+  text-transform: uppercase;
+}
+
+.firstVisitTextLong {
+  text-transform: none;
+  width: calc(var(--column-width) * 4 + var(--column-gap) * 3);
+  text-align: left;
+}
+
 /* ------------------------------------------------------------ */
 
 /*                          CHAT BOX                           */
@@ -134,7 +157,8 @@
   padding: calc(var(--gap) * 2);
   width: 50%;
   position: relative;
-  transition: opacity 0.2s ease;
+  /* GSAP handles all transitions now - chat box images message */
+  /* transition: opacity 0.2s ease; */
 }
 
 .chatBoxImagesMessageLoading {
@@ -253,21 +277,18 @@
 
 .chatBoxLine {
   position: absolute;
-  width: 200vw;
+  width: 100vw;
   height: .5px;
   background-color: var(--column-line-color);
+  left: calc((var(--column-width) * 5 + var(--column-gap) * 5 + var(--padding)) * -1);
 }
 
 .topLine {
   top: -4.5px;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 .bottomLine {
   bottom: -4.5px;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 @media (max-width: 768px) {

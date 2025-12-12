@@ -6,7 +6,8 @@
   margin-top: var(--archive-container-top-margin);
   position: relative;
   z-index: 1;
-  transition: margin-top var(--transition-time) var(--transition-effect);
+  /* GSAP handles all transitions now */
+  /* transition: margin-top var(--transition-time) var(--transition-effect); */
 }
 
 .containerContent {
@@ -109,7 +110,8 @@
   cursor: pointer;
   color: inherit;
   font: inherit;
-  transition: background-color var(--transition-time) var(--transition-effect), color var(--transition-time) var(--transition-effect);
+  /* GSAP handles all transitions now */
+  /* transition: background-color var(--transition-time) var(--transition-effect), color var(--transition-time) var(--transition-effect); */
 }
 
 .containerLegendColumnButton:hover,
@@ -188,7 +190,8 @@
   bottom: calc(100% + 2px);
   left: 3px;
   opacity: 0;
-  transition: opacity var(--transition-time) var(--transition-effect);
+  /* GSAP handles all transitions now */
+  /* transition: opacity var(--transition-time) var(--transition-effect); */
   z-index: 1;
   pointer-events: none;
 }
@@ -207,7 +210,8 @@
   
   .itemContainer:hover .itemPoster {
     opacity: 1;
-    transition-delay: var(--transition-delay);
+    /* GSAP handles all transitions now */
+    /* transition-delay: var(--transition-delay); */
   }
 }
 
@@ -275,7 +279,8 @@
   align-items: flex-end;
   padding: var(--padding);
   opacity: 0;
-  transition: opacity var(--transition-time) var(--transition-effect);
+  /* GSAP handles all transitions now */
+  /* transition: opacity var(--transition-time) var(--transition-effect); */
   pointer-events: none;
 }
 

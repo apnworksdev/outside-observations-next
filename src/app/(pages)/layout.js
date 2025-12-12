@@ -5,6 +5,7 @@ import HeaderNav from '@app/_components/HeaderNav';
 import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
 import BodyHydrationGuard from '@/app/_helpers/BodyHydrationGuard';
 import VisitorTracker from '@/app/_helpers/VisitorTracker';
+import WebsiteVisitTracker from '@/app/_helpers/WebsiteVisitTracker';
 import StudioLayoutWrapper from '@/app/_components/StudioLayoutWrapper';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveSearchStateProvider } from '@/app/_components/Archive/ArchiveSearchStateProvider';
@@ -43,7 +44,7 @@ export default function RootLayout({ children }) {
             <ArchiveSearchStateProvider>
               <ErrorBoundary>
                 <div data-hide-on-studio="true">
-                  <div className={styles.linesGrid}>
+                  <div className={styles.linesGrid} data-first-visit-animate="lines">
                     {Array.from({ length: 5 }).map((_, index) => (
                       <div className={styles.linesGridItem} key={index} />
                     ))}
@@ -57,11 +58,14 @@ export default function RootLayout({ children }) {
                 <VisitorTracker />
               </ErrorBoundary>
               <ErrorBoundary>
+                <WebsiteVisitTracker />
+              </ErrorBoundary>
+              <ErrorBoundary>
                 <StudioLayoutWrapper />
               </ErrorBoundary>
               <ErrorBoundary>
                 <PageTransition>
-                  <div data-hide-on-studio="true">
+                  <div data-hide-on-studio="true" data-first-visit-animate="header">
                     <HeaderNav />
                   </div>
                   {children}

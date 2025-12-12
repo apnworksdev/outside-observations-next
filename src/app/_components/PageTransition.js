@@ -1,14 +1,19 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { gsap } from 'gsap';
+import CircleAnimation from '@/app/_components/Home/CircleAnimation';
+import { isFirstWebsiteVisit } from '@/app/_helpers/visitTracker';
 
 /**
- * PageTransition - Step 2: Fade out content before navigation
+ * PageTransition - Handles page transitions and initial load animations
  * 
- * Nav stays visible, only content fades out
- * After content fade out, nav can animate (handled by CSS via data-page)
+ * Responsibilities:
+ * - Fade out content before navigation (nav stays visible)
+ * - Show CircleAnimation loader on first website entry (except home page first visit)
+ * - Handle content fade-in after loader completes
+ * - Manage header visibility for home page
  */
 export default function PageTransition({ children }) {
   const navRef = useRef(null);
@@ -18,37 +23,65 @@ export default function PageTransition({ children }) {
   const previousPathnameRef = useRef(pathname);
   const isNavigatingRef = useRef(false);
   const isInitialMountRef = useRef(true);
+  const [showCircleLoader, setShowCircleLoader] = useState(false);
+  const [loaderComplete, setLoaderComplete] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
-  // Separate nav (first child) and content (rest)
-  const childrenArray = Array.isArray(children) ? children : [children];
-  const navChild = childrenArray[0]; // First child is nav
-  const contentChildren = childrenArray.slice(1); // Rest is content
+  // Memoize children separation to avoid recalculation on every render
+  const { navChild, contentChildren } = useMemo(() => {
+    const childrenArray = Array.isArray(children) ? children : [children];
+    return {
+      navChild: childrenArray[0], // First child is nav
+      contentChildren: childrenArray.slice(1), // Rest is content
+    };
+  }, [children]);
 
-  // Handle initial visibility and fade-in
+  // Determine if we should show CircleAnimation (client-side only to avoid hydration issues)
   useEffect(() => {
-    const body = document.body;
-    const pageType = body.getAttribute('data-page');
-    const content = contentRef.current;
+    setIsClient(true);
     
-    if (pageType === 'home') {
-      requestAnimationFrame(() => {
-        if (body && !body.classList.contains('blur-ready')) {
-          body.classList.add('blur-ready');
-        }
-      });
+    // Only check on initial mount
+    if (!isInitialMountRef.current) return;
+    
+    const isHomePage = pathname === '/';
+    let shouldShow = false;
+    
+    if (isHomePage) {
+      // On home page: Middleware redirects non-first-time visitors to /archive,
+      // so this code will only execute for first-time visitors.
+      // However, we keep the check as a fallback in case cookies are disabled
+      // and middleware check fails (defensive programming).
+      const isFirstVisit = isFirstWebsiteVisit();
+      shouldShow = !isFirstVisit;
+      
+      // For returning visitors on home (edge case: cookies disabled),
+      // ensure header is visible immediately
+      if (shouldShow) {
+        document.body.classList.add('home-animation-complete');
+      }
+    } else {
+      // Not home page - show CircleAnimation if it hasn't been shown this session
+      try {
+        const hasShownLoader = sessionStorage.getItem('circleLoaderShown') === 'true';
+        shouldShow = !hasShownLoader;
+      } catch {
+        // If sessionStorage fails, don't show loader
+        shouldShow = false;
+      }
     }
-
-    // Fade in content on initial mount
-    if (isInitialMountRef.current && content) {
-      gsap.set(content, { opacity: 0 });
-      gsap.to(content, {
-        opacity: 1,
-        duration: 0.4,
-        ease: 'power2.out',
-      });
-      isInitialMountRef.current = false;
+    
+    setShowCircleLoader(shouldShow);
+    
+    // Hide content initially if showing loader
+    if (shouldShow) {
+      const content = contentRef.current;
+      if (content) {
+        gsap.set(content, { opacity: 0 });
+      }
     }
-  }, []);
+    
+    isInitialMountRef.current = false;
+  }, [pathname]);
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -107,7 +140,31 @@ export default function PageTransition({ children }) {
     };
   }, [router, pathname]);
 
-  // Handle pathname change - fade in new content
+  // Handle CircleAnimation completion - fade in content and mark as shown
+  useEffect(() => {
+    if (!loaderComplete || !showCircleLoader) return;
+    
+    // Mark that CircleAnimation has been shown this session
+    try {
+      sessionStorage.setItem('circleLoaderShown', 'true');
+    } catch {
+      // Silently fail if sessionStorage is unavailable
+    }
+    
+    const content = contentRef.current;
+    if (content) {
+      gsap.to(content, {
+        opacity: 1,
+        duration: 0.4,
+        ease: 'power2.out',
+        onComplete: () => {
+          isNavigatingRef.current = false;
+        },
+      });
+    }
+  }, [loaderComplete, showCircleLoader]);
+
+  // Handle pathname change - fade in new content (no CircleAnimation on navigation)
   useEffect(() => {
     // Skip if pathname hasn't changed
     if (previousPathnameRef.current === pathname) {
@@ -120,13 +177,20 @@ export default function PageTransition({ children }) {
       return;
     }
 
+    // On navigation, don't show CircleAnimation (only shown on initial website entry)
+    setShowCircleLoader(false);
+    setLoaderComplete(false);
+
+    // Handle home page header visibility (defensive check in case cookies are disabled)
+    const isHomePage = pathname === '/';
+    if (isHomePage && !isFirstWebsiteVisit()) {
+      document.body.classList.add('home-animation-complete');
+    }
+
+    // Fade in new content
     const content = contentRef.current;
-    
     if (content) {
-      // Set initial state to opacity 0
       gsap.set(content, { opacity: 0 });
-      
-      // Fade in from opacity 0 to 1
       gsap.to(content, {
         opacity: 1,
         duration: 0.4,
@@ -140,12 +204,20 @@ export default function PageTransition({ children }) {
     previousPathnameRef.current = pathname;
   }, [pathname]);
 
+  const handleLoaderComplete = () => {
+    setLoaderComplete(true);
+  };
+
   return (
     <>
       {/* Nav - always visible, can be controlled for animations */}
       <div ref={navRef}>
         {navChild}
       </div>
+      {/* CircleAnimation loader - shows on all pages except home on first visit */}
+      {isClient && showCircleLoader && !loaderComplete && (
+        <CircleAnimation onComplete={handleLoaderComplete} />
+      )}
       {/* Content - fades in/out */}
       <div ref={contentRef}>
         {contentChildren}

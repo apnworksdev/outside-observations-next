@@ -12,7 +12,7 @@ export default function HeaderNav() {
     <header id="main-header" className={styles.header}>
       <div className={styles.navTitleContainer}>
         <div className={styles.navTitle}>
-          <Link href="/" className={styles.navBubble} data-transition="nav">
+          <Link href="/archive" className={styles.navBubble} data-transition="nav">
             O
             <span className={`${styles.navTitleSpan} ${styles.outside}`}>utside</span>
             O

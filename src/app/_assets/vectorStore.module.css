@@ -35,7 +35,8 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  /* GSAP handles all transitions now */
+  /* transition: background-color 0.2s; */
 }
 
 .refreshButton:hover:not(:disabled) {
@@ -137,7 +138,8 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  /* GSAP handles all transitions now */
+  /* transition: background-color 0.2s; */
 }
 
 .selectAllButton {
@@ -176,7 +178,8 @@
   border: 2px solid #e0e0e0;
   border-radius: 6px;
   word-break: break-all;
-  transition: all 0.2s;
+  /* GSAP handles all transitions now */
+  /* transition: all 0.2s; */
   cursor: pointer;
 }
 

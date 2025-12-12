@@ -69,7 +69,8 @@
 
 .number {
   opacity: 0.2;
-  transition: opacity var(--transition-time) var(--transition-effect);
+  /* GSAP handles all transitions now */
+  /* transition: opacity var(--transition-time) var(--transition-effect); */
 }
 
 .number.active {

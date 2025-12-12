@@ -24,33 +24,37 @@ export default function ChatBox() {
 
   const messageIdRef = useRef(0);
   
-  // Initialize messages - try to load from localStorage first
-  const [messages, setMessages] = useState(() => {
-    // Try to load saved chat on initial mount
-    if (typeof window !== 'undefined') {
-      const sessionId = sessionStorage.getItem('visitor_session_id');
-      if (sessionId) {
-        const savedMessages = loadChatFromStorage(sessionId);
-        if (savedMessages && savedMessages.length > 0) {
-          // Restore messageIdRef to be higher than the highest saved message ID
-          const ids = savedMessages.map(msg => msg.id || 0).filter(id => typeof id === 'number');
-          const maxId = ids.length > 0 ? Math.max(...ids) : 0;
-          messageIdRef.current = maxId + 1;
-          // Mark all loaded messages as loaded (skip animation)
-          return savedMessages.map(msg => ({ ...msg, isLoaded: true }));
-        }
-      }
+  // Initialize messages with default state (same on server and client to avoid hydration mismatch)
+  const [messages, setMessages] = useState([
+    {
+      id: 0,
+      text: 'Welcome to Outside Observations®, how can I help you?',
+      sender: 'bot',
+      isLoading: false
     }
-    // Default welcome message if no saved chat
-    return [
-      {
-        id: messageIdRef.current++,
-        text: 'Welcome to Outside Observations®, how can I help you?',
-        sender: 'bot',
-        isLoading: false
+  ]);
+  
+  // Load messages from localStorage after mount (client-side only)
+  useEffect(() => {
+    const sessionId = sessionStorage.getItem('visitor_session_id');
+    if (sessionId) {
+      const savedMessages = loadChatFromStorage(sessionId);
+      if (savedMessages && savedMessages.length > 0) {
+        // Restore messageIdRef to be higher than the highest saved message ID
+        const ids = savedMessages.map(msg => msg.id || 0).filter(id => typeof id === 'number');
+        const maxId = ids.length > 0 ? Math.max(...ids) : 0;
+        messageIdRef.current = maxId + 1;
+        // Mark all loaded messages as loaded (skip animation)
+        setMessages(savedMessages.map(msg => ({ ...msg, isLoaded: true })));
+      } else {
+        // Initialize messageIdRef if no saved messages
+        messageIdRef.current = 1;
       }
-    ];
-  });
+    } else {
+      // Initialize messageIdRef if no sessionId
+      messageIdRef.current = 1;
+    }
+  }, []);
 
   // Use custom hook for chat storage persistence
   useChatStorage(messages, setMessages, messageIdRef);
@@ -358,16 +362,22 @@ export default function ChatBox() {
   return (
     <div className={styles.chatBox}>
       <div ref={chatBoxContentRef} className={styles.chatBoxContent}>
-        {messages.map((message) => {
+        {messages.map((message, index) => {
           const messageKey = message.id;
           const hasImages = message.imageEntries && message.imageEntries.length > 0;
           const imagesAlreadyAdded = imagesMessageAddedRef.current.has(messageKey);
+          // Only add data attribute to the first message (index 0)
+          const isFirstMessage = index === 0;
           
           return (
             <div key={message.id} className={styles.chatBoxMessageContainer}>
               {/* Text message */}
               {!message.isImageMessage && (
-                <div data-sender={message.sender} className={styles.chatBoxMessage}>
+                <div 
+                  data-sender={message.sender} 
+                  className={styles.chatBoxMessage}
+                  {...(isFirstMessage && { 'data-first-visit-animate': 'first-message' })}
+                >
                   <p className={styles.chatBoxMessageText}>
                     {message.sender === 'bot' ? (
                       // Skip animation for loaded messages - show text immediately
@@ -428,7 +438,7 @@ export default function ChatBox() {
         })}
       </div>
       <div className={styles.chatBoxFormContainer}>
-        <form onSubmit={handleSubmit} className={styles.chatBoxForm}>
+        <form onSubmit={handleSubmit} className={styles.chatBoxForm} data-first-visit-animate="form-element">
           <textarea
             ref={textareaRef}
             className={styles.chatBoxFormInput}
@@ -450,12 +460,12 @@ export default function ChatBox() {
             <span>Send</span>
           </button>
         </form>
-        <div className={`${styles.chatBoxLine} ${styles.topLine}`} />
-        <div className={`${styles.chatBoxLine} ${styles.bottomLine}`} />
-        <div className={`${styles.chatBoxCircle} ${styles.topRightCircle}`} />
-        <div className={`${styles.chatBoxCircle} ${styles.bottomRightCircle}`} />
-        <div className={`${styles.chatBoxCircle} ${styles.bottomLeftCircle}`} />
-        <div className={`${styles.chatBoxCircle} ${styles.topLeftCircle}`} />
+        <div className={`${styles.chatBoxLine} ${styles.topLine}`} data-first-visit-animate="form-line" />
+        <div className={`${styles.chatBoxLine} ${styles.bottomLine}`} data-first-visit-animate="form-line" />
+        <div className={`${styles.chatBoxCircle} ${styles.topRightCircle}`} data-first-visit-animate="form-element" />
+        <div className={`${styles.chatBoxCircle} ${styles.bottomRightCircle}`} data-first-visit-animate="form-element" />
+        <div className={`${styles.chatBoxCircle} ${styles.bottomLeftCircle}`} data-first-visit-animate="form-element" />
+        <div className={`${styles.chatBoxCircle} ${styles.topLeftCircle}`} data-first-visit-animate="form-element" />
       </div>
     </div>
   );

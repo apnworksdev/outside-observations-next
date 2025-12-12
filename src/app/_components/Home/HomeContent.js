@@ -1,16 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import CircleAnimation from '@/app/_components/Home/CircleAnimation';
+import FirstVisitAnimation from '@/app/_components/Home/FirstVisitAnimation';
 import ChatBox from '@/app/_components/Home/ChatBox';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { HomeErrorFallback, ChatErrorFallback } from '@/app/_components/ErrorFallbacks';
 import styles from '@app/_assets/error.module.css';
 
+/**
+ * HomeContent - Home page content component
+ * 
+ * Note: Middleware redirects non-first-time visitors to /archive before this component renders.
+ * Therefore, if this component renders, it's guaranteed to be a first-time visitor.
+ */
 export default function HomeContent() {
   const [animationComplete, setAnimationComplete] = useState(false);
 
-  // Add class to body when animation completes
+  const handleAnimationComplete = () => {
+    setAnimationComplete(true);
+  };
+
+  // Manage body class for CSS-based header visibility control
   useEffect(() => {
     if (animationComplete) {
       document.body.classList.add('home-animation-complete');
@@ -27,32 +37,29 @@ export default function HomeContent() {
   return (
     <ErrorBoundary fallback={HomeErrorFallback}>
       <div>
-        {!animationComplete && (
-          <ErrorBoundary
-            fallback={(error, reset) => (
-              <div className={styles.container}>
-                <p className={styles.message}>Animation failed to load. Starting chat interface...</p>
-                <button
-                  onClick={() => {
-                    reset();
-                    setAnimationComplete(true);
-                  }}
-                  className={styles.button}
-                  type="button"
-                >
-                  Skip animation
-                </button>
-              </div>
-            )}
-          >
-            <CircleAnimation onComplete={() => setAnimationComplete(true)} />
-          </ErrorBoundary>
-        )}
-        {animationComplete && (
-          <ErrorBoundary fallback={ChatErrorFallback}>
-            <ChatBox />
-          </ErrorBoundary>
-        )}
+        <ErrorBoundary
+          fallback={(error, reset) => (
+            <div className={styles.container}>
+              <p className={styles.message}>Animation failed to load. Starting chat interface...</p>
+              <button
+                onClick={() => {
+                  reset();
+                  handleAnimationComplete();
+                }}
+                className={styles.button}
+                type="button"
+              >
+                Skip animation
+              </button>
+            </div>
+          )}
+        >
+          <FirstVisitAnimation onComplete={handleAnimationComplete}>
+            <ErrorBoundary fallback={ChatErrorFallback}>
+              <ChatBox />
+            </ErrorBoundary>
+          </FirstVisitAnimation>
+        </ErrorBoundary>
       </div>
     </ErrorBoundary>
   );

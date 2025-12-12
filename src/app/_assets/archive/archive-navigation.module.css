@@ -17,11 +17,12 @@
   justify-content: center;
   background-color: var(--fg-color-75);
   border-radius: var(--border-radius);
-  transition:
+  /* GSAP handles all transitions now */
+  /* transition:
   width var(--transition-time) var(--transition-effect),
   height var(--transition-time) var(--transition-effect),
   transform var(--transition-time) var(--transition-effect),
-  opacity var(--transition-time) var(--transition-effect);
+  opacity var(--transition-time) var(--transition-effect); */
   transform-origin: bottom right;
   mix-blend-mode: darken;
 }
@@ -93,7 +94,8 @@
   left: 50%;
   transform-origin: center center;
   transform: translate(-50%, -50%);
-  transition: width var(--transition-time) var(--transition-effect), height var(--transition-time) var(--transition-effect), transform var(--transition-time) var(--transition-effect);
+  /* GSAP handles all transitions now */
+  /* transition: width var(--transition-time) var(--transition-effect), height var(--transition-time) var(--transition-effect), transform var(--transition-time) var(--transition-effect); */
 }
 
 .archiveNavigation[data-state='open'] .archiveNavigationButton {
@@ -134,8 +136,9 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  transition: opacity 0.22s var(--transition-effect);
-  transition-delay: 0s;
+  /* GSAP handles all transitions now */
+  /* transition: opacity 0.22s var(--transition-effect); */
+  /* transition-delay: 0s; */
   color: var(--bg-color);
   max-width: 100px;
   text-align: center;
@@ -151,9 +154,10 @@
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--white-color));
   opacity: 0;
   visibility: hidden;
-  transition:
+  /* GSAP handles all transitions now */
+  /* transition:
     opacity var(--transition-time) var(--transition-effect),
-    visibility var(--transition-time) var(--transition-effect);
+    visibility var(--transition-time) var(--transition-effect); */
   z-index: -1;
 }
 
@@ -164,17 +168,20 @@
 
 .archiveNavigationLabel[data-visibility='hidden'] {
   opacity: 0;
-  transition-delay: 0s;
+  /* GSAP handles all transitions now */
+  /* transition-delay: 0s; */
 }
 
 .archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='true'] {
   opacity: 1;
-  transition-delay: 0.22s;
+  /* GSAP handles all transitions now */
+  /* transition-delay: 0.22s; */
 }
 
 .archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='false'] {
   opacity: 1;
-  transition-delay: 0s;
+  /* GSAP handles all transitions now */
+  /* transition-delay: 0s; */
 }
 
 .archiveNavigationPanel {
@@ -185,10 +192,11 @@
   pointer-events: none;
   overflow: hidden;
   transform: translateY(8px);
-  transition:
+  /* GSAP handles all transitions now */
+  /* transition:
     opacity 160ms var(--transition-effect),
     transform 160ms var(--transition-effect),
-    max-height 160ms var(--transition-effect);
+    max-height 160ms var(--transition-effect); */
   align-self: flex-end;
 }
 
@@ -261,7 +269,8 @@
 .archiveNavigationSearchInput:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--bg-color);
   -webkit-box-shadow: 0 0 0px 1000px transparent inset;
-  transition: background-color 5000s ease-in-out 0s;
+  /* GSAP handles all transitions now - note: this was a very long transition (5000s) */
+  /* transition: background-color 5000s ease-in-out 0s; */
 }
 
 .archiveNavigationSearchButton {
@@ -316,7 +325,8 @@
   border: .25px solid var(--bg-color);
   background: transparent;
   flex-shrink: 0;
-  transition: background-color var(--transition-time) var(--transition-effect);
+  /* GSAP handles all transitions now */
+  /* transition: background-color var(--transition-time) var(--transition-effect); */
 }
 
 .archiveNavigationPanelTagIndicatorActive {
@@ -347,7 +357,8 @@
     height: calc(var(--close-archive-button-size) + var(--padding));
     opacity: 1;
     visibility: visible;
-    transition: height var(--transition-time) var(--transition-effect);
+    /* GSAP handles all transitions now */
+    /* transition: height var(--transition-time) var(--transition-effect); */
   }
 
   .archiveNavigation[data-state='open'] + .archiveNavigationGradient {
