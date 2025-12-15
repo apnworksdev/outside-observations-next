@@ -17,12 +17,11 @@
   justify-content: center;
   background-color: var(--fg-color-75);
   border-radius: var(--border-radius);
-  /* GSAP handles all transitions now */
-  /* transition:
-  width var(--transition-time) var(--transition-effect),
-  height var(--transition-time) var(--transition-effect),
-  transform var(--transition-time) var(--transition-effect),
-  opacity var(--transition-time) var(--transition-effect); */
+  transition:
+    width var(--transition-time) var(--transition-effect),
+    height var(--transition-time) var(--transition-effect),
+    transform var(--transition-time) var(--transition-effect),
+    opacity var(--transition-time) var(--transition-effect);
   transform-origin: bottom right;
   mix-blend-mode: darken;
 }
@@ -88,46 +87,41 @@
   height: 7px;
   background-color: var(--bg-color);
   border-radius: 50%;
-  --star-radius: 130%;
+  --star-radius: 170%;
   --scale-factor: 1;
   top: 50%;
   left: 50%;
   transform-origin: center center;
   transform: translate(-50%, -50%);
-  /* GSAP handles all transitions now */
-  /* transition: width var(--transition-time) var(--transition-effect), height var(--transition-time) var(--transition-effect), transform var(--transition-time) var(--transition-effect); */
+  transition: width var(--transition-time) var(--transition-effect), height var(--transition-time) var(--transition-effect), transform var(--transition-time) var(--transition-effect);
 }
 
 .archiveNavigation[data-state='open'] .archiveNavigationButton {
-  --star-radius: 540%;
+  --star-radius: 740%;
   width: 14px;
   height: 14px;
 }
 
 @media (hover: hover) {
   .archiveNavigation[data-state='open'] .archiveNavigationButton:hover {
-    --scale-factor: 1.5;
+    --scale-factor: 1.8;
   }
 }
 
 .archiveNavigationButtonSearch {
-  transform: translate(-50%, -50%) translateY(calc(-1 * var(--star-radius))) scale(var(--scale-factor));
-}
-
-.archiveNavigationButtonLive {
-  transform: translate(-50%, -50%) translate(calc(-0.951 * var(--star-radius)), calc(-0.309 * var(--star-radius))) scale(var(--scale-factor));
-}
-
-.archiveNavigationButtonContinue {
-  transform: translate(-50%, -50%) translate(calc(-0.588 * var(--star-radius)), calc(0.809 * var(--star-radius))) scale(var(--scale-factor));
-}
-
-.archiveNavigationButtonUnexpected {
-  transform: translate(-50%, -50%) translate(calc(0.588 * var(--star-radius)), calc(0.809 * var(--star-radius))) scale(var(--scale-factor));
+  transform: translate(-50%, -50%) translate(calc(-0.5 * var(--star-radius)), calc(-0.5 * var(--star-radius))) scale(var(--scale-factor));
 }
 
 .archiveNavigationButtonMood {
-  transform: translate(-50%, -50%) translate(calc(0.951 * var(--star-radius)), calc(-0.309 * var(--star-radius))) scale(var(--scale-factor));
+  transform: translate(-50%, -50%) translate(calc(0.5 * var(--star-radius)), calc(-0.5 * var(--star-radius))) scale(var(--scale-factor));
+}
+
+.archiveNavigationButtonUnexpected {
+  transform: translate(-50%, -50%) translate(calc(-0.5 * var(--star-radius)), calc(0.5 * var(--star-radius))) scale(var(--scale-factor));
+}
+
+.archiveNavigationButtonLive {
+  transform: translate(-50%, -50%) translate(calc(0.5 * var(--star-radius)), calc(0.5 * var(--star-radius))) scale(var(--scale-factor));
 }
 
 .archiveNavigationLabel {
@@ -136,9 +130,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  /* GSAP handles all transitions now */
-  /* transition: opacity 0.22s var(--transition-effect); */
-  /* transition-delay: 0s; */
+  transition: opacity 0.22s var(--transition-effect);
+  transition-delay: 0s;
   color: var(--bg-color);
   max-width: 100px;
   text-align: center;
@@ -154,10 +147,9 @@
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--white-color));
   opacity: 0;
   visibility: hidden;
-  /* GSAP handles all transitions now */
-  /* transition:
+  transition:
     opacity var(--transition-time) var(--transition-effect),
-    visibility var(--transition-time) var(--transition-effect); */
+    visibility var(--transition-time) var(--transition-effect);
   z-index: -1;
 }
 
@@ -168,20 +160,17 @@
 
 .archiveNavigationLabel[data-visibility='hidden'] {
   opacity: 0;
-  /* GSAP handles all transitions now */
-  /* transition-delay: 0s; */
+  transition-delay: 0s;
 }
 
 .archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='true'] {
   opacity: 1;
-  /* GSAP handles all transitions now */
-  /* transition-delay: 0.22s; */
+  transition-delay: 0.22s;
 }
 
 .archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='false'] {
   opacity: 1;
-  /* GSAP handles all transitions now */
-  /* transition-delay: 0s; */
+  transition-delay: 0s;
 }
 
 .archiveNavigationPanel {
@@ -192,11 +181,10 @@
   pointer-events: none;
   overflow: hidden;
   transform: translateY(8px);
-  /* GSAP handles all transitions now */
-  /* transition:
+  transition:
     opacity 160ms var(--transition-effect),
     transform 160ms var(--transition-effect),
-    max-height 160ms var(--transition-effect); */
+    max-height 160ms var(--transition-effect);
   align-self: flex-end;
 }
 
@@ -325,8 +313,7 @@
   border: .25px solid var(--bg-color);
   background: transparent;
   flex-shrink: 0;
-  /* GSAP handles all transitions now */
-  /* transition: background-color var(--transition-time) var(--transition-effect); */
+  transition: background-color var(--transition-time) var(--transition-effect);
 }
 
 .archiveNavigationPanelTagIndicatorActive {
@@ -357,8 +344,7 @@
     height: calc(var(--close-archive-button-size) + var(--padding));
     opacity: 1;
     visibility: visible;
-    /* GSAP handles all transitions now */
-    /* transition: height var(--transition-time) var(--transition-effect); */
+    transition: height var(--transition-time) var(--transition-effect);
   }
 
   .archiveNavigation[data-state='open'] + .archiveNavigationGradient {

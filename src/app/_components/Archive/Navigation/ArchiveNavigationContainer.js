@@ -31,12 +31,6 @@ const NAVIGATION_ITEMS = [
     href: '/archive/unexpected-connections',
   },
   {
-    id: 'continue',
-    label: 'Continue your conversation',
-    className: styles.archiveNavigationButtonContinue,
-    href: null,
-  },
-  {
     id: 'live',
     label: 'Users researching',
     className: styles.archiveNavigationButtonLive,
@@ -100,7 +94,7 @@ export default function ArchiveNavigationContainer() {
 
   /**
    * Only the items with interactive panels are mapped below. This makes it trivial to
-   * introduce new panels later (e.g. "Continue") by extending the switch.
+   * introduce new panels later by extending the switch.
    * When the navigation is closed we short-circuit to keep the panel hidden.
    * Note: The "live" button shows count on hover instead of opening a panel.
    */
