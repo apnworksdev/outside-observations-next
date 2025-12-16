@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
 
 import SanityImage from '@/sanity/components/SanityImage';
+import SanityVideo from '@/sanity/components/SanityVideo';
 
 import styles from '@app/_assets/archive/archive-page.module.css';
 import ArchiveEntry from '@/app/_components/Archive/ArchiveEntryListRow';
@@ -34,6 +35,10 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
   const prefetchHandlers = usePrefetchOnHover(href, 300);
   // Set priority for first 4 images (above the fold)
   const isPriority = index < 4;
+  const isVideo = entry.mediaType === 'video';
+  const posterHeight = entry?.poster?.dimensions?.aspectRatio
+    ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
+    : POSTER_WIDTH;
 
   return (
     <div className={styles.archiveEntryImageContainer}>
@@ -43,21 +48,34 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
         {...prefetchHandlers}
       >
         <div className={styles.archiveEntryImageWrapper}>
-          <SanityImage
-            image={entry.poster}
-            alt={entry.artName || 'Archive entry poster'}
-            className={styles.archiveEntryImage}
-            width={POSTER_WIDTH}
-            height={
-              entry?.poster?.dimensions?.aspectRatio
-                ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
-                : POSTER_WIDTH
-            }
-            priority={isPriority}
-            loading={isPriority ? undefined : 'lazy'}
-            blurDataURL={entry?.poster?.lqip || undefined}
-            onLoad={onImageLoad}
-          />
+          {isVideo && entry.video ? (
+            <SanityVideo
+              video={entry.video}
+              poster={entry.poster}
+              alt={entry.artName || 'Archive entry video'}
+              className={styles.archiveEntryVideo}
+              fallbackClassName={styles.archiveEntryImage}
+              width={POSTER_WIDTH}
+              height={posterHeight}
+              priority={isPriority}
+              preload="metadata"
+              muted
+              playsInline
+              onLoad={onImageLoad}
+            />
+          ) : (
+            <SanityImage
+              image={entry.poster}
+              alt={entry.artName || 'Archive entry poster'}
+              className={styles.archiveEntryImage}
+              width={POSTER_WIDTH}
+              height={posterHeight}
+              priority={isPriority}
+              loading={isPriority ? undefined : 'lazy'}
+              blurDataURL={entry?.poster?.lqip || undefined}
+              onLoad={onImageLoad}
+            />
+          )}
           <div className={styles.archiveEntryImageOverlay}>
             <div className={styles.archiveEntryImageOverlayContent}>
               <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.year}</p></div>
@@ -84,7 +102,7 @@ export default function ArchiveListContent() {
   const artNameSort = useArchiveSortController('artName', { label: 'Art Name' });
   const fileNameSort = useArchiveSortController('fileName', { label: 'File Name' });
   const sourceSort = useArchiveSortController('source', { label: 'Source/Author' });
-  const typeSort = useArchiveSortController('type', { label: 'Type' });
+  const typeSort = useArchiveSortController('mediaType', { label: 'Type' });
   const sortableLegendColumns = useMemo(
     () => [
       { key: 'year', label: 'Year', sort: yearSort },

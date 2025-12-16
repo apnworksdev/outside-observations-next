@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
+import SanityVideo from '@/sanity/components/SanityVideo';
 import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
@@ -52,7 +53,7 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
       </div>
       <div className={`${styles.itemColumn} ${styles.itemColumnType}`}>
         <div className={styles.itemColumnContent}>
-          <p>{entry.type ?? 'Image'}</p>
+          <p>{entry.mediaType ? entry.mediaType.charAt(0).toUpperCase() + entry.mediaType.slice(1) : 'Image'}</p>
         </div>
       </div>
     </div>

@@ -254,12 +254,32 @@
 .container[data-view="images"] .archiveEntryImageWrapper {
   position: relative;
   display: flex;
+  width: 100%;
 }
 
 .container[data-view="images"] .archiveEntryImage {
   width: 100%;
   line-height: 0;
   height: auto;
+}
+
+/* SanityVideo container styles */
+.container[data-view="images"] .archiveEntryVideo {
+  position: relative;
+  width: 100%;
+  padding-bottom: var(--video-aspect-ratio-padding, 100%);
+  overflow: hidden;
+  height: 0; /* Override height: auto from archiveEntryImage */
+}
+
+.container[data-view="images"] .archiveEntryVideo video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .container[data-view="images"] .archiveEntryImageOverlay {

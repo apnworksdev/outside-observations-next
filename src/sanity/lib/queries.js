@@ -10,6 +10,15 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
   artName,
   fileName,
   source,
+  mediaType,
+  video{
+    asset->{
+      _id,
+      url,
+      originalFilename,
+      mimeType
+    }
+  },
   poster{
     ...,
     asset,

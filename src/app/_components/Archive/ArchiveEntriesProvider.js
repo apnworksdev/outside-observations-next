@@ -121,7 +121,7 @@ const SORT_ACCESSORS = {
   artName: (entry) => normaliseStringValue(entry, 'artName'),
   fileName: (entry) => normaliseStringValue(entry, 'fileName'),
   source: (entry) => normaliseStringValue(entry, 'source'),
-  type: (entry) => normaliseStringValue(entry, 'type'),
+  mediaType: (entry) => normaliseStringValue(entry, 'mediaType'),
 };
 
 function getInitialSorting() {

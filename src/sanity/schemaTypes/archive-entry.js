@@ -49,6 +49,7 @@ export const archiveEntry = defineType({
       options: {
         hotspot: true
       },
+      description: 'For videos, please upload a poster image with the same dimensions as the video.',
       components: {
         input: MediaWithAIButton
       },
