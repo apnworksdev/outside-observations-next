@@ -359,8 +359,11 @@ export default function ChatBox({ variant = 'home' }) {
                 >
                   <p className={styles.chatBoxMessageText}>
                     {message.sender === 'bot' ? (
+                      // For first message during first visit, render text directly (FirstVisitAnimation controls it)
                       // Skip animation for loaded messages - show text immediately
-                      message.isLoaded ? (
+                      isFirstMessage && !message.isLoaded ? (
+                        message.text
+                      ) : message.isLoaded ? (
                         message.text
                       ) : (
                         <TypewriterMessage

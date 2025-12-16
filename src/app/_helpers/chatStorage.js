@@ -100,6 +100,20 @@ export const saveChatToStorage = (messages) => {
 };
 
 /**
+ * Clear chat history from localStorage
+ * Used when starting a first visit animation to ensure clean state
+ */
+export const clearChatStorage = () => {
+  if (!isLocalStorageAvailable()) return;
+  
+  try {
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+  } catch (error) {
+    // Silently fail cleanup
+  }
+};
+
+/**
  * Clean up old sessionId-based chat storage keys (legacy cleanup)
  * This removes keys like 'chat_history_visitor_...' and 'chat_history_home'/'chat_history_archive'
  * that were created with the old approaches

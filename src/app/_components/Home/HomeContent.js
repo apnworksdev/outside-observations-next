@@ -6,6 +6,7 @@ import ChatBox from '@/app/_components/Home/ChatBox';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { HomeErrorFallback, ChatErrorFallback } from '@/app/_components/ErrorFallbacks';
 import { markWebsiteAsVisited } from '@/app/_helpers/visitTracker';
+import { clearChatStorage } from '@/app/_helpers/chatStorage';
 import styles from '@app/_assets/error.module.css';
 
 /**
@@ -16,6 +17,12 @@ import styles from '@app/_assets/error.module.css';
  */
 export default function HomeContent() {
   const [animationComplete, setAnimationComplete] = useState(false);
+
+  // Clear chat history on mount to ensure clean state for first visit animation
+  // This handles cases where cookies are cleared but localStorage still has chat history
+  useEffect(() => {
+    clearChatStorage();
+  }, []);
 
   const handleAnimationComplete = () => {
     setAnimationComplete(true);

@@ -122,6 +122,8 @@ export default function FirstVisitAnimation({ onComplete, children }) {
       // Get computed CSS variable values
       const rootStyle = window.getComputedStyle(document.documentElement);
       const fgColor = rootStyle.getPropertyValue('--fg-color').trim();
+      // Disable CSS transitions to prevent interference with GSAP animations
+      firstMessage.style.transition = 'none';
       gsap.set(firstMessage, { 
         opacity: 0, 
         backgroundColor: 'transparent', 
@@ -219,12 +221,16 @@ export default function FirstVisitAnimation({ onComplete, children }) {
       // Re-select if they weren't found earlier (fallback)
       if (!firstMessage) {
         firstMessage = content.querySelector('[data-first-visit-animate="first-message"]');
+        // Disable CSS transitions if element is found in fallback
+        if (firstMessage) {
+          firstMessage.style.transition = 'none';
+        }
       }
       let formElements = content.querySelectorAll('[data-first-visit-animate="form-element"]');
       let formLines = content.querySelectorAll('[data-first-visit-animate="form-line"]');
 
       // Show first message with typewriter effect
-      if (firstMessage && storedText) {
+      if (firstMessage) {
         // Get computed CSS variable values
         const rootComputedStyle = window.getComputedStyle(document.documentElement);
         const darkGrayColor = rootComputedStyle.getPropertyValue('--dark-gray-color').trim();
@@ -235,14 +241,16 @@ export default function FirstVisitAnimation({ onComplete, children }) {
         const textElement = firstMessage.querySelector('p');
         if (!textElement) return;
         
-        // Use stored text (captured earlier) or try to get it again
-        const textToType = storedText || (textElement.textContent || textElement.innerText || '').trim();
+        // Use stored text (captured earlier) or try to get it again from the DOM
+        // Fallback to default welcome message if text is still not found
+        const textFromDOM = (textElement.textContent || textElement.innerText || '').trim();
+        const textToType = storedText || textFromDOM || 'Welcome to Outside Observations®, how can I help you?';
         
-        if (!textToType) {
-          return;
-        }
+        if (!textToType) return;
         
         // Set initial state: visible, transparent background, fg-color text
+        // Disable CSS transitions to prevent interference with GSAP animations
+        firstMessage.style.transition = 'none';
         gsap.set(firstMessage, {
           opacity: 1,
           color: initialFgColor,
@@ -277,7 +285,12 @@ export default function FirstVisitAnimation({ onComplete, children }) {
           color: bgColor || '#ffffff',
           duration: messageBackgroundColorDuration,
           ease: 'none',
-        }, '>'); // Start after typewriter completes
+        }, '>') // Start after typewriter completes
+        // Re-enable transitions after animation completes (optional, for future interactions)
+        .call(() => {
+          // Clear the transition override so normal CSS transitions can work again if needed
+          firstMessage.style.transition = '';
+        });
       }
 
       // Animate form lines first, then form elements
