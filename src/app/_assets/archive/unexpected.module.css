@@ -98,8 +98,7 @@
   }
 
   .unexpectedConnectionsContainer {
-    /* GSAP handles all transitions now */
-    /* transition: padding-top var(--transition-time) var(--transition-effect); */
+    transition: padding-top var(--transition-time) var(--transition-effect);
   }
 
   :global(body[data-page="unexpected-connections"].mobile-nav-open) .unexpectedConnectionsContainer {

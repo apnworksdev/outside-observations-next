@@ -1,14 +1,12 @@
 :global(body[data-page="home"]) .header {
   opacity: 0;
-  /* GSAP handles all transitions now - header fade-in */
-  /* transition: opacity var(--transition-time) var(--transition-effect); */
+  transition: opacity var(--transition-time) var(--transition-effect);
   pointer-events: none;
 }
 
 :global(body[data-page="home"].home-animation-complete) .header {
   opacity: 1;
-  /* GSAP handles all transitions now - header fade-in delay */
-  /* transition-delay: var(--transition-time); */
+  transition-delay: var(--transition-time);
   pointer-events: auto;
 }
 
@@ -27,8 +25,7 @@
   color: var(--white-color);
   width: fit-content;
   pointer-events: auto;
-  /* GSAP handles all transitions now - nav bubble background */
-  /* transition: background-color var(--transition-time) var(--transition-effect); */
+  transition: background-color var(--transition-time) var(--transition-effect);
 }
 
 .header {
@@ -69,8 +66,7 @@
 
 .navNavigation .navLi {
   margin-left: var(--padding);
-  /* GSAP handles all transitions now - nav item margins */
-  /* transition: margin-left var(--transition-time) var(--transition-effect), margin-top var(--transition-time) var(--transition-effect); */
+  transition: margin-left var(--transition-time) var(--transition-effect), margin-top var(--transition-time) var(--transition-effect);
 }
 
 /* ------------------------------------------------------------ */
@@ -81,8 +77,7 @@
 
 .navLink {
   position: relative;
-  /* GSAP handles all transitions now - nav link padding and background */
-  /* transition: padding-left var(--transition-time) var(--transition-effect), background-color var(--transition-time) var(--transition-effect); */
+  transition: padding-left var(--transition-time) var(--transition-effect), background-color var(--transition-time) var(--transition-effect);
 }
 
 @media (hover: hover) {
@@ -171,8 +166,7 @@
 :global(body[data-page="archive-entry"]) .header {
   overflow: hidden;
   opacity: 0;
-  /* GSAP handles all transitions now - archive entry header */
-  /* transition: opacity var(--transition-time) var(--transition-effect); */
+  transition: opacity var(--transition-time) var(--transition-effect);
   pointer-events: none;
 }
 
@@ -215,8 +209,7 @@
     max-width: 0;
     overflow: hidden;
     white-space: nowrap;
-    /* GSAP handles all transitions now - mobile nav title */
-    /* transition: max-width .3s ease; */
+    transition: max-width .3s ease;
   }
 
   .navTitleSpan.outside {
@@ -227,8 +220,7 @@
     height: 0;
     overflow-y: hidden;
     overflow-x: visible;
-    /* GSAP handles all transitions now - mobile nav height */
-    /* transition: height var(--transition-time) var(--transition-effect); */
+    transition: height var(--transition-time) var(--transition-effect);
   }
 
   :global(body[data-page="archive"]) .navNavigation .navLi:global(.lab-nav),
@@ -262,8 +254,7 @@
   :global(body[data-page="archive-entry"]) .navLi {
     height: 0;
     overflow: hidden;
-    /* GSAP handles all transitions now - mobile nav item height */
-    /* transition: height var(--transition-time) var(--transition-effect); */
+    transition: height var(--transition-time) var(--transition-effect);
   }
 
   :global(body[data-page="archive"]) .navLi:global(.archive-nav),
@@ -279,10 +270,9 @@
     padding-right: 0;
     padding-left: 0;
     overflow: hidden;
-    /* GSAP handles all transitions now - mobile nav link width and padding */
-    /* transition: width var(--transition-time) var(--transition-effect),
-    padding-right var(--transition-time) var(--transition-effect),
-    padding-left var(--transition-time) var(--transition-effect); */
+    transition: width var(--transition-time) var(--transition-effect),
+      padding-right var(--transition-time) var(--transition-effect),
+      padding-left var(--transition-time) var(--transition-effect);
   }
 
   :global(body[data-page="archive"].mobile-nav-open) .navLi,

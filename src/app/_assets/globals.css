@@ -67,8 +67,7 @@ body {
   overflow: hidden;
   /* Hide content until React has hydrated and view preference is loaded */
   opacity: 0;
-  /* GSAP handles all transitions now */
-  /* transition: opacity 0.2s ease-in; */
+  transition: opacity var(--transition-time) var(--transition-effect);
 }
 
 /* Show content after hydration (except home page - GSAP controls it completely) */
@@ -228,7 +227,6 @@ body[data-page="archive-entry"] {
 
 body[data-page="archive-entry"] .container {
   opacity: 0;
-  /* GSAP handles all transitions now */
-  /* transition: opacity var(--transition-time) var(--transition-effect); */
+  transition: opacity var(--transition-time) var(--transition-effect);
   pointer-events: none;
 }

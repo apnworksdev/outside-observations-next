@@ -69,8 +69,7 @@
   padding: calc(var(--gap) * 2);
   width: 50%;
   position: relative;
-  /* GSAP handles all transitions now - chat box images message */
-  /* transition: opacity 0.2s ease; */
+  transition: opacity 0.2s ease;
 }
 
 .chatBoxImagesMessageLoading {
@@ -325,8 +324,7 @@
 .chatBox[data-variant="archive"] .chatBoxFormInput:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--bg-color);
   -webkit-box-shadow: 0 0 0px 1000px transparent inset;
-  /* GSAP handles all transitions now - note: this was a very long transition (5000s) */
-  /* transition: background-color 5000s ease-in-out 0s; */
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .chatBox[data-variant="archive"] .chatBoxFormSubmit {
