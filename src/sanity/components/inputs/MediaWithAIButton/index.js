@@ -16,6 +16,7 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState(null)
   const [lastProcessed, setLastProcessed] = useState(null)
+  const [progressMessage, setProgressMessage] = useState(null)
 
   const processedAssetRef = useRef(null)
   const isInitializedRef = useRef(false)
@@ -160,28 +161,85 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
         body: formData,
       })
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        let errorData
-        try {
-          errorData = JSON.parse(errorText)
-        } catch {
-          throw new Error(`API call failed: ${response.status} - ${errorText}`)
-        }
-        
-        // Build a comprehensive error message
-        let errorMessage = errorData.error || errorData.message || `API call failed: ${response.status}`
-        if (errorData.details) {
-          errorMessage += `\n\nDetails: ${errorData.details}`
-        }
-        
-        throw new Error(errorMessage)
+      if (!response.body) {
+        throw new Error('No response body received from server')
       }
 
-      const data = await response.json()
-      const aiResult = {
-        description: data.description,
-        mood_tags: data.mood_tags,
+      // Read the stream for progress updates
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let aiResult = null
+      let streamError = null
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          
+          if (done) {
+            break
+          }
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || '' // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            if (!line.trim()) continue
+            
+            try {
+              const message = JSON.parse(line)
+              
+              if (message.type === 'progress') {
+                setProgressMessage(message.message)
+              } else if (message.type === 'result') {
+                aiResult = {
+                  description: message.data.description,
+                  mood_tags: message.data.mood_tags,
+                }
+              } else if (message.type === 'error') {
+                streamError = message.error
+                break
+              }
+            } catch (parseError) {
+              console.error('Error parsing stream message:', parseError, line)
+            }
+          }
+
+          // If we got an error, break out of the loop
+          if (streamError) {
+            break
+          }
+        }
+
+        // Process any remaining buffer
+        if (buffer.trim() && !streamError) {
+          try {
+            const message = JSON.parse(buffer)
+            if (message.type === 'result') {
+              aiResult = {
+                description: message.data.description,
+                mood_tags: message.data.mood_tags,
+              }
+            } else if (message.type === 'error') {
+              streamError = message.error
+            }
+          } catch (parseError) {
+            console.error('Error parsing final buffer:', parseError)
+          }
+        }
+
+        // If we got an error from the stream, throw it
+        if (streamError) {
+          throw new Error(streamError)
+        }
+
+        // If we didn't get a result, throw an error
+        if (!aiResult) {
+          throw new Error('No result received from AI service')
+        }
+      } finally {
+        reader.releaseLock()
       }
 
       const documentPatches = []
@@ -270,8 +328,10 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
         timestamp: new Date().toLocaleTimeString(),
         autoFilled,
       })
+      setProgressMessage(null)
     } catch (err) {
       setError(err.message)
+      setProgressMessage(null)
     } finally {
       setIsProcessing(false)
     }
@@ -345,7 +405,9 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
             {isProcessing && (
               <Flex align="center" gap={2}>
                 <Spinner />
-                <Text size={1}>Generating AI description and tags...</Text>
+                <Text size={1}>
+                  {progressMessage || 'Generating AI description and tags...'}
+                </Text>
               </Flex>
             )}
 
