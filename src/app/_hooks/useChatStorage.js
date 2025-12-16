@@ -1,72 +1,62 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { getSessionId, loadChatFromStorage, saveChatToStorage } from '@/app/_helpers/chatStorage';
+import { loadChatFromStorage, saveChatToStorage, cleanupOldChatStorage } from '@/app/_helpers/chatStorage';
 
 /**
  * Custom hook for managing chat storage persistence
  * 
  * Handles:
- * - Loading chat history on mount
+ * - Loading chat history on mount (shared across home and archive)
  * - Saving chat messages with debouncing
- * - Managing session ID caching
+ * - Cleanup of old sessionId-based storage keys
  * 
  * @param {Array} messages - Current messages array
  * @param {Function} setMessages - State setter for messages
  * @param {Object} messageIdRef - Ref to track message ID counter
- * @returns {Object} { sessionId: string|null }
  */
 export function useChatStorage(messages, setMessages, messageIdRef) {
-  const sessionIdRef = useRef(null);
   const saveTimeoutRef = useRef(null);
   const isInitialLoadRef = useRef(true);
   const messagesRef = useRef(messages);
-
-  // Get sessionId with caching
-  const getCachedSessionId = () => {
-    if (sessionIdRef.current) return sessionIdRef.current;
-    const id = getSessionId();
-    if (id) sessionIdRef.current = id;
-    return id;
-  };
 
   // Keep messagesRef in sync with messages state
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
+  // Clean up old sessionId-based storage keys on mount (one-time cleanup)
+  useEffect(() => {
+    cleanupOldChatStorage();
+  }, []);
+
   // Load chat history on mount
   useEffect(() => {
     if (isInitialLoadRef.current) {
-      const sessionId = getCachedSessionId();
-      if (sessionId) {
-        const savedMessages = loadChatFromStorage(sessionId);
-        if (savedMessages && savedMessages.length > 0) {
-          // Restore messageIdRef to be higher than the highest saved message ID
-          const ids = savedMessages.map(msg => msg.id || 0).filter(id => typeof id === 'number');
-          const maxId = ids.length > 0 ? Math.max(...ids) : 0;
-          messageIdRef.current = maxId + 1;
-          isInitialLoadRef.current = false;
-          // Mark all loaded messages as loaded (skip animation)
-          setMessages(savedMessages.map(msg => ({ ...msg, isLoaded: true })));
-          return;
-        }
+      const savedMessages = loadChatFromStorage();
+      
+      if (savedMessages && savedMessages.length > 0) {
+        // Restore messageIdRef to be higher than the highest saved message ID
+        const ids = savedMessages.map(msg => msg.id || 0).filter(id => typeof id === 'number');
+        const maxId = ids.length > 0 ? Math.max(...ids) : 0;
+        messageIdRef.current = maxId + 1;
+        isInitialLoadRef.current = false;
+        // Mark all loaded messages as loaded (skip animation)
+        setMessages(savedMessages.map(msg => ({ ...msg, isLoaded: true })));
+        return;
       }
       
       // Fallback: try to load if we still have default welcome message
       // Capture initial messages value to avoid stale closure
       const initialMessages = messagesRef.current;
       if (initialMessages.length === 1 && initialMessages[0]?.sender === 'bot' && initialMessages[0]?.id === 0) {
-        const sessionId = getCachedSessionId();
-        if (sessionId) {
-          const savedMessages = loadChatFromStorage(sessionId);
-          if (savedMessages && savedMessages.length > 0) {
-            const ids = savedMessages.map(msg => msg.id || 0).filter(id => typeof id === 'number');
-            const maxId = ids.length > 0 ? Math.max(...ids) : 0;
-            messageIdRef.current = maxId + 1;
-            isInitialLoadRef.current = false;
-            setMessages(savedMessages.map(msg => ({ ...msg, isLoaded: true })));
-          }
+        const savedMessages = loadChatFromStorage();
+        if (savedMessages && savedMessages.length > 0) {
+          const ids = savedMessages.map(msg => msg.id || 0).filter(id => typeof id === 'number');
+          const maxId = ids.length > 0 ? Math.max(...ids) : 0;
+          messageIdRef.current = maxId + 1;
+          isInitialLoadRef.current = false;
+          setMessages(savedMessages.map(msg => ({ ...msg, isLoaded: true })));
         }
       }
       
@@ -82,8 +72,7 @@ export function useChatStorage(messages, setMessages, messageIdRef) {
       clearTimeout(saveTimeoutRef.current);
     }
     
-    const sessionId = getCachedSessionId();
-    if (!sessionId || messages.length === 0) return;
+    if (messages.length === 0) return;
     
     // Only save if there are non-loading messages
     const hasNonLoadingMessages = messages.some(msg => !msg.isLoading && msg.text !== undefined);
@@ -95,7 +84,7 @@ export function useChatStorage(messages, setMessages, messageIdRef) {
     const delay = shouldDebounce ? 500 : 0; // 500ms debounce
     
     saveTimeoutRef.current = setTimeout(() => {
-      saveChatToStorage(sessionId, messagesRef.current);
+      saveChatToStorage(messagesRef.current);
     }, delay);
     
     return () => {
@@ -114,18 +103,13 @@ export function useChatStorage(messages, setMessages, messageIdRef) {
         clearTimeout(saveTimeoutRef.current);
       }
       // Save chat one final time on unmount (in case debounce was pending)
-      const sessionId = getCachedSessionId();
-      if (sessionId && messagesRef.current.length > 0) {
+      if (messagesRef.current.length > 0) {
         const hasNonLoadingMessages = messagesRef.current.some(msg => !msg.isLoading && msg.text !== undefined);
         if (hasNonLoadingMessages) {
           // Save synchronously on unmount (no debounce)
-          saveChatToStorage(sessionId, messagesRef.current);
+          saveChatToStorage(messagesRef.current);
         }
       }
     };
   }, []);
-
-  return {
-    sessionId: getCachedSessionId(),
-  };
 }

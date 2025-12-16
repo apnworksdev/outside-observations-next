@@ -1,16 +1,30 @@
+/* ------------------------------------------------------------ */
+/*                    CONTAINER & LAYOUT                        */
+/* ------------------------------------------------------------ */
+
 .archiveNavigationContainer {
   position: fixed;
   bottom: var(--padding);
   right: var(--padding);
   display: flex;
-
   gap: var(--gap);
   align-items: flex-end;
   z-index: 1000;
 }
 
+/* Hide navigation on archive entry pages */
+:global(body[data-page="archive-entry"]) .archiveNavigationContainer {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------ */
+/*                    MAIN NAVIGATION BUTTON                    */
+/* ------------------------------------------------------------ */
+
 .archiveNavigation {
-  position: relative;  width: var(--close-archive-button-size);
+  position: relative;
+  width: var(--close-archive-button-size);
   height: var(--close-archive-button-size);
   display: flex;
   align-items: center;
@@ -31,21 +45,22 @@
   pointer-events: none;
 }
 
-@media (hover: hover) {
-  .archiveNavigation[data-state='closed']:hover {
-    transform: scale(1.1);
-  }
-  
-  /* Signal to notification that navigation is being hovered */
-  .archiveNavigation[data-state='closed']:hover {
-    --archive-nav-hovered: 1;
-  }
-}
-
 .archiveNavigation[data-state='open'] {
   width: var(--open-archive-button-size);
   height: var(--open-archive-button-size);
 }
+
+@media (hover: hover) {
+  .archiveNavigation[data-state='closed']:hover {
+    transform: scale(1.1);
+    /* Signal to notification that navigation is being hovered */
+    --archive-nav-hovered: 1;
+  }
+}
+
+/* ------------------------------------------------------------ */
+/*                      TOGGLE BUTTON                           */
+/* ------------------------------------------------------------ */
 
 .archiveNavigationToggle {
   position: absolute;
@@ -58,6 +73,10 @@
   cursor: pointer;
   z-index: 2;
 }
+
+/* ------------------------------------------------------------ */
+/*                  NAVIGATION BUTTONS CONTAINER                */
+/* ------------------------------------------------------------ */
 
 .archiveNavigationButtons {
   position: absolute;
@@ -80,6 +99,10 @@
   pointer-events: auto;
   z-index: 3;
 }
+
+/* ------------------------------------------------------------ */
+/*                    NAVIGATION BUTTONS                        */
+/* ------------------------------------------------------------ */
 
 .archiveNavigationButton {
   position: absolute;
@@ -108,6 +131,10 @@
   }
 }
 
+/* ------------------------------------------------------------ */
+/*                    BUTTON POSITIONS                          */
+/* ------------------------------------------------------------ */
+
 .archiveNavigationButtonSearch {
   transform: translate(-50%, -50%) translate(calc(-0.5 * var(--star-radius)), calc(-0.5 * var(--star-radius))) scale(var(--scale-factor));
 }
@@ -124,6 +151,14 @@
   transform: translate(-50%, -50%) translate(calc(0.5 * var(--star-radius)), calc(0.5 * var(--star-radius))) scale(var(--scale-factor));
 }
 
+.archiveNavigationButtonLabel {
+  display: none;
+}
+
+/* ------------------------------------------------------------ */
+/*                         LABELS                               */
+/* ------------------------------------------------------------ */
+
 .archiveNavigationLabel {
   opacity: 0;
   position: absolute;
@@ -137,6 +172,26 @@
   text-align: center;
 }
 
+.archiveNavigationLabel[data-visibility='hidden'] {
+  opacity: 0;
+  transition-delay: 0s;
+}
+
+.archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='true'] {
+  opacity: 1;
+  transition-delay: 0.22s;
+}
+
+.archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='false'] {
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+/* ------------------------------------------------------------ */
+/*                      GRADIENT OVERLAY                        */
+/* ------------------------------------------------------------ */
+
+/* Bottom gradient - used for mood/search panels */
 .archiveNavigationGradient {
   position: fixed;
   left: 0;
@@ -158,20 +213,31 @@
   visibility: visible;
 }
 
-.archiveNavigationLabel[data-visibility='hidden'] {
+/* Right gradient - used when chat panel is open */
+.archiveNavigationGradientRight {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 50vw;
+  height: 100vh;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), var(--white-color));
   opacity: 0;
-  transition-delay: 0s;
+  visibility: hidden;
+  transition:
+    opacity var(--transition-time) var(--transition-effect),
+    visibility var(--transition-time) var(--transition-effect);
+  z-index: -1;
 }
 
-.archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='true'] {
+.archiveNavigationGradientRight[data-state='open'] {
   opacity: 1;
-  transition-delay: 0.22s;
+  visibility: visible;
 }
 
-.archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='false'] {
-  opacity: 1;
-  transition-delay: 0s;
-}
+/* ------------------------------------------------------------ */
+/*                      PANEL CONTAINER                         */
+/* ------------------------------------------------------------ */
 
 .archiveNavigationPanel {
   position: relative;
@@ -205,6 +271,29 @@
   width: auto;
 }
 
+.archiveNavigationPanel[data-state='open'][data-panel-type='chat'] {
+  position: absolute;
+  bottom: calc(100% + var(--gap));
+  width: var(--open-archive-button-size);
+  height: calc(100vh - (var(--open-archive-button-size) + var(--gap) + var(--padding) * 2));
+  max-height: none;
+}
+
+@media (max-width: 768px) {
+  .archiveNavigationPanel[data-state='open'][data-panel-type='chat'] {
+    bottom: 0;
+    right: calc(100% + var(--gap));
+    width: calc(100vw - (var(--padding) * 2 + var(--close-archive-button-size)));
+    max-width: 320px;
+    height: calc(100vh - var(--padding) * 2);
+    max-height: none;
+  }
+}
+
+/* ------------------------------------------------------------ */
+/*                      PANEL CONTENT                           */
+/* ------------------------------------------------------------ */
+
 .archiveNavigationPanelContent {
   display: flex;
   flex-direction: column;
@@ -220,6 +309,10 @@
   background-color: var(--fg-color-75);
   border-radius: var(--border-radius);
 }
+
+/* ------------------------------------------------------------ */
+/*                      SEARCH PANEL                            */
+/* ------------------------------------------------------------ */
 
 .archiveNavigationPanelSearch {
   display: flex;
@@ -269,6 +362,10 @@
   text-decoration: underline;
   font-weight: bold;
 }
+
+/* ------------------------------------------------------------ */
+/*                       MOOD PANEL                             */
+/* ------------------------------------------------------------ */
 
 .archiveNavigationMoodPanelContent {
   height: var(--open-archive-button-size);
@@ -320,14 +417,11 @@
   background-color: var(--bg-color);
 }
 
-.archiveNavigationButtonLabel {
-  display: none;
-}
+/* ------------------------------------------------------------ */
 
-:global(body[data-page="archive-entry"]) .archiveNavigationContainer {
-  opacity: 0;
-  pointer-events: none;
-}
+/*                    MOBILE RESPONSIVE                         */
+
+/* ------------------------------------------------------------ */
 
 @media (max-width: 768px) {
   .archiveNavigationContainer {
@@ -335,7 +429,6 @@
   }
 
   .archiveNavigationButton {
-    --star-radius: 130%;
     width: 12px;
     height: 12px;
   }
@@ -379,6 +472,46 @@
   }
 }
 
+/* ------------------------------------------------------------ */
+
+/*             MOBILE RESPONSIVE WITH PANEL OPEN                */
+
+/* ------------------------------------------------------------ */
+
+@media (max-width: 768px) {
+  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavigation[data-state="open"],
+  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavigation[data-state="open"] {
+    height: var(--close-archive-button-size);
+    width: var(--close-archive-button-size);
+  }
+  
+  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavigation[data-state="open"] .archiveNavigationButton,
+  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavigation[data-state="open"] .archiveNavigationButton {
+    width: 12px;
+    height: 12px;
+    --star-radius: 170%;
+    pointer-events: none;
+  }
+
+  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavigation[data-state="open"] .archiveNavigationLabel[data-visibility="visible"],
+  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavigation[data-state="open"] .archiveNavigationLabel[data-visibility="visible"] {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavigation[data-state="open"] .archiveNavigationButtonLabel,
+  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavigation[data-state="open"] .archiveNavigationButtonLabel {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+}
+
+/* ------------------------------------------------------------ */
+
+/*                       ANIMATIONS                             */
+
+/* ------------------------------------------------------------ */
+
 @keyframes buttonBackgroundAnimation {
   to {
     background-color: var(--bg-color);
@@ -398,4 +531,3 @@
     visibility: visible;
   }
 }
-

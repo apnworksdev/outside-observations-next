@@ -2,8 +2,12 @@
  * Chat Storage Utilities
  * 
  * Handles localStorage persistence for chat messages.
- * Uses sessionId from visitor tracking to maintain chat history across page refreshes.
+ * Uses a single shared storage key to maintain chat history across pages
+ * and browser sessions (shared between home and archive).
  */
+
+// Single storage key for chat history (shared across all chat instances)
+const CHAT_STORAGE_KEY = 'chat_history';
 
 // Check if localStorage is available and working
 export const isLocalStorageAvailable = () => {
@@ -18,19 +22,15 @@ export const isLocalStorageAvailable = () => {
   }
 };
 
-// Generate localStorage key for chat history
-export const getChatStorageKey = (sessionId) => `chat_history_${sessionId}`;
-
 /**
  * Load chat messages from localStorage
- * @param {string} sessionId - Visitor session ID
  * @returns {Array|null} Array of messages or null if not found/invalid
  */
-export const loadChatFromStorage = (sessionId) => {
-  if (!isLocalStorageAvailable() || !sessionId) return null;
+export const loadChatFromStorage = () => {
+  if (!isLocalStorageAvailable()) return null;
   
   try {
-    const stored = localStorage.getItem(getChatStorageKey(sessionId));
+    const stored = localStorage.getItem(CHAT_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       // Validate it's an array with valid message structure
@@ -50,9 +50,7 @@ export const loadChatFromStorage = (sessionId) => {
     console.error('Error loading chat from localStorage:', error);
     // If data is corrupted, try to clean it up
     try {
-      if (sessionId) {
-        localStorage.removeItem(getChatStorageKey(sessionId));
-      }
+      localStorage.removeItem(CHAT_STORAGE_KEY);
     } catch (cleanupError) {
       // Ignore cleanup errors
     }
@@ -62,11 +60,10 @@ export const loadChatFromStorage = (sessionId) => {
 
 /**
  * Save chat messages to localStorage
- * @param {string} sessionId - Visitor session ID
  * @param {Array} messages - Array of message objects
  */
-export const saveChatToStorage = (sessionId, messages) => {
-  if (!isLocalStorageAvailable() || !sessionId || !messages || messages.length === 0) return;
+export const saveChatToStorage = (messages) => {
+  if (!isLocalStorageAvailable() || !messages || messages.length === 0) return;
   
   try {
     // Only save non-loading messages (exclude temporary loading states)
@@ -81,20 +78,20 @@ export const saveChatToStorage = (sessionId, messages) => {
     // Don't save if we have no valid messages
     if (messagesToSave.length === 0) return;
     
-    localStorage.setItem(getChatStorageKey(sessionId), JSON.stringify(messagesToSave));
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messagesToSave));
   } catch (error) {
     console.error('Error saving chat to localStorage:', error);
     // Handle quota exceeded error gracefully
     if (error.name === 'QuotaExceededError') {
       console.warn('localStorage quota exceeded, chat history not saved');
-      // Try to clean up old chats if quota is exceeded
+      // Try to clean up old sessionId-based chat keys if quota is exceeded
       try {
         const keys = Object.keys(localStorage);
-        const chatKeys = keys.filter(key => key.startsWith('chat_history_'));
-        if (chatKeys.length > 1) {
-          // Remove oldest chat (simple cleanup - could be improved)
-          localStorage.removeItem(chatKeys[0]);
-        }
+        // Remove old sessionId-based keys (legacy cleanup)
+        const oldChatKeys = keys.filter(key => 
+          key.startsWith('chat_history_visitor_')
+        );
+        oldChatKeys.forEach(key => localStorage.removeItem(key));
       } catch (cleanupError) {
         // Ignore cleanup errors
       }
@@ -103,10 +100,25 @@ export const saveChatToStorage = (sessionId, messages) => {
 };
 
 /**
- * Get session ID from sessionStorage (same one used by VisitorTracker)
- * @returns {string|null} Session ID or null if not available
+ * Clean up old sessionId-based chat storage keys (legacy cleanup)
+ * This removes keys like 'chat_history_visitor_...' and 'chat_history_home'/'chat_history_archive'
+ * that were created with the old approaches
  */
-export const getSessionId = () => {
-  if (typeof window === 'undefined') return null;
-  return sessionStorage.getItem('visitor_session_id');
+export const cleanupOldChatStorage = () => {
+  if (!isLocalStorageAvailable()) return;
+  
+  try {
+    const keys = Object.keys(localStorage);
+    // Remove old sessionId-based keys (visitor_xxx)
+    const oldSessionKeys = keys.filter(key => key.startsWith('chat_history_visitor_'));
+    // Remove old variant-based keys (home/archive)
+    const oldVariantKeys = keys.filter(key => 
+      key === 'chat_history_home' || key === 'chat_history_archive'
+    );
+    
+    const allOldKeys = [...oldSessionKeys, ...oldVariantKeys];
+    allOldKeys.forEach(key => localStorage.removeItem(key));
+  } catch (error) {
+    // Silently fail cleanup
+  }
 };

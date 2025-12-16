@@ -2,73 +2,106 @@
  * Visit Tracker Utilities
  * 
  * Tracks whether a user has visited the website before (any page).
- * Uses localStorage with sessionId to persist across page refreshes.
+ * Uses cookie as the single source of truth (accessible by both middleware and client-side).
+ * localStorage is synced from cookie for backwards compatibility but is not the source of truth.
  * 
  * The first-visit animation on home page should only show if:
  * 1. It's the user's first visit to the website, AND
  * 2. The first page they visit happens to be the home page
  */
 
-import { getSessionId } from './chatStorage';
+// Cookie name for website visit tracking (single source of truth)
+const VISIT_COOKIE_NAME = 'has_visited_website';
+// localStorage key (synced from cookie, for backwards compatibility)
+const WEBSITE_VISIT_KEY = 'has_visited_website';
 
-const getWebsiteVisitKey = (sessionId) => `has_visited_website_${sessionId}`;
+/**
+ * Get cookie value by name
+ * @param {string} name - Cookie name
+ * @returns {string|null} Cookie value or null if not found
+ */
+const getCookie = (name) => {
+  if (typeof document === 'undefined') return null;
+  
+  try {
+    const cookies = document.cookie.split(';').map(c => c.trim());
+    const cookie = cookies.find(c => c.startsWith(`${name}=`));
+    return cookie ? cookie.split('=')[1] : null;
+  } catch {
+    return null;
+  }
+};
 
 /**
  * Check if this is the user's first visit to the website (any page)
+ * Uses cookie as the single source of truth (same as middleware)
+ * localStorage is synced FROM cookie, but cookie is never synced FROM localStorage
  * @returns {boolean} True if first website visit, false if returning
  */
 export const isFirstWebsiteVisit = () => {
   if (typeof window === 'undefined') return true;
   
   try {
-    const sessionId = getSessionId();
-    if (!sessionId) return true;
+    // Check cookie first (single source of truth - same as middleware)
+    const cookieValue = getCookie(VISIT_COOKIE_NAME);
+    if (cookieValue === 'true') {
+      // Cookie exists - sync to localStorage for backwards compatibility
+      try {
+        localStorage.setItem(WEBSITE_VISIT_KEY, 'true');
+      } catch {
+        // Ignore localStorage errors
+      }
+      return false; // Not a first visit
+    }
     
-    const hasVisited = localStorage.getItem(getWebsiteVisitKey(sessionId));
-    return hasVisited !== 'true';
+    // No cookie found - this is a first visit
+    // Note: We don't check localStorage here because cookie is the source of truth.
+    // If localStorage exists but cookie doesn't, we treat it as a first visit
+    // (cookie might have been deleted intentionally)
+    return true;
   } catch {
-    // If localStorage fails, treat as first visit
+    // If cookies fail, treat as first visit
     return true;
   }
 };
 
 /**
  * Mark that the user has visited the website (any page)
- * This should be called on any page load to track website visits
- * Sets both localStorage (for client-side checks) and cookie (for middleware)
+ * Sets cookie as the source of truth, and syncs localStorage for backwards compatibility
  */
 export const markWebsiteAsVisited = () => {
   if (typeof window === 'undefined') return;
   
   try {
-    const sessionId = getSessionId();
-    if (!sessionId) return;
+    // Check if cookie already exists to avoid unnecessary writes
+    const existingCookie = getCookie(VISIT_COOKIE_NAME);
+    if (existingCookie === 'true') {
+      // Cookie exists, just sync localStorage
+      try {
+        localStorage.setItem(WEBSITE_VISIT_KEY, 'true');
+      } catch {
+        // Ignore localStorage errors
+      }
+      return;
+    }
     
-    // Check if already marked to avoid unnecessary writes
-    const visitKey = getWebsiteVisitKey(sessionId);
-    const alreadyVisited = localStorage.getItem(visitKey) === 'true';
+    // Set cookie (single source of truth)
+    const expires = new Date();
+    expires.setFullYear(expires.getFullYear() + 1);
     
-    // Set localStorage (for client-side checks)
-    localStorage.setItem(visitKey, 'true');
+    // Add Secure flag if on HTTPS (production) for better security
+    const isSecure = window.location.protocol === 'https:';
+    const secureFlag = isSecure ? '; Secure' : '';
     
-    // Set cookie for middleware to check (only if not already set to avoid unnecessary writes)
-    // Parse cookies more robustly (handle spaces and edge cases)
-    const cookies = document.cookie.split(';').map(c => c.trim());
-    const existingCookie = cookies.find(c => c.startsWith('has_visited_website='));
+    document.cookie = `${VISIT_COOKIE_NAME}=true; expires=${expires.toUTCString()}; path=/; SameSite=Lax${secureFlag}`;
     
-    // Set cookie if it doesn't exist, or if localStorage says we haven't visited
-    // (cookie might be out of sync, so we sync it)
-    if (!existingCookie || !alreadyVisited) {
-      const expires = new Date();
-      expires.setFullYear(expires.getFullYear() + 1);
-      
-      // Add Secure flag if on HTTPS (production) for better security
-      const isSecure = window.location.protocol === 'https:';
-      const secureFlag = isSecure ? '; Secure' : '';
-      
-      document.cookie = `has_visited_website=true; expires=${expires.toUTCString()}; path=/; SameSite=Lax${secureFlag}`;
+    // Sync to localStorage for backwards compatibility
+    try {
+      localStorage.setItem(WEBSITE_VISIT_KEY, 'true');
+    } catch {
+      // Ignore localStorage errors
     }
   } catch {
-    // Silently fail if localStorage/cookies are unavailable
+    // Silently fail if cookies/localStorage are unavailable
   }
 };

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
 import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
-import styles from '@app/_assets/home.module.css';
+import styles from '@app/_assets/chatbox.module.css';
 
 /**
  * ExploreArchiveLink Component

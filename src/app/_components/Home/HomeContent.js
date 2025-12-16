@@ -5,6 +5,7 @@ import FirstVisitAnimation from '@/app/_components/Home/FirstVisitAnimation';
 import ChatBox from '@/app/_components/Home/ChatBox';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { HomeErrorFallback, ChatErrorFallback } from '@/app/_components/ErrorFallbacks';
+import { markWebsiteAsVisited } from '@/app/_helpers/visitTracker';
 import styles from '@app/_assets/error.module.css';
 
 /**
@@ -18,6 +19,9 @@ export default function HomeContent() {
 
   const handleAnimationComplete = () => {
     setAnimationComplete(true);
+    // Mark website as visited after animation completes
+    // This ensures the cookie is set so middleware can redirect on next visit
+    markWebsiteAsVisited();
   };
 
   // Manage body class for CSS-based header visibility control

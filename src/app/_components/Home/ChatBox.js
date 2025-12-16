@@ -3,13 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useArchiveSearchState } from '@/app/_components/Archive/ArchiveSearchStateProvider';
-import { loadChatFromStorage } from '@/app/_helpers/chatStorage';
 import { useChatStorage } from '@/app/_hooks/useChatStorage';
-import styles from '@app/_assets/home.module.css';
+import styles from '@app/_assets/chatbox.module.css';
 import TypewriterMessage from './TypewriterMessage';
 import ExploreArchiveLink from './ExploreArchiveLink';
 
-export default function ChatBox() {
+export default function ChatBox({ variant = 'home' }) {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [navigatingMessageId, setNavigatingMessageId] = useState(null);
@@ -34,29 +33,9 @@ export default function ChatBox() {
     }
   ]);
   
-  // Load messages from localStorage after mount (client-side only)
-  useEffect(() => {
-    const sessionId = sessionStorage.getItem('visitor_session_id');
-    if (sessionId) {
-      const savedMessages = loadChatFromStorage(sessionId);
-      if (savedMessages && savedMessages.length > 0) {
-        // Restore messageIdRef to be higher than the highest saved message ID
-        const ids = savedMessages.map(msg => msg.id || 0).filter(id => typeof id === 'number');
-        const maxId = ids.length > 0 ? Math.max(...ids) : 0;
-        messageIdRef.current = maxId + 1;
-        // Mark all loaded messages as loaded (skip animation)
-        setMessages(savedMessages.map(msg => ({ ...msg, isLoaded: true })));
-      } else {
-        // Initialize messageIdRef if no saved messages
-        messageIdRef.current = 1;
-      }
-    } else {
-      // Initialize messageIdRef if no sessionId
-      messageIdRef.current = 1;
-    }
-  }, []);
-
   // Use custom hook for chat storage persistence
+  // This hook handles loading chat history on mount and saving on updates
+  // Chat history is shared across home and archive variants
   useChatStorage(messages, setMessages, messageIdRef);
 
   const handleInputChange = (e) => {
@@ -360,7 +339,7 @@ export default function ChatBox() {
   };
 
   return (
-    <div className={styles.chatBox}>
+    <div className={styles.chatBox} data-variant={variant}>
       <div ref={chatBoxContentRef} className={styles.chatBoxContent}>
         {messages.map((message, index) => {
           const messageKey = message.id;
@@ -460,12 +439,16 @@ export default function ChatBox() {
             <span>Send</span>
           </button>
         </form>
-        <div className={`${styles.chatBoxLine} ${styles.topLine}`} data-first-visit-animate="form-line" />
-        <div className={`${styles.chatBoxLine} ${styles.bottomLine}`} data-first-visit-animate="form-line" />
-        <div className={`${styles.chatBoxCircle} ${styles.topRightCircle}`} data-first-visit-animate="form-element" />
-        <div className={`${styles.chatBoxCircle} ${styles.bottomRightCircle}`} data-first-visit-animate="form-element" />
-        <div className={`${styles.chatBoxCircle} ${styles.bottomLeftCircle}`} data-first-visit-animate="form-element" />
-        <div className={`${styles.chatBoxCircle} ${styles.topLeftCircle}`} data-first-visit-animate="form-element" />
+        {variant === 'home' && (
+          <>
+            <div className={`${styles.chatBoxLine} ${styles.topLine}`} data-first-visit-animate="form-line" />
+            <div className={`${styles.chatBoxLine} ${styles.bottomLine}`} data-first-visit-animate="form-line" />
+            <div className={`${styles.chatBoxCircle} ${styles.topRightCircle}`} data-first-visit-animate="form-element" />
+            <div className={`${styles.chatBoxCircle} ${styles.bottomRightCircle}`} data-first-visit-animate="form-element" />
+            <div className={`${styles.chatBoxCircle} ${styles.bottomLeftCircle}`} data-first-visit-animate="form-element" />
+            <div className={`${styles.chatBoxCircle} ${styles.topLeftCircle}`} data-first-visit-animate="form-element" />
+          </>
+        )}
       </div>
     </div>
   );

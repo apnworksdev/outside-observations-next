@@ -7,14 +7,14 @@ import styles from '@app/_assets/archive/archive-navigation.module.css';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import ArchiveNavigation from './ArchiveNavigation';
 import ArchiveNavigationMoodPanel from './ArchiveNavigationMoodPanel';
-import ArchiveNavigationSearchPanel from './ArchiveNavigationSearchPanel';
+import ArchiveNavigationChatPanel from './ArchiveNavigationChatPanel';
 import VisitorNotificationToast from '@/app/_components/VisitorNotificationToast';
 import { useVisitorCount } from '@/app/_components/VisitorCountProvider';
 
 const NAVIGATION_ITEMS = [
   {
-    id: 'search',
-    label: 'Search',
+    id: 'chat',
+    label: 'Chat',
     className: styles.archiveNavigationButtonSearch,
     href: null,
   },
@@ -65,7 +65,7 @@ export default function ArchiveNavigationContainer() {
   /**
    * Opening and closing the navigation is symmetrical: when users collapse it we clear
    * the active item and panel id so the next expansion starts from a clean slate. This
-   * makes “Search” behave like a toggle rather than a sticky state.
+   * makes "Chat" behave like a toggle rather than a sticky state.
    */
   const handleOpenChange = useCallback((nextOpen) => {
     setIsNavigationOpen(nextOpen);
@@ -83,6 +83,7 @@ export default function ArchiveNavigationContainer() {
         return;
       }
 
+      // Keep navigation open when selecting items (works on both desktop and mobile)
       setActiveItemId((current) => (current === itemId ? null : itemId));
 
       if (href) {
@@ -104,11 +105,11 @@ export default function ArchiveNavigationContainer() {
     }
 
     switch (activeItemId) {
-      case 'search':
+      case 'chat':
         return {
-          id: 'archive-navigation-panel-search',
-          panelType: 'search',
-          Content: ArchiveNavigationSearchPanel,
+          id: 'archive-navigation-panel-chat',
+          panelType: 'chat',
+          Content: ArchiveNavigationChatPanel,
         };
       case 'mood':
         return {
@@ -213,11 +214,20 @@ export default function ArchiveNavigationContainer() {
         externalLabelChange={externalLabelChange}
       />
       {!isHidden && (
-        <div
-          className={styles.archiveNavigationGradient}
-          data-state={isNavigationOpen ? 'open' : 'closed'}
-          aria-hidden="true"
-        />
+        <>
+          {/* Bottom gradient - shown for mood/search panels */}
+          <div
+            className={styles.archiveNavigationGradient}
+            data-state={isNavigationOpen && panelContent?.panelType !== 'chat' ? 'open' : 'closed'}
+            aria-hidden="true"
+          />
+          {/* Right gradient - shown when chat panel is open */}
+          <div
+            className={styles.archiveNavigationGradientRight}
+            data-state={isNavigationOpen && panelContent?.panelType === 'chat' ? 'open' : 'closed'}
+            aria-hidden="true"
+          />
+        </>
       )}
       <ErrorBoundary>
         <VisitorNotificationToast 
