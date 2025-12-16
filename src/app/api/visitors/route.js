@@ -50,7 +50,33 @@ const VISITOR_TTL = 300; // 5 minutes
  */
 export async function POST(request) {
   try {
-    const body = await request.json();
+    // Check if request has a body before parsing
+    const contentType = request.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      return NextResponse.json(
+        { error: 'Content-Type must be application/json' },
+        { status: 400 }
+      );
+    }
+
+    // Safely parse request body
+    let body;
+    try {
+      const text = await request.text();
+      if (!text || text.trim().length === 0) {
+        return NextResponse.json(
+          { error: 'Request body is required and cannot be empty' },
+          { status: 400 }
+        );
+      }
+      body = JSON.parse(text);
+    } catch (parseError) {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body', details: parseError.message },
+        { status: 400 }
+      );
+    }
+
     const { sessionId, action, includeCount = false } = body;
 
     if (!sessionId || typeof sessionId !== 'string') {
