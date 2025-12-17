@@ -264,7 +264,7 @@
 }
 
 /* SanityVideo container styles */
-.container[data-view="images"] .archiveEntryVideo {
+.archiveEntryVideo {
   position: relative;
   width: 100%;
   padding-bottom: var(--video-aspect-ratio-padding, 100%);
@@ -272,7 +272,7 @@
   height: 0; /* Override height: auto from archiveEntryImage */
 }
 
-.container[data-view="images"] .archiveEntryVideo video {
+.archiveEntryVideo video {
   position: absolute;
   top: 0;
   left: 0;

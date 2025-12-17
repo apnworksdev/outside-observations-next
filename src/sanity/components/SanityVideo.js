@@ -1,18 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { urlForImage } from '@/sanity/lib/image';
 import SanityImage from '@/sanity/components/SanityImage';
 
 /**
- * SanityVideo - An optimized video component for Sanity-hosted videos
+ * SanityVideo - A simple video component for Sanity-hosted videos
  * Features:
- * - Lazy loading with Intersection Observer
- * - Autoplay when visible, pause when not
- * - Poster image support with smooth transition
- * - Proper preload strategy
- * - Error handling and fallbacks
- * - Performance optimizations
+ * - Lazy loading when visible (unless priority)
+ * - Error fallback to poster image
+ * - Autoplay when visible
  */
 export default function SanityVideo({
   video,
@@ -37,151 +34,117 @@ export default function SanityVideo({
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const observerRef = useRef(null);
-  const isVisibleRef = useRef(false);
-  const [shouldPreload, setShouldPreload] = useState(priority);
+  const shouldLoadRef = useRef(priority);
+  const prefersReducedMotionRef = useRef(false);
+  const [shouldLoad, setShouldLoad] = useState(priority);
   const [hasError, setHasError] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   // Get video URL from Sanity file asset
-  // Sanity file URLs should work directly, but we ensure it's a valid URL
-  let videoUrl = video?.asset?.url;
+  const videoUrl = video?.asset?.url;
   const videoMimeType = video?.asset?.mimeType || 'video/mp4';
-  
-  // Ensure URL is properly formatted for video playback
-  // Don't add ?dl= for video playback (that's for downloads)
-  // The URL from Sanity should work directly for video elements
   
   // Get poster URL from Sanity image
   const posterUrl = poster ? urlForImage(poster) : null;
   
   // Calculate aspect ratio padding for responsive container
-  // Uses padding-bottom trick: padding-bottom = (1 / aspectRatio) * 100%
   const posterAspectRatio = poster?.dimensions?.aspectRatio;
   const aspectRatioPadding = posterAspectRatio 
     ? `${(1 / posterAspectRatio) * 100}%`
     : width && height
     ? `${(height / width) * 100}%`
-    : '100%'; // Default to square if no aspect ratio
+    : '100%';
 
-  // Handle video play
-  const handlePlay = useCallback(async () => {
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
-
-    try {
-      await videoElement.play();
-      onPlay?.(videoElement);
-    } catch (error) {
-      // Silently handle play errors (autoplay restrictions, etc.)
-    }
-  }, [onPlay]);
-
-  // Handle video pause
-  const handlePause = useCallback(() => {
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
-
-    videoElement.pause();
-    onPause?.(videoElement);
-  }, [onPause]);
-
-  // Handle video errors
-  const handleError = useCallback((event) => {
-    const videoElement = event.target;
-    const error = videoElement.error;
-    
-    // Handle video errors silently, show fallback
-    setHasError(true);
-    onError?.(event);
-  }, [onError]);
-
-  // Play when visible on screen, pause when not
+  // Check for reduced motion preference
   useEffect(() => {
-    if (priority) {
-      setShouldPreload(true);
-    }
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const matches = mediaQuery.matches;
+    setPrefersReducedMotion(matches);
+    prefersReducedMotionRef.current = matches;
+    
+    const handleChange = (e) => {
+      setPrefersReducedMotion(e.matches);
+      prefersReducedMotionRef.current = e.matches;
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
+  // Initialize shouldLoad for priority videos
+  useEffect(() => {
+    if (priority && !shouldLoadRef.current) {
+      shouldLoadRef.current = true;
+      setShouldLoad(true);
+    }
+  }, [priority]);
+
+  // Lazy load and play/pause based on visibility
+  useEffect(() => {
+    const container = containerRef.current;
     const videoElement = videoRef.current;
-    if (!videoElement) return;
+    if (!container || !videoElement) return;
+
+    // Clean up existing observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           const isIntersecting = entry.isIntersecting;
           const intersectionRatio = entry.intersectionRatio;
-          const wasVisible = isVisibleRef.current;
-          const isVisible = isIntersecting && intersectionRatio >= 0.5;
-          isVisibleRef.current = isVisible;
+          // Consider visible if >50% is in viewport
+          const visible = isIntersecting && intersectionRatio >= 0.5;
 
-          // Start loading when visible (check current state, don't depend on it)
-          if (isVisible && !priority) {
-            setShouldPreload((prev) => {
-              if (!prev) return true;
-              return prev;
-            });
+          // Load video when it becomes visible
+          if (visible && !shouldLoadRef.current) {
+            shouldLoadRef.current = true;
+            setShouldLoad(true);
           }
 
-          // Play when visible, pause when not visible
-          if (isVisible) {
-            // Video is visible - play when ready
-            if (videoElement.readyState >= 2) {
-              if (videoElement.paused) {
-                handlePlay();
-              }
-            } else if (!wasVisible) {
-              // Just became visible, wait for video to load then play
-              const playWhenReady = () => {
-                if (isVisibleRef.current && videoElement.readyState >= 2 && videoElement.paused) {
-                  handlePlay();
-                }
-              };
-              videoElement.addEventListener('loadedmetadata', playWhenReady, { once: true });
-              videoElement.addEventListener('canplay', playWhenReady, { once: true });
+          // Play/pause based on visibility and reduced motion preference
+          // Use refs to avoid stale closures
+          const canPlay = shouldLoadRef.current && !prefersReducedMotionRef.current;
+          
+          if (canPlay) {
+            if (visible && videoElement.paused) {
+              videoElement.play().catch(() => {
+                // Autoplay blocked - that's okay, user interaction required
+              });
+            } else if (!visible && !videoElement.paused) {
+              videoElement.pause();
             }
           } else {
-            // Video is not visible - pause
+            // Pause if reduced motion is preferred or not loaded
             if (!videoElement.paused) {
-              handlePause();
+              videoElement.pause();
             }
           }
         });
       },
       {
-        rootMargin: priority ? '0px' : '50px',
+        rootMargin: '50px',
         threshold: [0, 0.25, 0.5, 0.75, 1],
       }
     );
 
-    observer.observe(videoElement);
+    observer.observe(container);
     observerRef.current = observer;
 
     return () => {
-      observer.disconnect();
-      observerRef.current = null;
-      isVisibleRef.current = false;
-    };
-  }, [priority, handlePlay, handlePause]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    const observer = observerRef.current;
-    
-    return () => {
-      if (observer) {
-        observer.disconnect();
-      }
-      if (videoElement && typeof videoElement.pause === 'function') {
-        videoElement.pause();
-        videoElement.src = '';
-        videoElement.load();
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
       }
     };
-  }, []);
+  }, [prefersReducedMotion]); // Only re-run when reduced motion preference changes
 
-  // Handle loaded metadata
-  const handleLoadedMetadata = useCallback(() => {
-    onLoad?.(videoRef.current);
-  }, [onLoad]);
+  // Handle video errors - show poster as fallback
+  const handleError = (event) => {
+    setHasError(true);
+    onError?.(event);
+  };
 
   // Validate video URL
   if (!videoUrl) {
@@ -192,9 +155,7 @@ export default function SanityVideo({
     return null;
   }
 
-  const currentPreload = shouldPreload ? (priority ? 'auto' : preload) : 'none';
-
-  // If video has error, show poster as fallback
+  // Show poster as fallback if video has error
   if (hasError && poster) {
     return (
       <SanityImage
@@ -202,7 +163,7 @@ export default function SanityVideo({
         alt={alt || 'Video poster'}
         width={width}
         height={height}
-        className={fallbackClassName}
+        className={fallbackClassName || className}
         {...props}
       />
     );
@@ -220,18 +181,19 @@ export default function SanityVideo({
       <video
         ref={videoRef}
         poster={posterUrl || undefined}
-        preload={currentPreload}
+        preload={shouldLoad ? preload : 'none'}
+        autoPlay={false}
         muted={muted}
         playsInline={playsInline}
         controls={controls}
         loop={loop}
         aria-label={alt || 'Video'}
-        onLoadedMetadata={handleLoadedMetadata}
+        onLoadedMetadata={() => onLoad?.()}
         onPlay={onPlay}
         onPause={onPause}
         onError={handleError}
       >
-        {currentPreload !== 'none' && <source src={videoUrl} type={videoMimeType} />}
+        <source src={videoUrl} type={videoMimeType} />
         Your browser does not support the video tag.
       </video>
     </div>

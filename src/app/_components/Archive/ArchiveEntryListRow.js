@@ -30,15 +30,31 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
           <p>{entry.fileName}</p>
         </div>
         <div className={styles.itemPoster}>
-          <SanityImage
-            image={entry.poster}
-            alt={entry.artName || 'Archive entry poster'}
-            width={posterWidth}
-            height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
-            priority={isPriority}
-            loading={isPriority ? undefined : 'lazy'}
-            blurDataURL={entry?.poster?.lqip || undefined}
-          />
+          {entry.mediaType === 'video' ? (
+            <SanityVideo
+              video={entry.video}
+              poster={entry.poster}
+              alt={entry.artName || 'Archive entry video'}
+              className={styles.archiveEntryVideo}
+              fallbackClassName={styles.archiveEntryImage}
+              width={posterWidth}
+              height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
+              priority={isPriority}
+              preload="metadata"
+              muted
+              playsInline
+            />
+          ) : (
+            <SanityImage
+              image={entry.poster}
+              alt={entry.artName || 'Archive entry poster'}
+              width={posterWidth}
+              height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
+              priority={isPriority}
+              loading={isPriority ? undefined : 'lazy'}
+              blurDataURL={entry?.poster?.lqip || undefined}
+            />
+          )}
         </div>
       </div>
       <div className={`${styles.itemColumn} ${styles.itemColumnSource}`}>
