@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useArchiveSearchState } from '@/app/_components/Archive/ArchiveSearchStateProvider';
+import { useArchiveEntriesSafe } from '@/app/_components/Archive/ArchiveEntriesProvider';
 import { useChatStorage } from '@/app/_hooks/useChatStorage';
 import styles from '@app/_assets/chatbox.module.css';
 import TypewriterMessage from './TypewriterMessage';
@@ -20,6 +21,11 @@ export default function ChatBox({ variant = 'home' }) {
   // Get setSearchPayload from global search state provider
   // Available from any page since it's in root layout
   const { setSearchPayload } = useArchiveSearchState();
+  
+  // Get setSearchFromPayload from archive entries provider (only available on archive page)
+  // Use safe hook that returns null if not within provider
+  const archiveEntries = useArchiveEntriesSafe();
+  const setSearchFromPayload = archiveEntries?.setSearchFromPayload;
 
   const messageIdRef = useRef(0);
   
@@ -63,9 +69,9 @@ export default function ChatBox({ variant = 'home' }) {
     }
   }, [inputValue]);
 
-  // Function to trigger archive search using already-fetched image IDs (no API call!)
-  const triggerArchiveSearch = (messageId, imageIds, searchQuery) => {
-    if (!imageIds || imageIds.length === 0 || !searchQuery) return;
+  // Function to trigger archive search using already-fetched item IDs (no API call!)
+  const triggerArchiveSearch = (messageId, itemIds, searchQuery) => {
+    if (!itemIds || itemIds.length === 0 || !searchQuery) return;
 
     setNavigatingMessageId(messageId);
 
@@ -73,8 +79,8 @@ export default function ChatBox({ variant = 'home' }) {
     const orderedUniqueIds = [];
     const seenIds = new Set();
 
-    for (let index = 0; index < imageIds.length; index += 1) {
-      const id = imageIds[index];
+    for (let index = 0; index < itemIds.length; index += 1) {
+      const id = itemIds[index];
       if (!seenIds.has(id)) {
         seenIds.add(id);
         orderedUniqueIds.push(id);
@@ -115,15 +121,17 @@ export default function ChatBox({ variant = 'home' }) {
     };
   }, []);
 
-  // Prefetch archive route when images appear (for faster navigation)
+  // Prefetch archive route when images appear (for faster navigation) - only for 'home' variant
   useEffect(() => {
-    const hasImageMessages = messages.some(
-      (msg) => msg.isImageMessage && msg.imageEntries && msg.imageEntries.length > 0
-    );
-    if (hasImageMessages) {
-      router.prefetch('/archive');
+    if (variant === 'home') {
+      const hasImageMessages = messages.some(
+        (msg) => msg.isImageMessage && msg.imageEntries && msg.imageEntries.length > 0
+      );
+      if (hasImageMessages) {
+        router.prefetch('/archive');
+      }
     }
-  }, [messages, router]);
+  }, [messages, router, variant]);
 
   // Auto-scroll to bottom when messages change or during typewriter animation
   useEffect(() => {
@@ -252,21 +260,70 @@ export default function ChatBox({ variant = 'home' }) {
         // Extract query for archive search (prefer rewritten_query, fallback to original_query or user message)
         const searchQuery = result?.rewritten_query || result?.original_query || userMessage;
         
-        // Check if response has images and fetch them by ID
-        const imageIds = Array.isArray(result?.images) && result.images.length > 0 
-          ? result.images.filter((id) => typeof id === 'string' && id.trim().length > 0)
+        // Check if response has itemIds and fetch them by ID
+        const itemIds = Array.isArray(result?.itemIds) && result.itemIds.length > 0 
+          ? result.itemIds.filter((id) => typeof id === 'string' && id.trim().length > 0)
           : [];
 
-        // Fetch archive entries by IDs (only if we have image IDs)
+        // If variant is 'archive', filter directly instead of showing ExploreArchiveLink
+        if (variant === 'archive' && itemIds.length > 0) {
+          if (setSearchFromPayload) {
+            try {
+              // Create ordered unique IDs (same logic as ArchiveEntriesProvider)
+              const orderedUniqueIds = [];
+              const seenIds = new Set();
+
+              for (let index = 0; index < itemIds.length; index += 1) {
+                const id = itemIds[index];
+                if (!seenIds.has(id)) {
+                  seenIds.add(id);
+                  orderedUniqueIds.push(id);
+                }
+              }
+
+              // Create payload and apply search directly
+              const payload = {
+                resultsState:
+                  orderedUniqueIds.length > 0
+                    ? { active: true, ids: orderedUniqueIds, orderedIds: orderedUniqueIds }
+                    : { active: true, ids: [], orderedIds: [] },
+                statusState: {
+                  status: 'success',
+                  query: searchQuery,
+                  summary: {
+                    original: searchQuery,
+                    rewritten: searchQuery,
+                    matches: orderedUniqueIds.length,
+                    threshold: 0.1,
+                  },
+                  error: null,
+                },
+              };
+
+              // Apply search directly to filter archive items
+              setSearchFromPayload(payload);
+            } catch (error) {
+              // Log error but don't break the chat flow
+              console.error('ChatBox: Error applying archive filter:', error);
+            }
+          } else {
+            // This shouldn't happen if ChatBox is properly used within ArchiveEntriesProvider
+            // But log a warning for debugging
+            console.warn('ChatBox: setSearchFromPayload not available in archive variant. Make sure ChatBox is used within ArchiveEntriesProvider.');
+          }
+        }
+
+        // Fetch archive entries by IDs (only if we have item IDs and variant is 'home')
+        // For 'archive' variant, we don't need to fetch entries since we're filtering directly
         let matchedEntries = [];
-        if (imageIds.length > 0) {
+        if (variant === 'home' && itemIds.length > 0) {
           try {
             const entriesResponse = await fetch('/api/archive-entries/by-ids', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ ids: imageIds }),
+              body: JSON.stringify({ ids: itemIds }),
             });
 
             if (entriesResponse.ok) {
@@ -290,9 +347,10 @@ export default function ChatBox({ variant = 'home' }) {
               ...newMessages[lastIndex],
               text: botResponse,
               isLoading: false,
-              imageEntries: matchedEntries.length > 0 ? matchedEntries : null,
-              imageIds: imageIds.length > 0 ? imageIds : null,
-              searchQuery: matchedEntries.length > 0 ? searchQuery : null
+              // Only include imageEntries and itemIds for 'home' variant
+              imageEntries: variant === 'home' && matchedEntries.length > 0 ? matchedEntries : null,
+              itemIds: variant === 'home' && itemIds.length > 0 ? itemIds : null,
+              searchQuery: variant === 'home' && matchedEntries.length > 0 ? searchQuery : null
             };
           }
           return newMessages;
@@ -370,7 +428,7 @@ export default function ChatBox({ variant = 'home' }) {
                           text={message.text}
                           isLoading={message.isLoading}
                           onComplete={
-                            hasImages && !imagesAlreadyAdded
+                            variant === 'home' && hasImages && !imagesAlreadyAdded
                               ? () => {
                                   // Mark images as added for this message
                                   imagesMessageAddedRef.current.add(messageKey);
@@ -386,7 +444,7 @@ export default function ChatBox({ variant = 'home' }) {
                                       sender: 'bot',
                                       isLoading: false,
                                       imageEntries: message.imageEntries,
-                                      imageIds: message.imageIds,
+                                      itemIds: message.itemIds,
                                       searchQuery: message.searchQuery,
                                       isImageMessage: true
                                     });
@@ -404,11 +462,11 @@ export default function ChatBox({ variant = 'home' }) {
                 </div>
               )}
               
-              {/* Images message (rendered as separate message) */}
-              {message.isImageMessage && message.imageEntries && (
+              {/* Images message (rendered as separate message) - only for 'home' variant */}
+              {variant === 'home' && message.isImageMessage && message.imageEntries && (
                 <ExploreArchiveLink
                   messageId={message.id}
-                  imageIds={message.imageIds}
+                  itemIds={message.itemIds}
                   searchQuery={message.searchQuery}
                   imageEntries={message.imageEntries}
                   navigatingMessageId={navigatingMessageId}

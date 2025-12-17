@@ -13,7 +13,7 @@ import styles from '@app/_assets/chatbox.module.css';
  */
 export default function ExploreArchiveLink({ 
   messageId, 
-  imageIds, 
+  itemIds, 
   searchQuery, 
   imageEntries, 
   navigatingMessageId, 
@@ -27,8 +27,8 @@ export default function ExploreArchiveLink({
       prefetch={true}
       onClick={(e) => {
         e.preventDefault();
-        if (imageIds && searchQuery) {
-          onTriggerSearch(messageId, imageIds, searchQuery);
+        if (itemIds && searchQuery) {
+          onTriggerSearch(messageId, itemIds, searchQuery);
         }
       }}
       className={`${styles.chatBoxMessage} ${styles.chatBoxImagesMessage} ${navigatingMessageId === messageId ? styles.chatBoxImagesMessageLoading : ''}`}

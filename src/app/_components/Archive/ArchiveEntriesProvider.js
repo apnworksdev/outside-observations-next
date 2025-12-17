@@ -7,7 +7,6 @@ import { useArchiveSearchState } from './ArchiveSearchStateProvider';
 const ArchiveEntriesContext = createContext(null);
 
 const DUPLICATION_FACTOR = 10;
-const SIMILARITY_THRESHOLD = 0.1;
 export const VIEW_COOKIE_NAME = 'outside-observations-archive-view';
 export const VIEW_CHANGE_EVENT = 'outside-observations:archive-view-change';
 const VIEW_COOKIE_MAX_AGE_SECONDS = 60 * 60; // 1 hour
@@ -409,159 +408,6 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     }
   }, [pathname, applySearchPayload, consumeSearchPayload, globalSearchPayload]);
 
-  /**
-   * `runSearch` wraps the full request lifecycle:
-   *   1. Bail out (and reset state) on empty queries.
-   *   2. Track an incrementing request id so we can ignore late responses.
-   *   3. Submit the vector-store query with the configured similarity threshold.
-   *   4. Normalise the result into an ordered list of unique entry IDs that the UI
-   *      can consume for both filtering and result summaries.
-   *   5. Handle navigation transitions when the user triggers the search from a page
-   *      outside `/archive` by remembering the payload and pushing the new route.
-   * Network errors degrade gracefully to the idle state without surfacing details to users.
-   */
-  const runSearch = useCallback(
-    async (query) => {
-      const trimmedQuery = (query ?? '').trim();
-
-      if (!trimmedQuery) {
-        requestIdRef.current += 1;
-        setSearchResultsState({ active: false, ids: [], orderedIds: [] });
-        setSearchStatus({ status: 'idle', query: null, summary: null, error: null });
-        setSorting(getInitialSorting());
-        pendingSearchPayloadRef.current = null;
-        return;
-      }
-
-      // Clear mood tag filter when starting a search
-      setSelectedMoodTag(null);
-
-      const currentRequestId = requestIdRef.current + 1;
-      requestIdRef.current = currentRequestId;
-      pendingSearchPayloadRef.current = null;
-
-      setSearchStatus({ status: 'loading', query: trimmedQuery, summary: null, error: null });
-
-      try {
-        const response = await fetch('/api/vector-store/query', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: trimmedQuery,
-            minSimilarity: SIMILARITY_THRESHOLD,
-          }),
-        });
-
-        if (!response.ok) {
-          let errorMessage = 'Search failed';
-          try {
-            const errorBody = await response.json();
-            errorMessage = errorBody?.error || errorBody?.message || `Search failed: ${response.status}`;
-          } catch (parseError) {
-            // If JSON parsing fails, use status text
-            errorMessage = `Search failed: ${response.status} ${response.statusText || 'Unknown error'}`;
-          }
-          throw new Error(errorMessage);
-        }
-
-        let result;
-        try {
-          result = await response.json();
-        } catch (parseError) {
-          console.error('Failed to parse search response:', parseError);
-          throw new Error('Invalid response from search service');
-        }
-
-        if (requestIdRef.current !== currentRequestId) {
-          return;
-        }
-
-        // The new API returns images as an array of image ID strings
-        const imageIds = Array.isArray(result?.images)
-          ? result.images.filter((id) => typeof id === 'string' && id.trim().length > 0)
-          : [];
-
-        const orderedUniqueIds = [];
-        const seenIds = new Set();
-
-        for (let index = 0; index < imageIds.length; index += 1) {
-          const id = imageIds[index];
-          if (!seenIds.has(id)) {
-            seenIds.add(id);
-            orderedUniqueIds.push(id);
-          }
-        }
-
-        const payload = {
-          resultsState:
-            orderedUniqueIds.length > 0
-              ? { active: true, ids: orderedUniqueIds, orderedIds: orderedUniqueIds }
-              : { active: true, ids: [], orderedIds: [] },
-          statusState: {
-            status: 'success',
-            query: trimmedQuery,
-            summary: {
-              original: result?.original_query ?? trimmedQuery,
-              rewritten: result?.rewritten_query ?? trimmedQuery,
-              matches: orderedUniqueIds.length,
-              threshold: SIMILARITY_THRESHOLD,
-            },
-            error: null,
-          },
-        };
-
-        if (pathname !== '/archive') {
-          pendingSearchPayloadRef.current = payload;
-          router.push('/archive');
-        } else {
-          applySearchPayload(payload);
-        }
-      } catch (error) {
-        if (requestIdRef.current !== currentRequestId) {
-          return;
-        }
-
-        // Determine user-friendly error message
-        let errorMessage = 'Search failed. Please try again.';
-        if (error instanceof TypeError && error.message.includes('fetch')) {
-          errorMessage = 'Unable to connect to search service. Please check your internet connection.';
-        } else if (error.message) {
-          const message = error.message.toLowerCase();
-          if (message.includes('network') || message.includes('fetch')) {
-            errorMessage = 'Network error. Please check your connection and try again.';
-          } else if (message.includes('timeout')) {
-            errorMessage = 'Search request timed out. Please try again.';
-          } else if (message.length < 150) {
-            // Use error message if it's reasonably short
-            errorMessage = error.message;
-          }
-        }
-
-        console.error('Search error:', error);
-
-        const payload = {
-          resultsState: { active: true, ids: [], orderedIds: [] },
-          statusState: {
-            status: 'error',
-            query: trimmedQuery,
-            summary: null,
-            error: errorMessage,
-          },
-        };
-
-        if (pathname !== '/archive') {
-          pendingSearchPayloadRef.current = payload;
-          router.push('/archive');
-        } else {
-          applySearchPayload(payload);
-        }
-      }
-    },
-    [applySearchPayload, pathname, router]
-  );
-
   const clearSearch = useCallback(() => {
     requestIdRef.current += 1;
     setSearchResultsState({ active: false, ids: [], orderedIds: [] });
@@ -619,7 +465,6 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       view,
       setView,
       searchStatus,
-      runSearch,
       setSearchFromPayload,
       clearSearch,
       sorting,
@@ -628,7 +473,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       setMoodTag,
       clearMoodTag,
     }),
-    [clearSearch, clearMoodTag, entries, runSearch, setSearchFromPayload, searchStatus, selectedMoodTag, setMoodTag, setSorting, setView, sortedEntries, sorting, view]
+    [clearSearch, clearMoodTag, entries, setSearchFromPayload, searchStatus, selectedMoodTag, setMoodTag, setSorting, setView, sortedEntries, sorting, view]
   );
 
   return <ArchiveEntriesContext.Provider value={value}>{children}</ArchiveEntriesContext.Provider>;
