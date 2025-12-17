@@ -24,6 +24,7 @@
   gap: var(--column-gap);
   padding: 0 var(--padding);
   pointer-events: none;
+  z-index: 1000;
 }
 
 .archiveEntryModalContent {
@@ -84,12 +85,77 @@
   object-fit: cover;
 }
 
+.archiveEntryVideoContainer {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  padding-bottom: var(--video-aspect-ratio-padding, 100%);
+  cursor: pointer;
+}
+
+.archiveEntryVideoContainer .archiveEntryVideo {
+  cursor: pointer;
+}
+
+.archiveEntryVideo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.archiveEntryVideoFull {
+  position: fixed;
+}
+
+.archiveEntryVideoControls {
+  width: calc(100% + var(--item-gap) * 2);
+  position: absolute;
+  left: calc(var(--item-gap) * -1);
+  top: calc(100% + var(--gap) + var(--item-gap));
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.archiveEntryVideoControlBubble {
+  height: var(--bubble-height);
+  padding-right: var(--padding);
+  padding-left: var(--padding);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-color);
+  background-color: var(--bg-color);
+  text-transform: uppercase;
+}
+
+.archiveEntryVideoControlBubbleProgressBar {
+  flex: 1;
+}
+
+.archiveEntryVideoProgress {
+  height: 1px;
+  width: 100%;
+  background-color: var(--gray-color);
+  position: relative;
+  cursor: pointer;
+}
+
+.archiveEntryVideoProgressBar {
+  height: 100%;
+  background-color: var(--fg-color);
+  will-change: width;
+}
+
 .archiveEntryAside {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  z-index: 1000;
+  z-index: 999;
   padding: 0 var(--padding) var(--gap) var(--padding);
 }
 
@@ -151,6 +217,7 @@
 @media (max-width: 768px) {
   .archiveEntryContentWrapper {
     display: flex;
+    flex-direction: column;
   }
 
   .archiveEntryModalAsideFileName,

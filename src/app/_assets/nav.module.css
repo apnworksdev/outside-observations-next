@@ -288,12 +288,6 @@
     padding-right: var(--padding);
     padding-left: var(--padding);
   }
-
-  :global(body[data-page="archive-entry"]) .header {
-    z-index: 1001;
-    opacity: 1;
-    pointer-events: auto;
-  }
   
   :global(body[data-page="archive-entry"]) .navBubble {
     color: var(--fg-color);

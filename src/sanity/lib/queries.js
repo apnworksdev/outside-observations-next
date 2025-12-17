@@ -43,6 +43,15 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && slu
   artName,
   fileName,
   source,
+  mediaType,
+  video{
+    asset->{
+      _id,
+      url,
+      originalFilename,
+      mimeType
+    }
+  },
   poster{
     ...,
     asset,
@@ -65,6 +74,7 @@ export const ARCHIVE_ENTRY_SLUGS = defineQuery(`*[_type == "archiveEntry" && def
 /**
  * Query to fetch archive entries by IDs - optimized for image display
  * Only fetches minimal data needed for displaying images in chat
+ * Includes mediaType for consistency and future use
  */
 export const ARCHIVE_ENTRIES_BY_IDS_QUERY = defineQuery(`*[_type == "archiveEntry" && _id in $ids] {
   _id,
@@ -73,6 +83,7 @@ export const ARCHIVE_ENTRIES_BY_IDS_QUERY = defineQuery(`*[_type == "archiveEntr
     _type
   },
   artName,
+  mediaType,
   poster{
     ...,
     asset,
