@@ -178,7 +178,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   const [searchResults, setSearchResultsState] = useState({ active: false, ids: [], orderedIds: [] });
   const [searchStatus, setSearchStatus] = useState({ status: 'idle', query: null, summary: null, error: null });
   const [sorting, setSorting] = useState(() => getInitialSorting());
-  const [selectedMoodTag, setSelectedMoodTag] = useState(null);
+  const [selectedMoodTags, setSelectedMoodTags] = useState([]);
   const requestIdRef = useRef(0);
   const pendingSearchPayloadRef = useRef(null);
   const previousPathRef = useRef(null);
@@ -296,16 +296,18 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
         .sort((a, b) => getRankForEntry(a) - getRankForEntry(b));
     }
 
-    // Apply mood tag filtering if a tag is selected
-    if (selectedMoodTag) {
+    // Apply mood tag filtering if tags are selected (OR logic - entry needs at least one)
+    if (selectedMoodTags && selectedMoodTags.length > 0) {
       result = result.filter((entry) => {
         const moodTags = entry.aiMoodTags || [];
-        return moodTags.some((tag) => tag?.name === selectedMoodTag);
+        return selectedMoodTags.some((selectedTag) =>
+          moodTags.some((tag) => tag?.name === selectedTag)
+        );
       });
     }
 
     return result;
-  }, [entries, searchResults, selectedMoodTag]);
+  }, [entries, searchResults, selectedMoodTags]);
 
   const sortedEntries = useMemo(() => {
     const column = sorting?.column;
@@ -362,7 +364,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     }
 
     // Clear mood tag filter when applying search results
-    setSelectedMoodTag(null);
+    setSelectedMoodTags([]);
     setSearchResultsState(payload.resultsState);
     setSearchStatus(payload.statusState);
     setSorting(getInitialSorting());
@@ -422,7 +424,13 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       if (pathname !== '/archive') {
         router.push('/archive');
       }
-      setSelectedMoodTag(tagName);
+      setSelectedMoodTags((prev) => {
+        // Toggle: if tag is already selected, remove it; otherwise add it
+        if (prev.includes(tagName)) {
+          return prev.filter((tag) => tag !== tagName);
+        }
+        return [...prev, tagName];
+      });
       // Clear search when filtering by mood tag
       clearSearch();
     },
@@ -430,7 +438,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   );
 
   const clearMoodTag = useCallback(() => {
-    setSelectedMoodTag(null);
+    setSelectedMoodTags([]);
   }, []);
 
   /**
@@ -469,11 +477,11 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       clearSearch,
       sorting,
       setSorting,
-      selectedMoodTag,
+      selectedMoodTags,
       setMoodTag,
       clearMoodTag,
     }),
-    [clearSearch, clearMoodTag, entries, setSearchFromPayload, searchStatus, selectedMoodTag, setMoodTag, setSorting, setView, sortedEntries, sorting, view]
+    [clearSearch, clearMoodTag, entries, setSearchFromPayload, searchStatus, selectedMoodTags, setMoodTag, setSorting, setView, sortedEntries, sorting, view]
   );
 
   return <ArchiveEntriesContext.Provider value={value}>{children}</ArchiveEntriesContext.Provider>;

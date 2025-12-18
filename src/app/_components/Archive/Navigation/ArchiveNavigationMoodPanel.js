@@ -5,111 +5,125 @@ import { useArchiveEntries } from '@/app/_components/Archive/ArchiveEntriesProvi
 import styles from '@app/_assets/archive/archive-navigation.module.css';
 
 const MOOD_TAGS = [
-  'Analyze',
-  'Anger',
-  'Anguish',
-  'Anxious',
-  'Artificial',
-  'Contemplate',
-  'Content',
-  'Cooperative',
-  'Delicate',
-  'Determined',
-  'Directed',
-  'Discover',
-  'Dramatic',
-  'Dream',
-  'Energetic',
-  'Engaging',
-  'Excited',
-  'Fleeting',
-  'Focused',
-  'Friendly',
-  'Gentle',
-  'Grief',
-  'Guarded',
-  'Hectic',
-  'Helpful',
-  'Hopeful',
-  'Innocent',
-  'Intense',
-  'Intentional',
-  'Interpret',
-  'Joyful',
-  'Lively',
-  'Lonely',
-  'Loving',
-  'Memory',
-  'Mysterious',
-  'Nostalgic',
-  'Notice',
-  'Nurturing',
-  'Observe',
-  'Oppression',
-  'Passionate',
-  'Peaceful',
-  'Playful',
-  'Present',
-  'Protective',
-  'Purposeful',
-  'Question',
-  'Quiet',
-  'Resilient',
-  'Restless',
-  'Sad',
-  'Searching',
-  'Solitary',
-  'Stable',
-  'Still',
-  'Strong',
-  'Surreal',
-  'Tender',
-  'Transform',
-  'Trusting',
-  'Turmoil',
-  'Unsettled',
-  'Vulnerable',
-  'Withdrawn',
+  {
+    parent: 'Calm',
+    children: ['Quiet', 'Gentle', 'Peaceful'],
+  },
+  {
+    parent: 'Care',
+    children: ['Protective'],
+  },
+  {
+    parent: 'Enigmatic',
+    children: ['Contemplate', 'Nostalgic', 'Dream', 'Surreal'],
+  },
+  {
+    parent: 'Inquiry',
+    children: ['Focused', 'Analyze'],
+  },
+  {
+    parent: 'Melancholy',
+    children: ['Mysterious', 'Solitary', 'Withdrawn', 'Searching'],
+  },
+  {
+    parent: 'Processing',
+    children: ['Artificial', 'Transform'],
+  },
+  {
+    parent: 'Strength',
+    children: ['Determined', 'Resilient'],
+  },
+  {
+    parent: 'Social',
+    children: ['Cooperative'],
+  },
+  {
+    parent: 'Temperament',
+    children: ['Passionate', 'Intense', 'Dramatic', 'Hectic'],
+  },
+  {
+    parent: 'Uneasy',
+    children: ['Turmoil', 'Guarded', 'Unsettled'],
+  },
+  {
+    parent: 'Uplifted',
+    children: ['Joyful', 'Playful', 'Lively'],
+  },
+  {
+    parent: 'Vulnerable',
+    children: ['Innocent', 'Tender'],
+  },
 ];
 
 export default function ArchiveNavigationMoodPanel() {
-  const { selectedMoodTag, setMoodTag, clearMoodTag } = useArchiveEntries();
+  const { selectedMoodTags, setMoodTag } = useArchiveEntries();
 
   const handleTagClick = useCallback(
     (tagName) => {
-      if (selectedMoodTag === tagName) {
-        clearMoodTag();
-      } else {
-        setMoodTag(tagName);
-      }
+      setMoodTag(tagName);
     },
-    [selectedMoodTag, setMoodTag, clearMoodTag]
+    [setMoodTag]
   );
+
+  const isParentOrChildSelected = (parentTag, children) => {
+    if (selectedMoodTags.includes(parentTag)) return true;
+    return children.some((child) => selectedMoodTags.includes(child));
+  };
+
+  const isParentSelected = (parentTag) => {
+    return selectedMoodTags.includes(parentTag);
+  };
+
+  const isChildSelected = (childTag) => {
+    return selectedMoodTags.includes(childTag);
+  };
 
   return (
     <div className={styles.archiveNavigationMoodPanelContent}>
-      <ul className={styles.archiveNavigationMoodPanelList}>
-        {MOOD_TAGS.map((tag) => {
-          const isSelected = selectedMoodTag === tag;
+      <div className={styles.archiveNavigationMoodPanelContentWrapper}>
+        {MOOD_TAGS.map(({ parent, children }) => {
+          const isParentTagSelected = isParentSelected(parent);
+          const isGroupSelected = isParentOrChildSelected(parent, children);
+
           return (
-            <li key={tag}>
+            <div
+              key={parent}
+              className={`${styles.archiveNavigationMoodPanelGroup} ${
+                isGroupSelected ? styles.archiveNavigationMoodPanelGroupSelected : ''
+              }`}
+            >
               <button
                 type="button"
-                onClick={() => handleTagClick(tag)}
-                className={isSelected ? styles.archiveNavigationPanelTagActive : undefined}
-                aria-pressed={isSelected ? 'true' : 'false'}
+                onClick={() => handleTagClick(parent)}
+                className={`${styles.archiveNavigationMoodButton} ${
+                  isParentTagSelected ? styles.archiveNavigationPanelTagActive : ''
+                }`}
+                aria-pressed={isParentTagSelected ? 'true' : 'false'}
               >
-                <span
-                  className={`${styles.archiveNavigationPanelTagIndicator} ${
-                    isSelected ? styles.archiveNavigationPanelTagIndicatorActive : ''
-                  }`}
-                />
-                {tag}
+                {parent}
               </button>
-            </li>
+              <ul className={styles.archiveNavigationMoodPanelGroupList}>
+                {children.map((child) => {
+                  const isSelected = isChildSelected(child);
+                  return (
+                    <li key={child} className={styles.archiveNavigationMoodPanelList}>
+                      <button
+                        type="button"
+                        onClick={() => handleTagClick(child)}
+                        className={`${styles.archiveNavigationMoodButton} ${
+                          isSelected ? styles.archiveNavigationPanelTagActive : ''}`}
+                        aria-pressed={isSelected ? 'true' : 'false'}
+                      >
+                        {child}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           );
         })}
-      </ul>
+      </div>
     </div>
   );
 }
