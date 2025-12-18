@@ -35,8 +35,10 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
   const isVideoField = props.schemaType?.name === 'file'
   
   // Determine expected media type based on field type and document mediaType
-  const expectedMediaType = isImageField ? 'image' : 'video'
-  const shouldProcessAI = mediaType === expectedMediaType
+  // For image fields, support both 'image' and 'text' media types
+  // For video fields, only support 'video' media type
+  const expectedMediaTypes = isImageField ? ['image', 'text'] : ['video']
+  const shouldProcessAI = expectedMediaTypes.includes(mediaType)
 
   // Media type labels
   const mediaLabel = isImageField ? 'image' : 'video'
@@ -64,8 +66,9 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
 
     // Verify media type matches
     const currentMediaType = documentValue?.mediaType
-    if (currentMediaType !== expectedMediaType) {
-      setError(`AI processing is only available for ${mediaLabel}s when media type is set to "${mediaLabelCapitalized}"`)
+    if (!expectedMediaTypes.includes(currentMediaType)) {
+      const allowedTypes = expectedMediaTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' or ')
+      setError(`AI processing is only available for ${mediaLabel}s when media type is set to "${allowedTypes}"`)
       return
     }
 
@@ -335,7 +338,7 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
     } finally {
       setIsProcessing(false)
     }
-  }, [currentAiDescription, currentAiMoodTags, formBuilder, client, documentValue, isImageField, expectedMediaType, mediaLabel, mediaLabelCapitalized])
+  }, [currentAiDescription, currentAiMoodTags, formBuilder, client, documentValue, isImageField, expectedMediaTypes, mediaLabel, mediaLabelCapitalized])
 
   // Track the last asset ID to prevent unnecessary effect runs
   const lastAssetIdRef = useRef(null)

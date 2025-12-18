@@ -58,7 +58,7 @@ export function ArchiveEntryMetadata({ entry }) {
         <p>{entry.tags?.map((tag) => tag.name).join(', ')}</p>
       </div>
       <div className={`${styles.archiveEntryModalAsideContentItem} ${styles.archiveEntryModalAsideType}`}>
-        <p>{entry.mediaType === 'video' ? 'Video' : 'Image'}</p>
+        <p>{entry.mediaType ? entry.mediaType.charAt(0).toUpperCase() + entry.mediaType.slice(1) : 'Image'}</p>
       </div>
     </div>
   );

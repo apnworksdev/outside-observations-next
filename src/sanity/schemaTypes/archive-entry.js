@@ -24,6 +24,7 @@ export const archiveEntry = defineType({
         list: [
           {title: 'Image', value: 'image'},
           {title: 'Video', value: 'video'},
+          {title: 'Text', value: 'text'},
         ],
         layout: 'radio',
       },
@@ -53,6 +54,12 @@ export const archiveEntry = defineType({
       components: {
         input: MediaWithAIButton
       },
+    }),
+    defineField({
+      name: 'textContent',
+      title: 'Text Content',
+      type: 'text',
+      hidden: ({parent}) => parent?.mediaType !== 'text',
     }),
     defineField({
       name: 'vectorStoreStatus',
