@@ -51,7 +51,7 @@ export default function UnexpectedConnectionsContent({
     posters[0]?.entry?._id ?? 'id',
     posters[0]?.imageUrl ?? 'url',
     posters[0]?.calculatedHeight ?? 'height',
-    posters[0]?.entry?.artName ?? 'title',
+    posters[0]?.entry?.metadata?.artName || posters[0]?.entry?.artName ?? 'title',
   ].join('-');
 
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function UnexpectedConnectionsContent({
               ref={isPrimary ? primaryItemRef : undefined}
             >
               <div className={styles.unexpectedConnectionsItemTitleWrapper}>
-                <p className={styles.unexpectedConnectionsItemTitle}>{entry.artName}</p>
+                <p className={styles.unexpectedConnectionsItemTitle}>{entry.metadata?.artName || entry.artName}</p>
               </div>
               <div
                 className={styles.unexpectedConnectionsItemPosterWrapper}
@@ -109,7 +109,7 @@ export default function UnexpectedConnectionsContent({
               >
                 <Image
                   src={imageUrl}
-                  alt={entry.artName || 'Archive entry poster'}
+                  alt={entry.metadata?.artName || entry.artName || 'Archive entry poster'}
                   width={posterWidth}
                   height={calculatedHeight}
                   priority={isPrimary}

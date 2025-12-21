@@ -31,7 +31,9 @@ const POSTER_WIDTH = 400;
 
 // Component for archive entry image link with prefetching
 function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
-  const href = `/archive/entry/${entry.slug.current}`;
+  const slug = entry.metadata?.slug || entry.slug
+  const hasSlug = slug?.current
+  const href = hasSlug ? `/archive/entry/${slug.current}` : null;
   const prefetchHandlers = usePrefetchOnHover(href, 300);
   // Set priority for first 4 images (above the fold)
   const isPriority = index < 4;
@@ -40,51 +42,61 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
     ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
     : POSTER_WIDTH;
 
+  const content = (
+    <div className={styles.archiveEntryImageWrapper}>
+      {isVideo && entry.video ? (
+        <SanityVideo
+          video={entry.video}
+          poster={entry.poster}
+          alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
+          className={styles.archiveEntryVideo}
+          fallbackClassName={styles.archiveEntryImage}
+          width={POSTER_WIDTH}
+          height={posterHeight}
+          priority={isPriority}
+          preload="metadata"
+          muted
+          playsInline
+          onLoad={onImageLoad}
+        />
+      ) : (
+        <SanityImage
+          image={entry.poster}
+          alt={entry.metadata?.artName || entry.artName || 'Archive entry poster'}
+          className={styles.archiveEntryImage}
+          width={POSTER_WIDTH}
+          height={posterHeight}
+          priority={isPriority}
+          loading={isPriority ? undefined : 'lazy'}
+          blurDataURL={entry?.poster?.lqip || undefined}
+          onLoad={onImageLoad}
+        />
+      )}
+      <div className={styles.archiveEntryImageOverlay}>
+        <div className={styles.archiveEntryImageOverlayContent}>
+          <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.metadata?.year || entry.year}</p></div>
+          <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.metadata?.source || entry.source}</p></div>
+          <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.metadata?.artName || entry.artName}</p></div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className={styles.archiveEntryImageContainer}>
-      <Link
-        href={href}
-        className={styles.archiveEntryImageLink}
-        {...prefetchHandlers}
-      >
-        <div className={styles.archiveEntryImageWrapper}>
-          {isVideo && entry.video ? (
-            <SanityVideo
-              video={entry.video}
-              poster={entry.poster}
-              alt={entry.artName || 'Archive entry video'}
-              className={styles.archiveEntryVideo}
-              fallbackClassName={styles.archiveEntryImage}
-              width={POSTER_WIDTH}
-              height={posterHeight}
-              priority={isPriority}
-              preload="metadata"
-              muted
-              playsInline
-              onLoad={onImageLoad}
-            />
-          ) : (
-            <SanityImage
-              image={entry.poster}
-              alt={entry.artName || 'Archive entry poster'}
-              className={styles.archiveEntryImage}
-              width={POSTER_WIDTH}
-              height={posterHeight}
-              priority={isPriority}
-              loading={isPriority ? undefined : 'lazy'}
-              blurDataURL={entry?.poster?.lqip || undefined}
-              onLoad={onImageLoad}
-            />
-          )}
-          <div className={styles.archiveEntryImageOverlay}>
-            <div className={styles.archiveEntryImageOverlayContent}>
-              <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.year}</p></div>
-              <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.source}</p></div>
-              <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.artName}</p></div>
-            </div>
-          </div>
+      {hasSlug ? (
+        <Link
+          href={href}
+          className={styles.archiveEntryImageLink}
+          {...prefetchHandlers}
+        >
+          {content}
+        </Link>
+      ) : (
+        <div className={styles.archiveEntryImageLink}>
+          {content}
         </div>
-      </Link>
+      )}
     </div>
   );
 }

@@ -1,7 +1,21 @@
 import {defineQuery} from 'next-sanity'
 
-export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | order(year desc) {
+export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | order(coalesce(metadata.year, year) desc) {
   _id,
+  metadata {
+    year,
+    slug {
+      current,
+      _type
+    },
+    artName,
+    fileName,
+    source,
+    tags[]->{
+      _id,
+      name
+    }
+  },
   year,
   slug {
     current,
@@ -10,6 +24,10 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
   artName,
   fileName,
   source,
+  tags[]->{
+    _id,
+    name
+  },
   mediaType,
   video{
     asset->{
@@ -25,10 +43,6 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
     'lqip': asset->metadata.lqip,
     'dimensions': asset->metadata.dimensions
   },
-  tags[]->{
-    _id,
-    name
-  },
   aiMoodTags[]->{
     _id,
     name
@@ -36,13 +50,28 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
   aiDescription
 }`)
 
-export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && slug.current == $slug][0] {
+export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && (slug.current == $slug || metadata.slug.current == $slug)][0] {
   _id,
+  metadata {
+    year,
+    slug,
+    artName,
+    fileName,
+    source,
+    tags[]->{
+      _id,
+      name
+    }
+  },
   year,
   slug,
   artName,
   fileName,
   source,
+  tags[]->{
+    _id,
+    name
+  },
   mediaType,
   video{
     asset->{
@@ -58,10 +87,6 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && slu
     'lqip': asset->metadata.lqip,
     'dimensions': asset->metadata.dimensions
   },
-  tags[]->{
-    _id,
-    name
-  },
   aiMoodTags[]->{
     _id,
     name
@@ -69,7 +94,13 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && slu
   aiDescription
 }`)
 
-export const ARCHIVE_ENTRY_SLUGS = defineQuery(`*[_type == "archiveEntry" && defined(slug.current)][].slug.current`)
+export const ARCHIVE_ENTRY_SLUGS = defineQuery(`
+  *[_type == "archiveEntry" && (defined(slug.current) || defined(metadata.slug.current))] 
+  | {
+    "slug": coalesce(metadata.slug.current, slug.current)
+  }
+  .slug
+`)
 
 /**
  * Query to fetch archive entries by IDs - optimized for image display
@@ -78,6 +109,13 @@ export const ARCHIVE_ENTRY_SLUGS = defineQuery(`*[_type == "archiveEntry" && def
  */
 export const ARCHIVE_ENTRIES_BY_IDS_QUERY = defineQuery(`*[_type == "archiveEntry" && _id in $ids] {
   _id,
+  metadata {
+    slug {
+      current,
+      _type
+    },
+    artName
+  },
   slug {
     current,
     _type

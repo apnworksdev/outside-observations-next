@@ -94,7 +94,7 @@ export default async function ArchiveEntryPage({ params }) {
   }
 
   // Validate entry has required fields
-  if (!entry.artName && !entry.poster) {
+  if (!entry.metadata?.artName && !entry.artName && !entry.poster) {
     console.error('ArchiveEntryPage: Entry missing required fields:', entry._id);
     notFound();
   }

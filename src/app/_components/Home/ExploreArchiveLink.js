@@ -48,7 +48,7 @@ export default function ExploreArchiveLink({
             <div key={entry._id} className={styles.chatBoxImageContainer}>
               <SanityImage
                 image={entry.poster}
-                alt={entry.artName || 'Archive entry poster'}
+                alt={entry.metadata?.artName || entry.artName || 'Archive entry poster'}
                 width={imageWidth}
                 height={imageHeight}
                 className={styles.chatBoxImage}

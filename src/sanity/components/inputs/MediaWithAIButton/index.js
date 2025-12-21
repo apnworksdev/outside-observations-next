@@ -1,8 +1,8 @@
 /**
- * MediaWithAIButton - Unified component for image and video uploads with AI processing
+ * MediaWithAIButton - Unified component for image, video, and PDF uploads with AI processing
  * 
- * Supports both image and video files. Automatically detects field type and processes accordingly.
- * Note: Video processing depends on API support - currently images work, videos are pending API update.
+ * Supports image, video, and PDF files. Automatically detects field type and processes accordingly.
+ * PDFs are processed as visual essays when mediaType is 'visualEssay'.
  */
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 import {Button, Card, Flex, Spinner, Stack, Text} from '@sanity/ui'
@@ -32,17 +32,26 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
 
   // Determine if this is an image or file field based on schema type
   const isImageField = props.schemaType?.name === 'image'
-  const isVideoField = props.schemaType?.name === 'file'
+  const isFileField = props.schemaType?.name === 'file'
+  
+  // Check if this is the PDF field - check accept option, field path, or mediaType
+  const isPDFField = props.schemaType?.options?.accept === 'application/pdf' || 
+                     props.path?.at(-1) === 'pdf'
+  
+  // If mediaType is 'visualEssay' and it's a file field, it's a PDF
+  const isPDF = isFileField && (isPDFField || mediaType === 'visualEssay')
   
   // Determine expected media type based on field type and document mediaType
   // For image fields, support both 'image' and 'text' media types
-  // For video fields, only support 'video' media type
-  const expectedMediaTypes = isImageField ? ['image', 'text'] : ['video']
+  // For file fields, support 'video' for videos and 'visualEssay' for PDFs
+  const expectedMediaTypes = isImageField 
+    ? ['image', 'text'] 
+    : (isPDF ? ['visualEssay'] : ['video'])
   const shouldProcessAI = expectedMediaTypes.includes(mediaType)
 
   // Media type labels
-  const mediaLabel = isImageField ? 'image' : 'video'
-  const mediaLabelCapitalized = isImageField ? 'Image' : 'Video'
+  const mediaLabel = isImageField ? 'image' : (isPDF ? 'PDF' : 'video')
+  const mediaLabelCapitalized = isImageField ? 'Image' : (isPDF ? 'PDF' : 'Video')
 
   // Keep props ref updated - only update when value actually changes
   const prevValueRef = useRef(props.value)
@@ -84,8 +93,8 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
         mediaUrl = urlFor(currentValue).url()
       }
 
-      // For file assets (videos), we need to fetch the asset document to get the URL
-      if (!isImageField && !mediaUrl) {
+      // For file assets (videos/PDFs), we need to fetch the asset document to get the URL
+      if (isFileField && !mediaUrl) {
         const assetRef = currentAsset?._ref || currentAsset?._id
         
         if (assetRef) {
@@ -136,17 +145,29 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
       }
 
       const contentType = mediaResponse.headers.get('content-type')
-      const expectedContentType = isImageField ? 'image/' : 'video/'
+      const expectedContentTypes = isImageField 
+        ? ['image/'] 
+        : (isPDF ? ['application/pdf'] : ['video/'])
       
-      if (!contentType?.startsWith(expectedContentType)) {
-        throw new Error(`Failed to fetch ${mediaLabel}: received ${contentType} instead of ${mediaLabel}.`)
+      const isValidContentType = expectedContentTypes.some(expected => 
+        contentType?.startsWith(expected)
+      )
+      
+      if (!isValidContentType) {
+        throw new Error(`Failed to fetch ${mediaLabel}: received ${contentType} instead of expected type.`)
       }
 
       const mediaBlob = await mediaResponse.blob()
-      const mediaMimeType = contentType || mediaBlob.type || (isImageField ? 'image/jpeg' : 'video/mp4')
-      const extension = mediaMimeType.split('/')[1]?.split(';')[0] || (isImageField ? 'jpg' : 'mp4')
+      const mediaMimeType = contentType || mediaBlob.type || (
+        isImageField ? 'image/jpeg' : (isPDF ? 'application/pdf' : 'video/mp4')
+      )
+      const extension = mediaMimeType.split('/')[1]?.split(';')[0] || (
+        isImageField ? 'jpg' : (isPDF ? 'pdf' : 'mp4')
+      )
       const assetRefPattern = isImageField ? 'image-' : 'file-'
-      const defaultFilename = isImageField ? `image.${extension}` : `video.${extension}`
+      const defaultFilename = isImageField 
+        ? `image.${extension}` 
+        : (isPDF ? `document.${extension}` : `video.${extension}`)
       
       const filename =
         currentAsset.originalFilename ||

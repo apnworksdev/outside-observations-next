@@ -85,7 +85,7 @@ function multiplyEntries(entries) {
 }
 
 function normaliseYearValue(entry) {
-  const { year } = entry ?? {};
+  const year = entry?.metadata?.year ?? entry?.year;
 
   if (typeof year === 'number' && Number.isFinite(year)) {
     return year;
@@ -102,7 +102,14 @@ function normaliseYearValue(entry) {
 }
 
 function normaliseStringValue(entry, key) {
-  const value = entry?.[key];
+  // For metadata fields, try metadata first, then fallback to top-level
+  let value;
+  if (key === 'artName' || key === 'fileName' || key === 'source') {
+    value = entry?.metadata?.[key] || entry?.[key];
+  } else {
+    // For other fields like mediaType, use top-level only
+    value = entry?.[key];
+  }
 
   if (typeof value === 'string') {
     return value.trim().toLocaleLowerCase();
@@ -116,7 +123,7 @@ function normaliseStringValue(entry, key) {
 }
 
 const SORT_ACCESSORS = {
-  year: normaliseYearValue,
+  year: (entry) => normaliseYearValue(entry),
   artName: (entry) => normaliseStringValue(entry, 'artName'),
   fileName: (entry) => normaliseStringValue(entry, 'fileName'),
   source: (entry) => normaliseStringValue(entry, 'source'),
