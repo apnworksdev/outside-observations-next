@@ -51,7 +51,7 @@ export default function UnexpectedConnectionsContent({
     posters[0]?.entry?._id ?? 'id',
     posters[0]?.imageUrl ?? 'url',
     posters[0]?.calculatedHeight ?? 'height',
-    posters[0]?.entry?.metadata?.artName || posters[0]?.entry?.artName ?? 'title',
+    (posters[0]?.entry?.metadata?.artName || posters[0]?.entry?.artName) ?? 'title',
   ].join('-');
 
   useEffect(() => {
