@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
 import SanityVideo from '@/sanity/components/SanityVideo';
+import ArchiveVisualEssay from '@/app/_components/Archive/ArchiveVisualEssay';
 import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
@@ -31,7 +32,9 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
           <p>{entry.metadata?.fileName || entry.fileName}</p>
         </div>
         <div className={styles.itemPoster}>
-          {entry.mediaType === 'video' ? (
+          {entry.mediaType === 'visualEssay' ? (
+            <ArchiveVisualEssay entry={entry} width={posterWidth} />
+          ) : entry.mediaType === 'video' ? (
             <SanityVideo
               video={entry.video}
               poster={entry.poster}

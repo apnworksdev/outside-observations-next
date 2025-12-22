@@ -200,6 +200,39 @@
   object-fit: contain;
 }
 
+/* Visual Essay container - uses padding-bottom for consistent aspect ratio */
+.archiveVisualEssayContainer {
+  position: relative;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+}
+
+.archiveVisualEssayImageWrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.archiveVisualEssayImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: relative;
+}
+
+/* Ensure Next.js Image fills the container */
+.archiveVisualEssayImage :global(img) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 @media (hover: hover) {
   .itemContainer:hover {
     --item-background-color: var(--bg-color);

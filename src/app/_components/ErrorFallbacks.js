@@ -7,7 +7,7 @@ import ErrorDisplay from './ErrorDisplay';
  * These are client components that can be passed to ErrorBoundary from server components
  */
 
-export function ArchiveEntryErrorFallback({ error, reset }) {
+export function ArchiveEntryErrorFallback({ error, reset } = {}) {
   return (
     <ErrorDisplay
       title="Unable to display archive entry"
@@ -19,7 +19,7 @@ export function ArchiveEntryErrorFallback({ error, reset }) {
   );
 }
 
-export function ArchiveErrorFallback({ error, reset }) {
+export function ArchiveErrorFallback({ error, reset } = {}) {
   return (
     <ErrorDisplay
       title="Unable to load archive"
@@ -30,7 +30,7 @@ export function ArchiveErrorFallback({ error, reset }) {
   );
 }
 
-export function HomeErrorFallback({ error, reset }) {
+export function HomeErrorFallback({ error, reset } = {}) {
   return (
     <ErrorDisplay
       title="Unable to load home page"
@@ -41,7 +41,7 @@ export function HomeErrorFallback({ error, reset }) {
   );
 }
 
-export function ChatErrorFallback({ error, reset }) {
+export function ChatErrorFallback({ error, reset } = {}) {
   return (
     <ErrorDisplay
       title="Chat interface unavailable"
@@ -52,7 +52,7 @@ export function ChatErrorFallback({ error, reset }) {
   );
 }
 
-export function ArchiveListErrorFallback({ error, reset }) {
+export function ArchiveListErrorFallback({ error, reset } = {}) {
   return (
     <ErrorDisplay
       title="Unable to display archive"

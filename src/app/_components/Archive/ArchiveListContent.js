@@ -9,6 +9,7 @@ import SanityVideo from '@/sanity/components/SanityVideo';
 
 import styles from '@app/_assets/archive/archive-page.module.css';
 import ArchiveEntry from '@/app/_components/Archive/ArchiveEntryListRow';
+import ArchiveVisualEssay from '@/app/_components/Archive/ArchiveVisualEssay';
 import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
 import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper';
 import { useArchiveEntries, useArchiveSortController } from './ArchiveEntriesProvider';
@@ -42,9 +43,13 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
     ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
     : POSTER_WIDTH;
 
+  const isVisualEssay = entry.mediaType === 'visualEssay';
+
   const content = (
     <div className={styles.archiveEntryImageWrapper}>
-      {isVideo && entry.video ? (
+      {isVisualEssay ? (
+        <ArchiveVisualEssay entry={entry} width={POSTER_WIDTH} />
+      ) : isVideo && entry.video ? (
         <SanityVideo
           video={entry.video}
           poster={entry.poster}

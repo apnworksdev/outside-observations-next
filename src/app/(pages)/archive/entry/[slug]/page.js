@@ -99,17 +99,19 @@ export default async function ArchiveEntryPage({ params }) {
     notFound();
   }
 
+  const entryType = entry?.mediaType || 'image';
+
   return (
     <ErrorBoundary fallback={ArchiveEntryErrorFallback}>
       <Suspense
         fallback={
-          <div className={styles.archiveEntryContentWrapper}>
+          <div className={styles.archiveEntryContentWrapper} data-entry-type={entryType}>
             <ArchiveEntryArticle entry={entry} />
           </div>
         }
       >
         <ArchiveEntryBackdrop>
-          <div className={styles.archiveEntryContentWrapper}>
+          <div className={styles.archiveEntryContentWrapper} data-entry-type={entryType}>
             <ArchiveEntryArticle entry={entry} />
           </div>
           <aside className={styles.archiveEntryAside}>

@@ -47,7 +47,20 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
     _id,
     name
   },
-  aiDescription
+  aiDescription,
+  visualEssayImages[]->{
+    _id,
+    image{
+      ...,
+      asset,
+      'lqip': asset->metadata.lqip,
+      'dimensions': asset->metadata.dimensions
+    },
+    metadata {
+      artName,
+      fileName
+    }
+  }
 }`)
 
 export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && (slug.current == $slug || metadata.slug.current == $slug)][0] {
@@ -91,7 +104,22 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && (sl
     _id,
     name
   },
-  aiDescription
+  aiDescription,
+  visualEssayImages[]->{
+    _id,
+    image{
+      ...,
+      asset,
+      'lqip': asset->metadata.lqip,
+      'dimensions': asset->metadata.dimensions
+    },
+    metadata {
+      artName,
+      fileName
+    }
+  },
+  textMarkup,
+  textContent
 }`)
 
 export const ARCHIVE_ENTRY_SLUGS = defineQuery(`

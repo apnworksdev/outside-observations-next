@@ -53,6 +53,10 @@
 }
 
 .archiveEntryModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--column-gap);
   padding-right: var(--padding);
   padding-left: var(--padding);
   padding-top: 6px;
@@ -65,6 +69,11 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   max-width: 100%;
+  flex: 1;
+}
+
+.archiveEntryVisualImageCounter {
+  width: max-content;
 }
 
 .archiveEntryModalBody {
@@ -154,6 +163,119 @@
   will-change: width;
 }
 
+/* ------------------------------------------------------------ */
+
+/*                      Visual Essay styles                     */
+
+/* ------------------------------------------------------------ */
+
+.archiveEntryContentWrapper[data-entry-type="visualEssay"] {
+  display: flex;
+  overflow: auto;
+  scroll-snap-type: x mandatory;
+  height: 100%;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.archiveEntryVisualContainer {
+  display: flex;
+  column-gap: var(--column-gap);
+  align-items: center;
+  padding: 0 50vw;
+  width: fit-content;
+  pointer-events: none;
+  height: 100%;
+}
+
+.archiveEntryVisualTextWrapper {
+  pointer-events: auto;
+  cursor: auto;
+  scroll-snap-align: center;
+  width: calc(var(--column-width) * 3 + var(--column-gap) * 2);
+  background-color: var(--bg-color);
+  padding: 7px var(--padding);
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.archiveEntryVisualTextWrapper :global(h2) {
+  font-weight: 700;
+  font-style: italic;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  text-decoration-style: dotted;
+}
+
+.archiveEntryVisualTextWrapper :global(p) {
+  margin: 0;
+}
+
+.archiveEntryVisualImageWrapper {
+  pointer-events: auto;
+  cursor: auto;
+  scroll-snap-align: center;
+}
+
+.archiveEntryVisualImageWrapper.landscape {
+  width: calc(var(--column-width) * 4 + var(--column-gap) * 3);
+}
+
+.archiveEntryVisualImageWrapper.portrait {
+  width: calc(var(--column-width) * 3 + var(--column-gap) * 2);
+}
+
+@media (max-width: 1280px) {
+  .archiveEntryVisualTextWrapper {
+    width: calc(var(--column-width) * 5 + var(--column-gap) * 4);
+  }
+
+  .archiveEntryVisualImageWrapper.landscape {
+    width: calc(var(--column-width) * 5 + var(--column-gap) * 4);
+  }
+
+  .archiveEntryVisualImageWrapper.portrait {
+    width: calc(var(--column-width) * 4 + var(--column-gap) * 3);
+  }
+}
+
+@media (max-width: 1024px) { 
+  .archiveEntryVisualTextWrapper {
+    width: calc(var(--column-width) * 6 + var(--column-gap) * 5);
+  }
+
+  .archiveEntryVisualImageWrapper.landscape {
+    width: calc(var(--column-width) * 6 + var(--column-gap) * 5);
+  }
+
+  .archiveEntryVisualImageWrapper.portrait {
+    width: calc(var(--column-width) * 5 + var(--column-gap) * 4);
+  }
+}
+
+@media (max-width: 768px) {
+  .archiveEntryVisualTextWrapper {
+    width: calc(var(--column-width) * 5 + var(--column-gap) * 4);
+  }
+
+  .archiveEntryVisualImageWrapper.landscape {
+    width: calc(var(--column-width) * 5 + var(--column-gap) * 4);
+  }
+
+  .archiveEntryVisualImageWrapper.portrait {
+    width: calc(var(--column-width) * 4 + var(--column-gap) * 3);
+  }
+}
+
+/* ------------------------------------------------------------ */
+
+/*                         Aside styles                         */
+
+/* ------------------------------------------------------------ */
 .archiveEntryAside {
   position: fixed;
   bottom: 0;

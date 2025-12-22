@@ -48,15 +48,12 @@ export class ErrorBoundary extends Component {
 
   render() {
     if (this.state.hasError) {
-      // Custom fallback UI - can be a component or a function
+      // Custom fallback UI - can be a component or a render function
       if (this.props.fallback) {
-        // If it's a function, call it
-        if (typeof this.props.fallback === 'function') {
-          return this.props.fallback(this.state.error, this.handleReset);
-        }
-        // If it's a component, render it
+        // Render as component (all our fallbacks are components)
+        // Always pass valid props to avoid destructuring errors
         const FallbackComponent = this.props.fallback;
-        return <FallbackComponent error={this.state.error} reset={this.handleReset} />;
+        return <FallbackComponent error={this.state.error || null} reset={this.handleReset || (() => {})} />;
       }
 
       // Default fallback UI
