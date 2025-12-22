@@ -7,7 +7,7 @@ export default function LabPage() {
       <div className={styles.labContent}>
         <LabTypewriter />
       </div>
-      <a href="mailto:info@outsideobservations.com" className={styles.labButtonLink}>
+      <a href="mailto:contact@outsideobservations.com" className={styles.labButtonLink}>
         <div className={styles.labButton}>
           <p>Submit a proposal</p>
         </div>
