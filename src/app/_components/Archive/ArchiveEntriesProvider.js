@@ -6,7 +6,6 @@ import { useArchiveSearchState } from './ArchiveSearchStateProvider';
 
 const ArchiveEntriesContext = createContext(null);
 
-const DUPLICATION_FACTOR = 10;
 export const VIEW_COOKIE_NAME = 'outside-observations-archive-view';
 export const VIEW_CHANGE_EVENT = 'outside-observations:archive-view-change';
 const VIEW_COOKIE_MAX_AGE_SECONDS = 60 * 60; // 1 hour
@@ -55,34 +54,6 @@ export function setArchiveViewPreference(view) {
   }
 }
 
-function multiplyEntries(entries) {
-  if (!Array.isArray(entries)) {
-    return [];
-  }
-
-  /**
-   * The archive currently lacks enough real records to fill the designed layout.
-   * To preserve the intended browsing experience we clone every entry several times.
-   * Each clone keeps a pointer to the original `_id` (via `baseId`) so that features
-   * like search can treat the duplicates as a single logical item.
-   */
-  const multiplied = [];
-
-  for (let i = 0; i < DUPLICATION_FACTOR; i += 1) {
-    for (let j = 0; j < entries.length; j += 1) {
-      const entry = entries[j];
-      const isFirstClone = i === 0;
-
-      multiplied.push({
-        ...entry,
-        _id: isFirstClone ? entry._id : `${entry._id}__mock-${i}`,
-        baseId: entry._id,
-      });
-    }
-  }
-
-  return multiplied;
-}
 
 function normaliseYearValue(entry) {
   const year = entry?.metadata?.year ?? entry?.year;
@@ -159,21 +130,14 @@ function compareSortValues(valueA, valueB, isAscending) {
 
 export default function ArchiveEntriesProvider({ initialEntries = [], initialView = null, children }) {
   /**
-   * All stateful logic for the archive lives inside this provider. It inflates the
-   * dataset (see `multiplyEntries`), keeps track of the active view, orchestrates
-   * search queries, and exposes helpers to any descendant component through context.
-   * We duplicate the entries once and memoise the result so every consumer reads from
-   * the same in-memory collection.
+   * All stateful logic for the archive lives inside this provider. It keeps track
+   * of the active view, orchestrates search queries, and exposes helpers to any
+   * descendant component through context.
    */
   // Ensure initialEntries is an array
   const safeInitialEntries = Array.isArray(initialEntries) ? initialEntries : [];
   const [entries] = useState(() => {
-    try {
-      return multiplyEntries(safeInitialEntries);
-    } catch (error) {
-      console.error('Failed to multiply entries:', error);
-      return [];
-    }
+    return safeInitialEntries;
   });
   // Initialize view: Always start with 'images' to match server render and prevent hydration mismatch
   // The view will be updated from cookie/data attribute in useEffect after mount
@@ -255,9 +219,8 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   }, []);
 
   /**
-   * Derive the list of visible entries. When there is no active search we return every
-   * duplicated entry so the layout stays dense. Once a search is running we filter by
-   * the set of matching IDs (supporting both the clone `_id` and the `baseId`) and keep
+   * Derive the list of visible entries. When there is no active search we return all
+   * entries. Once a search is running we filter by the set of matching IDs and keep
    * the order consistent with the ranking provided by the vector store.
    * Also filters by selected mood tag if one is active.
    */
@@ -291,15 +254,11 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
           return rankMap.get(entry._id);
         }
 
-        if (entry.baseId && rankMap.has(entry.baseId)) {
-          return rankMap.get(entry.baseId);
-        }
-
         return Number.POSITIVE_INFINITY;
       };
 
       result = entries
-        .filter((entry) => allowedIds.has(entry._id) || (entry.baseId && allowedIds.has(entry.baseId)))
+        .filter((entry) => allowedIds.has(entry._id))
         .sort((a, b) => getRankForEntry(a) - getRankForEntry(b));
     }
 
