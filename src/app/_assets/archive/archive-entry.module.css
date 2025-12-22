@@ -98,6 +98,12 @@
   object-fit: contain;
 }
 
+.archiveEntryContentWrapper[data-entry-type="video"] .archiveEntryModalContentWrapper,
+.archiveEntryContentWrapper[data-entry-type="video"] .archiveEntryModalBody,
+.archiveEntryContentWrapper[data-entry-type="video"] .archiveEntryModalPosterContainer {
+  width: 100%;
+}
+
 .archiveEntryVideoContainer {
   position: relative;
   width: 100%;
