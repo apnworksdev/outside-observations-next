@@ -4,6 +4,7 @@ import styles from '@app/_assets/nav.module.css';
 import ArchiveViewToggle from '@/app/_components/Archive/ArchiveViewToggle';
 import NavItem from '@/app/_components/NavItem';
 import MobileMenuButton from '@/app/_components/MobileMenuButton';
+import HelpNav from '@/app/_components/HelpNav';
 
 export default function HeaderNav() {
   // Cookie reading is handled client-side by ArchiveViewToggle component
@@ -37,9 +38,7 @@ export default function HeaderNav() {
               <div className={styles.backToArchiveButton}>
                 <Link href="/archive" className={styles.navBubble} data-transition="nav">Back</Link>
               </div>
-              <div className="help-nav">
-                <button className={styles.navBubble} type="button">?</button>
-              </div>
+              <HelpNav />
             </div>
           </NavItem>
           <NavItem

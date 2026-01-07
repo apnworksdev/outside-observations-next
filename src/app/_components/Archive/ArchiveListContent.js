@@ -117,17 +117,15 @@ export default function ArchiveListContent() {
     },
   });
   const artNameSort = useArchiveSortController('artName', { label: 'Art Name' });
-  const fileNameSort = useArchiveSortController('fileName', { label: 'File Name' });
   const sourceSort = useArchiveSortController('source', { label: 'Source/Author' });
   const typeSort = useArchiveSortController('mediaType', { label: 'Type' });
   const sortableLegendColumns = useMemo(
     () => [
       { key: 'year', label: 'Year', sort: yearSort },
       { key: 'artName', label: 'Art Name', sort: artNameSort },
-      { key: 'fileName', label: 'File Name', sort: fileNameSort },
       { key: 'source', label: 'Source/Author', sort: sourceSort },
     ],
-    [artNameSort, fileNameSort, sourceSort, yearSort]
+    [artNameSort, sourceSort, yearSort]
   );
   const contentRef = useRef(null);
   const measurementFrameRef = useRef(null);
@@ -306,6 +304,11 @@ export default function ArchiveListContent() {
           <div className={styles.containerLegendColumn}>
             <div className={styles.containerLegendColumnItem}>
               <p>Tags</p>
+            </div>
+          </div>
+          <div className={styles.containerLegendColumn}>
+            <div className={styles.containerLegendColumnItem}>
+              <p>Mood Tags</p>
             </div>
           </div>
           <div className={styles.containerLegendColumn}>

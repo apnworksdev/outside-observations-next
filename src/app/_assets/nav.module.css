@@ -128,6 +128,53 @@
   background-color: var(--bg-color);
 }
 
+.helpNav {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  background-color: var(--gray-color);
+  color: var(--bg-color);
+  padding-right: var(--padding);
+  padding-left: var(--padding);
+  padding-top: 4px;
+  padding-bottom: 5px;
+  pointer-events: auto;
+  max-width: 300px;
+  max-height: 100px;
+}
+
+.helpNavText {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  margin: 0;
+  transition: white-space 0s linear 0.3s;
+}
+
+.helpNav[data-open="true"] {
+  padding-top: 6px;
+  padding-bottom: 7px;
+  gap: var(--padding);
+}
+
+.helpNav[data-open="true"] .helpNavText {
+  white-space: normal;
+  transition: white-space 0s linear 0.3s;
+}
+
+.helpNavButton {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.helpNavButton:hover {
+  transform: scale(1.1);
+}
+
 /* ------------------------------------------------------------ */
 
 /*                          ARCHIVE PAGE                        */
@@ -185,7 +232,8 @@
   display: none;
 }
 
-:global(body[data-page="unexpected-connections"]) .navBubble {
+:global(body[data-page="unexpected-connections"]) .navBubble,
+:global(body[data-page="unexpected-connections"]) .helpNav {
   background-color: var(--fg-color-75);
 }
 
@@ -268,7 +316,7 @@
   :global(body[data-page="archive-entry"]) .navLi:global(.archive-nav) .navLink {
     width: 0;
     padding-right: 0;
-    padding-left: 0;
+    padding-left: 0 !important;
     overflow: hidden;
     transition: width var(--transition-time) var(--transition-effect),
       padding-right var(--transition-time) var(--transition-effect),
