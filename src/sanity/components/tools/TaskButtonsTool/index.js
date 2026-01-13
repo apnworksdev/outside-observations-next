@@ -6,11 +6,13 @@ import {Stack} from '@sanity/ui'
 // import {BackfillTagSlugsTool} from '../BackfillTagSlugsTool'
 import {VectorStoreSyncTool} from '../VectorStoreSyncTool'
 import {VectorStoreCleanupTool} from '../VectorStoreCleanupTool'
+import {CsvImportTool} from '../CsvImportTool'
 
 export function TaskButtonsTool() {
   return (
     <Stack space={5}>
       {/* <BackfillTagSlugsTool /> */}
+      <CsvImportTool />
       <VectorStoreSyncTool />
       <VectorStoreCleanupTool />
     </Stack>

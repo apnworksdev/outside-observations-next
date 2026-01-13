@@ -43,7 +43,21 @@ export const archiveMetadata = defineType({
     defineField({
       name: 'year',
       title: 'Year',
-      type: 'number',
+      type: 'object',
+      fields: [
+        defineField({
+          name: 'value',
+          title: 'Year Value',
+          type: 'string',
+          validation: (Rule) => Rule.required(),
+        }),
+        defineField({
+          name: 'isEstimate',
+          title: 'Is Estimate',
+          type: 'boolean',
+          initialValue: false,
+        }),
+      ],
     }),
     defineField({
       name: 'tags',
@@ -85,19 +99,23 @@ export const archiveMetadata = defineType({
     defineField({
       name: 'timeOfDay',
       title: 'Time of day',
-      type: 'string',
+      type: 'array',
+      of: [{type: 'string'}],
       options: {
         list: [
           {title: 'Day', value: 'day'},
           {title: 'Night', value: 'night'},
         ],
-        layout: 'radio',
+      },
+      components: {
+        input: StringArrayInput,
       },
     }),
     defineField({
       name: 'season',
       title: 'Season',
-      type: 'string',
+      type: 'array',
+      of: [{type: 'string'}],
       options: {
         list: [
           {title: 'Spring', value: 'spring'},
@@ -105,13 +123,16 @@ export const archiveMetadata = defineType({
           {title: 'Fall', value: 'fall'},
           {title: 'Winter', value: 'winter'},
         ],
-        layout: 'radio',
+      },
+      components: {
+        input: StringArrayInput,
       },
     }),
     defineField({
       name: 'subject',
       title: 'Subject',
-      type: 'string',
+      type: 'array',
+      of: [{type: 'string'}],
       options: {
         list: [
           {title: 'Landscape', value: 'landscape'},
@@ -119,7 +140,9 @@ export const archiveMetadata = defineType({
           {title: 'Urban', value: 'urban'},
           {title: 'Study', value: 'study'},
         ],
-        layout: 'radio',
+      },
+      components: {
+        input: StringArrayInput,
       },
     }),
     defineField({
@@ -134,18 +157,25 @@ export const archiveMetadata = defineType({
     defineField({
       name: 'subjectType',
       title: 'Subject type',
-      type: 'string',
+      type: 'array',
+      of: [{type: 'string'}],
+      components: {
+        input: StringArrayInput,
+      },
     }),
     defineField({
       name: 'gender',
       title: 'Gender',
-      type: 'string',
+      type: 'array',
+      of: [{type: 'string'}],
       options: {
         list: [
           {title: 'Man', value: 'man'},
           {title: 'Woman', value: 'woman'},
         ],
-        layout: 'radio',
+      },
+      components: {
+        input: StringArrayInput,
       },
     }),
     defineField({
@@ -216,9 +246,13 @@ export const archiveMetadata = defineType({
       type: 'string',
     }),
     defineField({
-      name: 'language',
-      title: 'Language',
-      type: 'string',
+      name: 'languages',
+      title: 'Languages',
+      type: 'array',
+      of: [{type: 'string'}],
+      components: {
+        input: StringArrayInput,
+      },
     }),
     defineField({
       name: 'altTitles',

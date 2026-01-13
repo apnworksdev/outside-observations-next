@@ -1,6 +1,7 @@
 import {defineField, defineType} from 'sanity'
 import {MediaWithAIButton} from '../components/inputs/MediaWithAIButton'
 import {TagReferenceInput} from '../components/inputs/TagReferenceInput'
+import {VisualEssayImagesInput} from '../components/inputs/VisualEssayImagesInput'
 import {VectorStoreStatus} from '../components/status/VectorStoreStatus'
 import {aiAutoFillAction} from '../actions/aiAutoFillAction'
 
@@ -54,7 +55,7 @@ export const archiveEntry = defineType({
       components: {
         input: MediaWithAIButton
       },
-      hidden: ({parent}) => parent?.mediaType === 'text' || parent?.mediaType === 'visualEssay',
+      hidden: ({parent}) => parent?.mediaType === 'visualEssay',
     }),
     defineField({
       name: 'textContent',
@@ -100,6 +101,9 @@ export const archiveEntry = defineType({
         },
       ],
       hidden: ({parent}) => parent?.mediaType !== 'visualEssay',
+      components: {
+        input: VisualEssayImagesInput,
+      },
     }),
     defineField({
       name: 'vectorStoreStatus',
