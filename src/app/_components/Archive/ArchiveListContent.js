@@ -79,7 +79,7 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
       )}
       <div className={styles.archiveEntryImageOverlay}>
         <div className={styles.archiveEntryImageOverlayContent}>
-          <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.metadata?.year || entry.year}</p></div>
+          <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.metadata?.year?.value ?? entry.year ?? ''}</p></div>
           <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.metadata?.source || entry.source}</p></div>
           <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.metadata?.artName || entry.artName}</p></div>
         </div>

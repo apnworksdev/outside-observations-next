@@ -145,7 +145,8 @@ export function ArchiveEntryArticle({ entry, headingId }) {
 
 export function ArchiveEntryMetadata({ entry }) {
   const metadata = entry.metadata || {}
-  const year = metadata.year || entry.year
+  // Handle year as object with {value, isEstimate} structure or legacy string/number
+  const year = metadata.year?.value ?? entry.year ?? ''
   const artName = metadata.artName || entry.artName
   const fileName = metadata.fileName || entry.fileName
   const source = metadata.source || entry.source

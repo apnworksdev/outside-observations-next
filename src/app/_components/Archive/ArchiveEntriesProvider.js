@@ -55,17 +55,64 @@ export function setArchiveViewPreference(view) {
 }
 
 
-function normaliseYearValue(entry) {
-  const year = entry?.metadata?.year ?? entry?.year;
+function hasMedia(entry) {
+  if (!entry) return false;
+  
+  const mediaType = entry.mediaType;
+  
+  // Visual essay: needs at least one valid image in visualEssayImages
+  if (mediaType === 'visualEssay') {
+    const images = entry.visualEssayImages || [];
+    return images.some(img => img?.image?.asset?._ref);
+  }
+  
+  // Video: needs both video asset (with url) and poster
+  if (mediaType === 'video') {
+    return entry.video?.asset?.url && entry.poster?.asset?._ref;
+  }
+  
+  // Image (default): needs poster
+  return entry.poster?.asset?._ref;
+}
 
+function normaliseYearValue(entry) {
+  let year = entry?.metadata?.year ?? entry?.year;
+
+  // Handle year as object with {value, isEstimate} structure
+  if (typeof year === 'object' && year !== null && year?.value !== undefined) {
+    year = year.value;
+  }
+
+  // Handle null/undefined
+  if (year === null || year === undefined) {
+    return null;
+  }
+
+  // Handle number directly
   if (typeof year === 'number' && Number.isFinite(year)) {
     return year;
   }
 
+  // Handle string - extract first numeric value
   if (typeof year === 'string') {
-    const parsed = parseInt(year, 10);
+    const trimmed = year.trim();
+    if (!trimmed) {
+      return null;
+    }
+    
+    // Try parsing the whole string first (e.g., "2024")
+    const parsed = parseInt(trimmed, 10);
     if (!Number.isNaN(parsed)) {
       return parsed;
+    }
+    
+    // Extract first 4-digit number from string (handles cases like "c. 2024", "2024-2025", etc.)
+    const yearMatch = trimmed.match(/\b(19|20)\d{2}\b/);
+    if (yearMatch) {
+      const extracted = parseInt(yearMatch[0], 10);
+      if (!Number.isNaN(extracted)) {
+        return extracted;
+      }
     }
   }
 
@@ -225,7 +272,8 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
    * Also filters by selected mood tag if one is active.
    */
   const filtered = useMemo(() => {
-    let result = entries;
+    // Filter out entries without media
+    let result = entries.filter(hasMedia);
 
     // Apply search filtering if active
     if (searchResults?.active) {

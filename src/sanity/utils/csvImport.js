@@ -20,6 +20,11 @@ export const COLUMN_MAPPINGS = {
   'title': 'metadata.artName',
   'name': 'metadata.artName',
   
+  'excelid': 'metadata.excelID',
+  'excel id': 'metadata.excelID',
+  'excel_id': 'metadata.excelID',
+  'id': 'metadata.excelID',
+  
   'filename': 'metadata.fileName',
   'file name': 'metadata.fileName',
   'file_name': 'metadata.fileName',
@@ -75,23 +80,12 @@ export const COLUMN_MAPPINGS = {
   'series_title': 'metadata.seriesTitle',
   'publication': 'metadata.publication',
   'publisher': 'metadata.publisher',
-  'artcontextbackground': 'metadata.artContextBackground',
-  'art context background': 'metadata.artContextBackground',
-  'art_context_background': 'metadata.artContextBackground',
-  'context': 'metadata.artContextBackground',
-  'background': 'metadata.artContextBackground',
-  'short, 2-3 sentence summary/description that gives background or narrative context if there is': 'metadata.artContextBackground',
   'medium': 'metadata.medium',
   'exhibition': 'metadata.exhibition',
   'languages': 'metadata.languages',
   'language': 'metadata.languages',
   'main language(s) present in the piece, if textual.': 'metadata.languages',
   'main language(s)': 'metadata.languages',
-  'alttitles': 'metadata.altTitles',
-  'alternative titles': 'metadata.altTitles',
-  'alt titles': 'metadata.altTitles',
-  'alt_titles': 'metadata.altTitles',
-  'alternate titles (llm-generated)': 'metadata.altTitles',
   'externallinks': 'metadata.externalLinks',
   'external links': 'metadata.externalLinks',
   'external_links': 'metadata.externalLinks',
@@ -99,6 +93,25 @@ export const COLUMN_MAPPINGS = {
   'urls': 'metadata.externalLinks',
   'external links: wiki links...': 'metadata.externalLinks',
   'external links: wiki links, exhibition catalogs, critical essays, news coverage': 'metadata.externalLinks',
+  'fonttype': 'metadata.fontType',
+  'font type': 'metadata.fontType',
+  'font_type': 'metadata.fontType',
+  'countryregion': 'metadata.countryRegion',
+  'country / region': 'metadata.countryRegion',
+  'country_region': 'metadata.countryRegion',
+  'country': 'metadata.countryRegion',
+  'region': 'metadata.countryRegion',
+  'artistcontactinfo': 'metadata.artistContactInfo',
+  'artist contact info': 'metadata.artistContactInfo',
+  'artist_contact_info': 'metadata.artistContactInfo',
+  'artist contact': 'metadata.artistContactInfo',
+  'contact info': 'metadata.artistContactInfo',
+  'copyrightstatus': 'metadata.copyright.status',
+  'copyright status': 'metadata.copyright.status',
+  'copyright_status': 'metadata.copyright.status',
+  'copyrightinfo': 'metadata.copyright.info',
+  'copyright info': 'metadata.copyright.info',
+  'copyright_info': 'metadata.copyright.info',
 }
 
 export function mapColumnToField(columnName) {
@@ -137,16 +150,54 @@ export function parseCSVLine(line) {
   return values
 }
 
-// Parse CSV (simple parser)
+// Parse CSV (simple parser with edge case handling)
 export function parseCSV(csvText) {
-  const lines = csvText.split('\n').filter(line => line.trim())
-  if (lines.length === 0) return {headers: [], rows: []}
+  // Remove BOM (Byte Order Mark) if present
+  if (csvText.charCodeAt(0) === 0xFEFF) {
+    csvText = csvText.slice(1)
+  }
+  
+  // Normalize line endings (handle Windows \r\n, Mac \r, Unix \n)
+  csvText = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  
+  const lines = csvText.split('\n')
+  const nonEmptyLines = lines.filter(line => line.trim())
+  
+  if (nonEmptyLines.length === 0) {
+    return {headers: [], rows: [], warnings: ['CSV file appears to be empty']}
+  }
 
-  const headers = parseCSVLine(lines[0])
+  const headers = parseCSVLine(nonEmptyLines[0])
+  const headerCount = headers.length
   const rows = []
+  const warnings = []
+  let emptyRowCount = 0
+  let columnMismatchCount = 0
+  
   for (let i = 1; i < lines.length; i++) {
-    const values = parseCSVLine(lines[i])
-    if (values.length === 0) continue
+    const line = lines[i]
+    
+    // Track empty rows (but don't skip them silently)
+    if (!line.trim()) {
+      emptyRowCount++
+      continue
+    }
+    
+    const values = parseCSVLine(line)
+    
+    // Warn about column count mismatches
+    if (values.length !== headerCount) {
+      columnMismatchCount++
+      if (columnMismatchCount <= 5) {
+        warnings.push(`Row ${i + 1}: Column count mismatch (expected ${headerCount}, got ${values.length})`)
+      }
+    }
+    
+    // Skip rows with no values
+    if (values.length === 0 || values.every(v => !v.trim())) {
+      emptyRowCount++
+      continue
+    }
     
     const row = {}
     headers.forEach((header, index) => {
@@ -154,8 +205,16 @@ export function parseCSV(csvText) {
     })
     rows.push(row)
   }
-
-  return {headers, rows}
+  
+  // Add summary warnings
+  if (emptyRowCount > 0) {
+    warnings.push(`Skipped ${emptyRowCount} empty row${emptyRowCount === 1 ? '' : 's'}`)
+  }
+  if (columnMismatchCount > 5) {
+    warnings.push(`Found ${columnMismatchCount} rows with column count mismatches (showing first 5)`)
+  }
+  
+  return {headers, rows, warnings: warnings.length > 0 ? warnings : undefined}
 }
 
 // Parse array field (comma-separated)
@@ -170,9 +229,13 @@ export function parseArrayField(value) {
 // Generate unique key for tag references (similar to TagReferenceInput)
 const generateTagKey = () => `tag-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 
-// Resolve tags (lookup or create)
+// Resolve tags (lookup or create) - optimized with batch lookup
 export async function resolveTags(tagNames, client) {
-  const tagReferences = []
+  if (!tagNames || tagNames.length === 0) return []
+  
+  // Step 1: Normalize and create slug map (preserve original name -> slug mapping)
+  const tagMap = new Map() // slug -> {name, slug}
+  const validSlugs = []
   
   for (const tagName of tagNames) {
     if (!tagName || tagName.trim() === '') continue
@@ -182,35 +245,102 @@ export async function resolveTags(tagNames, client) {
     
     if (!tagSlug) continue
     
-    // Lookup existing tag by slug
-    const existing = await client.fetch(
-      `*[_type == "tag" && slug.current == $slug][0]`,
-      {slug: tagSlug}
-    )
-    
-    if (existing) {
-      // Use existing tag - but still need a new _key for the array item
-      tagReferences.push({
-        _type: 'reference',
-        _ref: existing._id,
-        _key: generateTagKey(),
-      })
-    } else {
-      // Create new tag
-      const newTag = await client.create({
+    // Store mapping and collect valid slugs
+    tagMap.set(tagSlug, {
+      name: tagName.trim(),
+      slug: tagSlug,
+    })
+    validSlugs.push(tagSlug)
+  }
+  
+  if (validSlugs.length === 0) return []
+  
+  // Step 2: Batch fetch all existing tags in one query
+  const existingTags = await client.fetch(
+    `*[_type == "tag" && slug.current in $slugs]`,
+    {slugs: validSlugs}
+  )
+  
+  // Step 3: Create a map of existing tags by slug for quick lookup
+  const existingTagsMap = new Map()
+  existingTags.forEach(tag => {
+    if (tag.slug?.current) {
+      existingTagsMap.set(tag.slug.current, tag)
+    }
+  })
+  
+  // Step 4: Identify missing tags and create them
+  const tagsToCreate = []
+  for (const [slug, tagInfo] of tagMap.entries()) {
+    if (!existingTagsMap.has(slug)) {
+      tagsToCreate.push({
         _type: 'tag',
-        name: tagName.trim(),
-        slug: {current: tagSlug},
+        name: tagInfo.name,
+        slug: {current: slug},
       })
+    }
+  }
+  
+  // Create missing tags (one by one, as Sanity doesn't have batch create)
+  // But this is still better than the old approach since we batch the lookups
+  for (const tagDoc of tagsToCreate) {
+    const newTag = await client.create(tagDoc)
+    existingTagsMap.set(tagDoc.slug.current, newTag)
+  }
+  
+  // Step 5: Build references array in the same order as input
+  const tagReferences = []
+  for (const [slug, tagInfo] of tagMap.entries()) {
+    const tag = existingTagsMap.get(slug)
+    if (tag) {
       tagReferences.push({
         _type: 'reference',
-        _ref: newTag._id,
+        _ref: tag._id,
         _key: generateTagKey(),
       })
     }
   }
   
   return tagReferences
+}
+
+// Extract excelID from CSV row (checks multiple column name variations)
+export function extractExcelID(row) {
+  return row['id'] || row['ID'] || row['excelID'] || row['excelid'] || 
+         row['excel id'] || row['Excel ID'] || row['excel_id'] || ''
+}
+
+// Validate CSV row before processing
+export function validateRow(row, rowNum, requiredFields = []) {
+  const errors = []
+  const warnings = []
+  
+  // Check required fields
+  for (const field of requiredFields) {
+    const value = row[field] || row[field.toLowerCase()] || row[field.toUpperCase()]
+    if (!value || value.trim() === '') {
+      errors.push(`Row ${rowNum}: Missing required field "${field}"`)
+    }
+  }
+  
+  // Validate excelID if present
+  const excelID = extractExcelID(row)
+  if (excelID && excelID.trim() !== '') {
+    // Check for reasonable length (not too long)
+    if (excelID.trim().length > 100) {
+      warnings.push(`Row ${rowNum}: excelID is very long (${excelID.trim().length} chars), may cause issues`)
+    }
+  }
+  
+  // Check if we have at least one identifier (fileName or artName)
+  const hasFileName = row['filename'] || row['file name'] || row['file_name'] || row['fileName']
+  const hasArtName = row['artname'] || row['art name'] || row['art_name'] || row['title'] || row['name'] || row['artName']
+  
+  if (!hasFileName && !hasArtName && !excelID) {
+    errors.push(`Row ${rowNum}: Missing identifier (need fileName, artName, or excelID)`)
+  }
+  
+  return { errors, warnings, isValid: errors.length === 0 }
 }
 
 // Build metadata object from CSV row
@@ -223,6 +353,10 @@ export async function buildMetadata(row, client, mapper = mapColumnToField) {
   let yearSpans = ''
   let yearEstimate = ''
   
+  // Handle copyright object - check two columns
+  let copyrightStatus = ''
+  let copyrightInfo = ''
+  
   for (const [columnName, value] of Object.entries(row)) {
     const normalized = columnName.toLowerCase().trim()
     if (normalized === 'year' && !yearValue) {
@@ -231,6 +365,10 @@ export async function buildMetadata(row, client, mapper = mapColumnToField) {
       yearSpans = value?.trim() || ''
     } else if ((normalized === 'year (estimate)' || normalized === 'year estimate') && !yearEstimate) {
       yearEstimate = value?.trim() || ''
+    } else if ((normalized === 'copyright status' || normalized === 'copyright_status') && !copyrightStatus) {
+      copyrightStatus = value?.trim() || ''
+    } else if ((normalized === 'copyright info' || normalized === 'copyright_info' || normalized === 'copyrightinfo') && !copyrightInfo) {
+      copyrightInfo = value?.trim() || ''
     }
   }
   
@@ -250,6 +388,17 @@ export async function buildMetadata(row, client, mapper = mapColumnToField) {
       isEstimate: true,
     }
   }
+  
+  // Build copyright object if at least one field has a value
+  if (copyrightStatus || copyrightInfo) {
+    metadata.copyright = {}
+    if (copyrightStatus) {
+      metadata.copyright.status = copyrightStatus
+    }
+    if (copyrightInfo) {
+      metadata.copyright.info = copyrightInfo
+    }
+  }
 
   // Process each column
   for (const [columnName, value] of Object.entries(row)) {
@@ -263,7 +412,12 @@ export async function buildMetadata(row, client, mapper = mapColumnToField) {
         normalizedColumn === 'year (spans)' || 
         normalizedColumn === 'year spans' ||
         normalizedColumn === 'year (estimate)' || 
-        normalizedColumn === 'year estimate') {
+        normalizedColumn === 'year estimate' ||
+        normalizedColumn === 'copyright status' ||
+        normalizedColumn === 'copyright_status' ||
+        normalizedColumn === 'copyright info' ||
+        normalizedColumn === 'copyright_info' ||
+        normalizedColumn === 'copyrightinfo') {
       continue
     }
 
@@ -292,8 +446,8 @@ export async function buildMetadata(row, client, mapper = mapColumnToField) {
       'metadata.humanStructure2',
       'metadata.typeOfWork',
       'metadata.languages',
-      'metadata.altTitles',
       'metadata.externalLinks',
+      'metadata.fontType',
     ]
 
     if (arrayFields.includes(fieldPath)) {
@@ -326,6 +480,16 @@ export async function buildMetadata(row, client, mapper = mapColumnToField) {
       if (arrayValue.length > 0) {
         metadata[nested] = arrayValue
       }
+      continue
+    }
+
+    // Handle nested object fields (like copyright.status, copyright.info)
+    if (fieldPath.startsWith('metadata.copyright.')) {
+      const copyrightField = fieldPath.replace('metadata.copyright.', '')
+      if (!metadata.copyright) {
+        metadata.copyright = {}
+      }
+      metadata.copyright[copyrightField] = value.trim()
       continue
     }
 

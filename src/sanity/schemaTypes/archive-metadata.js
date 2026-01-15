@@ -9,6 +9,12 @@ export const archiveMetadata = defineType({
   type: 'object',
   fields: [
     defineField({
+      name: 'excelID',
+      title: 'Excel ID',
+      type: 'string',
+      description: 'Unique identifier from Excel/CSV import. Used to match and update existing entries.',
+    }),
+    defineField({
       name: 'slug',
       title: 'Slug',
       type: 'slug',
@@ -26,9 +32,10 @@ export const archiveMetadata = defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'artName',
-      title: 'Art Name',
-      type: 'string',
+      name: 'contentWarning',
+      title: 'Content Warning',
+      type: 'boolean',
+      initialValue: false,
     }),
     defineField({
       name: 'fileName',
@@ -36,8 +43,18 @@ export const archiveMetadata = defineType({
       type: 'string',
     }),
     defineField({
+      name: 'artName',
+      title: 'Art Name',
+      type: 'string',
+    }),
+    defineField({
       name: 'source',
       title: 'Source/Author',
+      type: 'string',
+    }),
+    defineField({
+      name: 'credit',
+      title: 'Credit',
       type: 'string',
     }),
     defineField({
@@ -74,22 +91,8 @@ export const archiveMetadata = defineType({
       },
     }),
     defineField({
-      name: 'credit',
-      title: 'Credit',
-      type: 'string',
-    }),
-    defineField({
       name: 'action',
       title: 'Action',
-      type: 'array',
-      of: [{type: 'string'}],
-      components: {
-        input: StringArrayInput,
-      },
-    }),
-    defineField({
-      name: 'color',
-      title: 'Color',
       type: 'array',
       of: [{type: 'string'}],
       components: {
@@ -179,6 +182,15 @@ export const archiveMetadata = defineType({
       },
     }),
     defineField({
+      name: 'humanStructure2',
+      title: 'Human structure 2',
+      type: 'array',
+      of: [{type: 'string'}],
+      components: {
+        input: StringArrayInput,
+      },
+    }),
+    defineField({
       name: 'humanStructure1',
       title: 'Human structure 1',
       type: 'array',
@@ -188,8 +200,17 @@ export const archiveMetadata = defineType({
       },
     }),
     defineField({
-      name: 'humanStructure2',
-      title: 'Human structure 2',
+      name: 'color',
+      title: 'Color',
+      type: 'array',
+      of: [{type: 'string'}],
+      components: {
+        input: StringArrayInput,
+      },
+    }),
+    defineField({
+      name: 'fontType',
+      title: 'Font Type',
       type: 'array',
       of: [{type: 'string'}],
       components: {
@@ -231,18 +252,27 @@ export const archiveMetadata = defineType({
       type: 'string',
     }),
     defineField({
-      name: 'artContextBackground',
-      title: 'Art context/background',
+      name: 'exhibition',
+      title: 'Exhibition',
+      type: 'string',
+    }),
+    defineField({
+      name: 'externalLinks',
+      title: 'External links',
+      type: 'array',
+      of: [{type: 'string'}],
+      components: {
+        input: UrlArrayInput,
+      },
+    }),
+    defineField({
+      name: 'countryRegion',
+      title: 'Country / Region',
       type: 'string',
     }),
     defineField({
       name: 'medium',
       title: 'Medium',
-      type: 'string',
-    }),
-    defineField({
-      name: 'exhibition',
-      title: 'Exhibition',
       type: 'string',
     }),
     defineField({
@@ -255,22 +285,26 @@ export const archiveMetadata = defineType({
       },
     }),
     defineField({
-      name: 'altTitles',
-      title: 'Alt titles',
-      type: 'array',
-      of: [{type: 'string'}],
-      components: {
-        input: StringArrayInput,
-      },
+      name: 'copyright',
+      title: 'Copyright',
+      type: 'object',
+      fields: [
+        defineField({
+          name: 'status',
+          title: 'Status',
+          type: 'string',
+        }),
+        defineField({
+          name: 'info',
+          title: 'Info',
+          type: 'string',
+        }),
+      ],
     }),
     defineField({
-      name: 'externalLinks',
-      title: 'External links',
-      type: 'array',
-      of: [{type: 'string'}],
-      components: {
-        input: UrlArrayInput,
-      },
+      name: 'artistContactInfo',
+      title: 'Artist Contact Info',
+      type: 'string',
     }),
   ],
 })

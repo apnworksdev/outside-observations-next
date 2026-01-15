@@ -19,7 +19,7 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
     <div className={styles.itemWrapper}>
       <div className={`${styles.itemColumn} ${styles.itemColumnYear}`}>
         <div className={styles.itemColumnContent}>
-          <p>{entry.metadata?.year || entry.year}</p>
+          <p>{entry.metadata?.year?.value ?? entry.year ?? ''}</p>
         </div>
       </div>
       <div className={`${styles.itemColumn} ${styles.itemColumnArtName}`}>
