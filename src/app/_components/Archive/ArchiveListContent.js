@@ -13,6 +13,7 @@ import ArchiveVisualEssay from '@/app/_components/Archive/ArchiveVisualEssay';
 import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
 import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper';
 import { useArchiveEntries, useArchiveSortController } from './ArchiveEntriesProvider';
+import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveListErrorFallback } from '@/app/_components/ErrorFallbacks';
 
@@ -34,6 +35,7 @@ const POSTER_WIDTH = 400;
 function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
   const slug = entry.metadata?.slug || entry.slug
   const hasSlug = slug?.current
+  const slugValue = slug?.current || null;
   const href = hasSlug ? `/archive/entry/${slug.current}` : null;
   const prefetchHandlers = usePrefetchOnHover(href, 300);
   // Set priority for first 4 images (above the fold)
@@ -44,6 +46,9 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
     : POSTER_WIDTH;
 
   const isVisualEssay = entry.mediaType === 'visualEssay';
+  
+  // Check if entry has been visited (hydration-safe)
+  const isVisited = useArchiveEntryVisited(slugValue);
 
   const content = (
     <div className={styles.archiveEntryImageWrapper}>
@@ -87,18 +92,23 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
     </div>
   );
 
+  const linkProps = {
+    className: styles.archiveEntryImageLink,
+    'data-visited': isVisited ? 'true' : 'false',
+  };
+
   return (
     <div className={styles.archiveEntryImageContainer}>
       {hasSlug ? (
         <Link
           href={href}
-          className={styles.archiveEntryImageLink}
+          {...linkProps}
           {...prefetchHandlers}
         >
           {content}
         </Link>
       ) : (
-        <div className={styles.archiveEntryImageLink}>
+        <div {...linkProps}>
           {content}
         </div>
       )}

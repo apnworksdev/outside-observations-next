@@ -11,6 +11,8 @@
   --white-color: #FFF;
   --white-color-75: rgba(255, 255, 255, 0.75);
   --transparent-bg-color: rgba(239, 239, 239, 0);
+  --pink-color: #CCB8CE;
+  --dark-pink-color: #B4A2B8;
 
   /* Fonts */
   --font-family: 'courier', monospace;

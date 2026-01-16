@@ -5,16 +5,21 @@ import SanityImage from '@/sanity/components/SanityImage';
 import SanityVideo from '@/sanity/components/SanityVideo';
 import ArchiveVisualEssay from '@/app/_components/Archive/ArchiveVisualEssay';
 import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
+import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
 export default function ArchiveEntryListRow({ entry, index = 0 }) {
   const slug = entry.metadata?.slug || entry.slug
   const hasSlug = slug?.current
+  const slugValue = slug?.current || null;
   const posterWidth = 400;
   const href = hasSlug ? `/archive/entry/${slug.current}` : null;
   const prefetchHandlers = usePrefetchOnHover(href, 300);
   // Set priority for first 3 rows (above the fold in list view)
   const isPriority = index < 3;
+  
+  // Check if entry has been visited (hydration-safe)
+  const isVisited = useArchiveEntryVisited(slugValue);
   const content = (
     <div className={styles.itemWrapper}>
       <div className={`${styles.itemColumn} ${styles.itemColumnYear}`}>
@@ -79,16 +84,21 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
     </div>
   );
 
+  const containerProps = {
+    className: styles.itemContainer,
+    'data-visited': isVisited ? 'true' : 'false',
+  };
+
   return hasSlug ? (
     <Link 
       href={href} 
-      className={styles.itemContainer}
+      {...containerProps}
       {...prefetchHandlers}
     >
       {content}
     </Link>
   ) : (
-    <div className={styles.itemContainer}>
+    <div {...containerProps}>
       {content}
     </div>
   );

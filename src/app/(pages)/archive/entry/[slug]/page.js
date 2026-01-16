@@ -6,6 +6,7 @@ import { ARCHIVE_ENTRY_QUERY, ARCHIVE_ENTRY_SLUGS } from '@/sanity/lib/queries';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 import { ArchiveEntryArticle, ArchiveEntryMetadata } from '@/app/_components/Archive/ArchiveEntryContent';
 import ArchiveEntryBackdrop from '@/app/_components/Archive/ArchiveEntryBackdrop';
+import ArchiveEntryVisitTracker from '@/app/_components/Archive/ArchiveEntryVisitTracker';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveEntryErrorFallback } from '@/app/_components/ErrorFallbacks';
 
@@ -101,8 +102,12 @@ export default async function ArchiveEntryPage({ params }) {
 
   const entryType = entry?.mediaType || 'image';
 
+  // Get the slug for visit tracking
+  const entrySlug = resolvedParams.slug;
+
   return (
     <ErrorBoundary fallback={ArchiveEntryErrorFallback}>
+      <ArchiveEntryVisitTracker slug={entrySlug} />
       <Suspense
         fallback={
           <div className={styles.archiveEntryContentWrapper} data-entry-type={entryType}>

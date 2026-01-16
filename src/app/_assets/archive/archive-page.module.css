@@ -37,8 +37,16 @@
   --item-background-color: var(--dark-gray-color);
 }
 
+.itemContainer:nth-child(odd)[data-visited="true"] {
+  --item-background-color: var(--dark-pink-color);
+}
+
 .itemContainer:nth-child(even) {
   --item-background-color: var(--gray-color);
+}
+
+.itemContainer:nth-child(even)[data-visited="true"] {
+  --item-background-color: var(--pink-color);
 }
 
 .itemWrapper {
@@ -235,7 +243,7 @@
 
 @media (hover: hover) {
   .itemContainer:hover {
-    --item-background-color: var(--bg-color);
+    --item-background-color: var(--bg-color) !important;
     color: var(--fg-color);
   }
   
@@ -358,6 +366,10 @@
   color: var(--fg-color);
   width: fit-content;
   flex: 0 0 auto;
+}
+
+.container[data-view="images"] .archiveEntryImageLink[data-visited="true"] .archiveEntryImageOverlayContentItem {
+  background-color: var(--pink-color);
 }
 
 .errorBanner {
