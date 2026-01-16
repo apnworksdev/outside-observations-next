@@ -13,16 +13,17 @@ const isExternalLink = (href) => {
   return href.startsWith('http://') || href.startsWith('https://') || href.startsWith('//');
 };
 
-export default function NavItem({ href = '', label = '', children = null, section = '', className = '', innerNavBubble = true, ...rest }) {
+export default function NavItem({ href = '', label = '', children = null, section = '', className = '', innerNavBubble = true, isActive: isActiveProp, ...rest }) {
   const pathname = usePathname() ?? '';
   const isExternal = isExternalLink(href);
 
   const normalizedHref = href.endsWith('/') ? href.slice(0, -1) : href;
   const normalizedPathname = pathname.endsWith('/') && pathname !== '/' ? pathname.slice(0, -1) : pathname;
 
-  const isActive =
-    !isExternal &&
-    (normalizedPathname === normalizedHref || normalizedPathname.startsWith(`${normalizedHref}/`));
+  // Use provided isActive prop if available, otherwise calculate from pathname
+  const isActive = isActiveProp !== undefined 
+    ? isActiveProp 
+    : (!isExternal && (normalizedPathname === normalizedHref || normalizedPathname.startsWith(`${normalizedHref}/`)));
 
   return (
     <li

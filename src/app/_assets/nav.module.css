@@ -102,7 +102,8 @@
 }
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav),
-:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) {
+:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav),
+.navNavigation .navLi:global(.radio-nav)[data-active="true"] {
   position: relative;
   display: flex;
   gap: var(--gap);
@@ -110,13 +111,15 @@
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) .navLink,
 :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) .navLink,
-:global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) .navLink {
+:global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) .navLink,
+.navNavigation .navLi:global(.radio-nav)[data-active="true"] .navLink {
   padding-left: calc(var(--padding) * 2);
 }
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) .navLink::before,
 :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) .navLink::before,
-:global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) .navLink::before {
+:global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) .navLink::before,
+.navNavigation .navLi:global(.radio-nav)[data-active="true"] .navLink::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -126,6 +129,23 @@
   height: 6px;
   border-radius: 50%;
   background-color: var(--bg-color);
+}
+
+.navNavigation .navLi:global(.radio-nav)[data-active="true"] .navLink::before {
+  animation: radioNavPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes radioNavPulse {
+  0%, 100% {
+    transform: translateY(-50%) scale(1);
+  }
+  15% {
+    transform: translateY(-50%) scale(0.8);
+  }
+  30% {
+    transform: translateY(-50%) scale(1);
+  }
+  /* Stay at scale(1) from 30% to 100% - most of the animation */
 }
 
 .helpNav {
@@ -208,6 +228,70 @@
   font-style: oblique;
   text-transform: uppercase;
   text-decoration: underline;
+}
+
+/* Radio nav buttons */
+.radioNavButtons {
+  display: none;
+  gap: var(--gap);
+  align-items: center;
+  pointer-events: auto;
+  background-color: var(--gray-color);
+  padding: 0 5px;
+}
+
+.navNavigation .navLi:global(.radio-nav)[data-active="true"] .radioNavButtons {
+  display: flex;
+}
+
+.radioNavButton {
+  width: 17px;
+  height: var(--bubble-height);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  position: relative;
+  display: inline-block;
+}
+
+/* Expand button - square with thicker top border */
+.expandButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background-color: transparent;
+  border: 1px solid var(--bg-color);
+  border-top-width: 2px;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+  transform: translate(-50%, -50%);
+}
+
+/* Close button - Cross icon */
+.radioNavButton.closeButton::before,
+.radioNavButton.closeButton::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 1.5px;
+  background-color: var(--bg-color);
+  transform-origin: center;
+}
+
+.radioNavButton.closeButton::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.radioNavButton.closeButton::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 :global(body[data-page="archive-entry"]) .header {

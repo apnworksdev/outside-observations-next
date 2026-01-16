@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 
 import styles from '@app/_assets/nav.module.css';
@@ -5,10 +7,21 @@ import ArchiveViewToggle from '@/app/_components/Archive/ArchiveViewToggle';
 import NavItem from '@/app/_components/NavItem';
 import MobileMenuButton from '@/app/_components/MobileMenuButton';
 import HelpNav from '@/app/_components/HelpNav';
+import { useRadioIframe } from '@/app/_components/RadioIframeProvider';
 
 export default function HeaderNav() {
+  const { openRadio, closeRadio, expandRadio, isOpen: isRadioOpen, isMinimized } = useRadioIframe();
+
   // Cookie reading is handled client-side by ArchiveViewToggle component
   // This allows static generation while still reading view preference on the client
+  
+  const handleRadioClick = (e) => {
+    e.preventDefault();
+    if (!isRadioOpen) {
+      openRadio();
+    }
+  };
+
   return (
     <header id="main-header" className={styles.header}>
       <div className={styles.navTitleContainer}>
@@ -53,10 +66,31 @@ export default function HeaderNav() {
             innerNavBubble={true}
             href="https://www.outsideobservations.radio/"
             section="radio"
-            target="_blank"
-            rel="noreferrer"
+            onClick={handleRadioClick}
+            isActive={isRadioOpen}
             label="Radio"
-          />
+          >
+            {isRadioOpen && isMinimized && (
+              <div className={styles.radioNavButtons}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    expandRadio();
+                  }}
+                  className={`${styles.radioNavButton} ${styles.expandButton}`}
+                  aria-label="Expand radio"
+                ></button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    closeRadio();
+                  }}
+                  className={`${styles.radioNavButton} ${styles.closeButton}`}
+                  aria-label="Close radio"
+                ></button>
+              </div>
+            )}
+          </NavItem>
           <NavItem
             className={`${styles.navLi} shop-nav`}
             innerNavBubble={true}

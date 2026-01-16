@@ -10,6 +10,8 @@ import StudioLayoutWrapper from '@/app/_components/StudioLayoutWrapper';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveSearchStateProvider } from '@/app/_components/Archive/ArchiveSearchStateProvider';
 import { VisitorCountProvider } from '@/app/_components/VisitorCountProvider';
+import { RadioIframeProvider } from '@/app/_components/RadioIframeProvider';
+import RadioIframe from '@/app/_components/RadioIframe';
 import PageTransition from '@/app/_components/PageTransition';
 
 export const metadata = {
@@ -41,37 +43,42 @@ export default function RootLayout({ children }) {
         <ErrorBoundary>
           <BodyHydrationGuard />
           <VisitorCountProvider>
-            <ArchiveSearchStateProvider>
-              <ErrorBoundary>
-                <div data-hide-on-studio="true">
-                  <div className={styles.linesGrid} data-first-visit-animate="lines">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <div className={styles.linesGridItem} key={index} />
-                    ))}
+            <RadioIframeProvider>
+              <ArchiveSearchStateProvider>
+                <ErrorBoundary>
+                  <div data-hide-on-studio="true">
+                    <div className={styles.linesGrid} data-first-visit-animate="lines">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <div className={styles.linesGridItem} key={index} />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </ErrorBoundary>
-              <ErrorBoundary>
-                <BodyPageTypeUpdater />
-              </ErrorBoundary>
-              <ErrorBoundary>
-                <VisitorTracker />
-              </ErrorBoundary>
-              <ErrorBoundary>
-                <WebsiteVisitTracker />
-              </ErrorBoundary>
-              <ErrorBoundary>
-                <StudioLayoutWrapper />
-              </ErrorBoundary>
-              <ErrorBoundary>
-                <PageTransition>
-                  <div data-hide-on-studio="true" data-first-visit-animate="header">
-                    <HeaderNav />
-                  </div>
-                  {children}
-                </PageTransition>
-              </ErrorBoundary>
-            </ArchiveSearchStateProvider>
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  <BodyPageTypeUpdater />
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  <VisitorTracker />
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  <WebsiteVisitTracker />
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  <StudioLayoutWrapper />
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  <RadioIframe />
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  <PageTransition>
+                    <div data-hide-on-studio="true" data-first-visit-animate="header">
+                      <HeaderNav />
+                    </div>
+                    {children}
+                  </PageTransition>
+                </ErrorBoundary>
+              </ArchiveSearchStateProvider>
+            </RadioIframeProvider>
           </VisitorCountProvider>
         </ErrorBoundary>
       </body>
