@@ -65,6 +65,10 @@
   justify-self: end;
 }
 
+.chatBoxMessageText {
+  white-space: pre-line;
+}
+
 .chatBoxImagesMessage {
   padding: calc(var(--gap) * 2);
   width: 50%;

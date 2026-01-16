@@ -27,6 +27,16 @@ export const siteSettings = defineType({
         hotspot: true
       }
     }),
+    defineField({
+      name: 'chatFirstMessage',
+      title: 'Chat First Message',
+      type: 'text',
+      description: 'The first message displayed in the chat. Supports line breaks.',
+      rows: 4,
+      initialValue: `Welcome to Outside Observations®. We're glad you're here.
+
+Use the menu on the left to explore, or tell me what you're looking for and I'll point you in the right direction.`,
+    }),
   ],
   preview: {
     prepare() {

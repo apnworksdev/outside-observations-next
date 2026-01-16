@@ -244,7 +244,10 @@ export default function FirstVisitAnimation({ onComplete, children }) {
         // Use stored text (captured earlier) or try to get it again from the DOM
         // Fallback to default welcome message if text is still not found
         const textFromDOM = (textElement.textContent || textElement.innerText || '').trim();
-        const textToType = storedText || textFromDOM || 'Welcome to Outside Observations®, how can I help you?';
+        const defaultMessage = `Welcome to Outside Observations®. We're glad you're here.
+
+Use the menu on the left to explore, or tell me what you're looking for and I'll point you in the right direction.`;
+        const textToType = storedText || textFromDOM || defaultMessage;
         
         if (!textToType) return;
         

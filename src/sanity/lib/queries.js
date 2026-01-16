@@ -161,6 +161,7 @@ export const ARCHIVE_ENTRIES_BY_IDS_QUERY = defineQuery(`*[_type == "archiveEntr
 export const SITE_SETTINGS_QUERY = defineQuery(`*[_type == "siteSettings"][0] {
   _id,
   title,
+  chatFirstMessage,
   closedArchiveImage{
     ...,
     asset,

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useArchiveSearchState } from '@/app/_components/Archive/ArchiveSearchStateProvider';
 import { useArchiveEntriesSafe } from '@/app/_components/Archive/ArchiveEntriesProvider';
 import { useChatStorage } from '@/app/_hooks/useChatStorage';
+import { client } from '@/sanity/lib/client';
+import { SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
 import styles from '@app/_assets/chatbox.module.css';
 import TypewriterMessage from './TypewriterMessage';
 import ExploreArchiveLink from './ExploreArchiveLink';
@@ -29,11 +31,16 @@ export default function ChatBox({ variant = 'home' }) {
 
   const messageIdRef = useRef(0);
   
+  // Default first message - used as fallback and initial state
+  const DEFAULT_FIRST_MESSAGE = `Welcome to Outside Observations®. We're glad you're here.
+
+Use the menu on the left to explore, or tell me what you're looking for and I'll point you in the right direction.`;
+  
   // Initialize messages with default state (same on server and client to avoid hydration mismatch)
   const [messages, setMessages] = useState([
     {
       id: 0,
-      text: 'Welcome to Outside Observations®, how can I help you?',
+      text: DEFAULT_FIRST_MESSAGE,
       sender: 'bot',
       isLoading: false
     }
@@ -43,6 +50,60 @@ export default function ChatBox({ variant = 'home' }) {
   // This hook handles loading chat history on mount and saving on updates
   // Chat history is shared across home and archive variants
   useChatStorage(messages, setMessages, messageIdRef);
+
+  // Helper function to update the first message (id: 0) with given text
+  const updateFirstMessage = (text) => {
+    setMessages((currentMessages) => {
+      const firstMessageIndex = currentMessages.findIndex(msg => msg.id === 0);
+      
+      if (firstMessageIndex >= 0) {
+        // Update existing first message
+        const newMessages = [...currentMessages];
+        newMessages[firstMessageIndex] = {
+          ...newMessages[firstMessageIndex],
+          text,
+        };
+        return newMessages;
+      } else {
+        // Add first message at the beginning if it doesn't exist
+        return [
+          {
+            id: 0,
+            text,
+            sender: 'bot',
+            isLoading: false
+          },
+          ...currentMessages
+        ];
+      }
+    });
+  };
+
+  // Fetch chat first message from site settings and always set it as the first message
+  useEffect(() => {
+    const fetchChatFirstMessage = async () => {
+      try {
+        const siteSettings = await client.fetch(SITE_SETTINGS_QUERY);
+        const chatFirstMessage = siteSettings?.chatFirstMessage;
+        
+        // Use site settings message if available and not empty, otherwise use default
+        const firstMessageText = (chatFirstMessage && chatFirstMessage.trim()) 
+          ? chatFirstMessage 
+          : DEFAULT_FIRST_MESSAGE;
+        
+        updateFirstMessage(firstMessageText);
+      } catch (error) {
+        console.error('Failed to fetch chat first message from site settings:', error);
+        // Use default message on error
+        updateFirstMessage(DEFAULT_FIRST_MESSAGE);
+      }
+    };
+
+    // Fetch after a short delay to allow useChatStorage to load saved messages first
+    const timeoutId = setTimeout(fetchChatFirstMessage, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, []); // Only run once on mount
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
