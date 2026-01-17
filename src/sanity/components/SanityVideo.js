@@ -148,10 +148,36 @@ export default function SanityVideo({
 
   // Validate video URL
   if (!videoUrl) {
+    // If no video URL but we have a poster, show the poster as fallback
+    if (poster) {
+      return (
+        <SanityImage
+          image={poster}
+          alt={alt || 'Video poster'}
+          width={width}
+          height={height}
+          className={fallbackClassName || className}
+          {...props}
+        />
+      );
+    }
     return null;
   }
 
   if (!videoUrl.startsWith('http://') && !videoUrl.startsWith('https://')) {
+    // If invalid video URL but we have a poster, show the poster as fallback
+    if (poster) {
+      return (
+        <SanityImage
+          image={poster}
+          alt={alt || 'Video poster'}
+          width={width}
+          height={height}
+          className={fallbackClassName || className}
+          {...props}
+        />
+      );
+    }
     return null;
   }
 

@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback, memo } from 'react';
 import { urlForImage } from '@/sanity/lib/image';
+import SanityImage from '@/sanity/components/SanityImage';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
 // Format time as MM:SS (always 2 digits for minutes and seconds)
@@ -107,6 +108,7 @@ export default function ArchiveEntryVideo({ video, poster, alt }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFull, setIsFull] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const videoUrl = video?.asset?.url;
   const videoMimeType = video?.asset?.mimeType || 'video/mp4';
@@ -159,11 +161,60 @@ export default function ArchiveEntryVideo({ video, poster, alt }) {
 
   // Validate video URL
   if (!videoUrl) {
+    // If no video URL but we have a poster, show the poster as fallback
+    if (poster) {
+      const posterWidth = 1200;
+      const posterHeight = poster?.dimensions?.aspectRatio 
+        ? Math.round(posterWidth / poster.dimensions.aspectRatio) 
+        : posterWidth;
+      return (
+        <SanityImage
+          image={poster}
+          alt={alt || 'Video poster'}
+          width={posterWidth}
+          height={posterHeight}
+          className={styles.archiveEntryModalPoster}
+        />
+      );
+    }
     return null;
   }
 
   if (!videoUrl.startsWith('http://') && !videoUrl.startsWith('https://')) {
+    // If invalid video URL but we have a poster, show the poster as fallback
+    if (poster) {
+      const posterWidth = 1200;
+      const posterHeight = poster?.dimensions?.aspectRatio 
+        ? Math.round(posterWidth / poster.dimensions.aspectRatio) 
+        : posterWidth;
+      return (
+        <SanityImage
+          image={poster}
+          alt={alt || 'Video poster'}
+          width={posterWidth}
+          height={posterHeight}
+          className={styles.archiveEntryModalPoster}
+        />
+      );
+    }
     return null;
+  }
+
+  // Show poster as fallback if video has error
+  if (hasError && poster) {
+    const posterWidth = 1200;
+    const posterHeight = poster?.dimensions?.aspectRatio 
+      ? Math.round(posterWidth / poster.dimensions.aspectRatio) 
+      : posterWidth;
+    return (
+      <SanityImage
+        image={poster}
+        alt={alt || 'Video poster'}
+        width={posterWidth}
+        height={posterHeight}
+        className={styles.archiveEntryModalPoster}
+      />
+    );
   }
 
   const handleVideoClick = (e) => {
@@ -200,6 +251,7 @@ export default function ArchiveEntryVideo({ video, poster, alt }) {
         onError={(e) => {
           console.error('Video error:', e);
           setIsPlaying(false);
+          setHasError(true);
         }}
         aria-label={alt || 'Video'}
         className={styles.archiveEntryVideo}

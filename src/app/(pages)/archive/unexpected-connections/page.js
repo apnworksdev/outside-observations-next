@@ -1,4 +1,3 @@
-import { urlFor } from '@/sanity/lib/image';
 import { getRandomArchivePosters } from '@app/_data/archive';
 import UnexpectedConnectionsContent from '@app/_components/Archive/UnexpectedConnectionsContent';
 
@@ -26,7 +25,6 @@ export default async function UnexpectedConnectionsPage() {
     .map((entry) => {
       const aspectRatio = entry.poster?.dimensions?.aspectRatio || 1;
       const calculatedHeight = Math.round(posterWidth / aspectRatio);
-      const imageUrl = urlFor(entry.poster).width(posterWidth).url();
       const tags = entry.metadata?.tags || entry.tags || []
       const moodTags = Array.isArray(tags)
         ? tags.map((tag) => tag?.name).filter(Boolean)
@@ -38,7 +36,6 @@ export default async function UnexpectedConnectionsPage() {
 
       return {
         entry,
-        imageUrl,
         calculatedHeight,
         moodTags,
         description,

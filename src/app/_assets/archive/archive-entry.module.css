@@ -87,6 +87,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--item-gap);
+  max-width: 100%;
 }
 
 .archiveEntryModalPoster {
