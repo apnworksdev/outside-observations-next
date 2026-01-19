@@ -8,8 +8,8 @@ const MS_PER_MINUTE = MS_PER_SECOND * 60;
 const MS_PER_HOUR = MS_PER_MINUTE * 60;
 const MS_PER_DAY = MS_PER_HOUR * 24;
 
-// January 21st, 2026 at 12:00 PM (noon)
-const LAUNCH_DATE = new Date('2026-01-21T12:00:00');
+// January 28, 2026 at 8:00 AM PST
+const LAUNCH_DATE = new Date('2026-01-28T08:00:00-08:00');
 
 export default function LaunchCountdown() {
   const daysListRef = useRef(null);
