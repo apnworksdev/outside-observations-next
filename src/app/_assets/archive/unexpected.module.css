@@ -13,6 +13,7 @@
   gap: var(--column-gap);
   min-width: 0;
   width: 100%;
+  position: relative;
 }
 
 .unexpectedConnectionsItem {
@@ -41,6 +42,13 @@
   width: 100%;
   padding-right: var(--padding);
   padding-left: var(--padding);
+}
+
+.unexpectedConnectionsItemTitle {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .unexpectedConnectionsComparisonItem {
@@ -77,6 +85,29 @@
   max-width: 100%;
 }
 
+.unexpectedConnectionsRefreshBtn {
+  position: relative;
+  left: -3px;
+  background-color: var(--fg-color-75);
+  color: var(--bg-color);
+  height: var(--bubble-height);
+  width: max-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 var(--padding);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .unexpectedConnectionsRefreshBtn:hover {
+    text-transform: uppercase;
+    font-style: italic;
+    font-weight: 700;
+  }
+}
+
 @media (max-width: 768px) {
   .unexpectedConnectionsGrid {
     row-gap: var(--gap);
@@ -103,5 +134,12 @@
 
   :global(body[data-page="unexpected-connections"].mobile-nav-open) .unexpectedConnectionsContainer {
     padding-top: calc(var(--archive-container-top-margin) + var(--bubble-height) * 3 + var(--gap) * 3);
+  }
+
+  .unexpectedConnectionsRefreshBtn {
+    position: absolute;
+    bottom: calc(100% + 1px);
+    left: auto;
+    right: calc((var(--padding) - var(--gap)) * -1);
   }
 }

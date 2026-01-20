@@ -62,14 +62,15 @@
   padding-top: 6px;
   padding-bottom: 7px;
   flex-shrink: 0;
+  width: 0;
+  min-width: 100%;
+  box-sizing: border-box;
 }
 
 .archiveEntryModalTitle {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  max-width: 100%;
+  min-width: 0;
   flex: 1;
+  overflow-wrap: break-word;
 }
 
 .archiveEntryVisualImageCounter {
@@ -78,8 +79,9 @@
 
 .archiveEntryModalBody {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  width: fit-content;
 }
 
 .archiveEntryModalPosterContainer {

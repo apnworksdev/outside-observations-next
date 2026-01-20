@@ -75,17 +75,17 @@ export function ArchiveEntryArticle({ entry, headingId }) {
           return (
             <div key={image._id || index} className={`${styles.archiveEntryVisualImageWrapper} ${styles[layout]}`}>
               <div className={styles.archiveEntryModalContentWrapper}>
-                <div className={styles.archiveEntryModalHeader}>
-                  <h3 className={styles.archiveEntryModalTitle}>
-                    {image.metadata?.fileName || image.metadata?.artName || ''}
-                  </h3>
-                  {validImageCount > 0 && (
-                    <p className={styles.archiveEntryVisualImageCounter}>
-                      {index + 1} of {validImageCount}
-                    </p>
-                  )}
-                </div>
                 <div className={styles.archiveEntryModalBody}>
+                  <div className={styles.archiveEntryModalHeader}>
+                    <h3 className={styles.archiveEntryModalTitle}>
+                      {image.metadata?.fileName || image.metadata?.artName || ''}
+                    </h3>
+                    {validImageCount > 0 && (
+                      <p className={styles.archiveEntryVisualImageCounter}>
+                        {index + 1} of {validImageCount}
+                      </p>
+                    )}
+                  </div>
                   <div className={styles.archiveEntryModalPosterContainer}>
                     <SanityImage
                       image={image.image}
@@ -113,12 +113,12 @@ export function ArchiveEntryArticle({ entry, headingId }) {
   return (
     <article className={`${styles.archiveEntryModalContent} ${styles[layout]}`}>
       <div className={styles.archiveEntryModalContentWrapper}>
-        <div className={styles.archiveEntryModalHeader}>
-          <h1 className={styles.archiveEntryModalTitle} {...(headingId ? { id: headingId } : {})}>
-            {entry.metadata?.artName || entry.artName}
-          </h1>
-        </div>
         <div className={styles.archiveEntryModalBody}>
+          <div className={styles.archiveEntryModalHeader}>
+            <h1 className={styles.archiveEntryModalTitle} {...(headingId ? { id: headingId } : {})}>
+              {entry.metadata?.artName || entry.artName}
+            </h1>
+          </div>
           <div className={styles.archiveEntryModalPosterContainer}>
             {isVideo && entry.video ? (
               <ArchiveEntryVideo

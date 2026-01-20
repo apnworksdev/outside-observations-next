@@ -155,9 +155,7 @@ export default function UnexpectedConnectionsContent({
           );
         })}
         {comparisonPayload ? (
-          <div className={`${styles.unexpectedConnectionsItem} ${styles.unexpectedConnectionsComparisonItem}`}>
-            <UnexpectedConnectionsComparison postersPayload={comparisonPayload} />
-          </div>
+          <UnexpectedConnectionsComparison postersPayload={comparisonPayload} />
         ) : null}
       </div>
     </section>

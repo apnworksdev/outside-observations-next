@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import styles from '@app/_assets/archive/unexpected.module.css';
 import TypewriterMessage from '@/app/_components/Home/TypewriterMessage';
@@ -11,14 +12,27 @@ const initialState = {
   error: null,
 };
 
+function RefreshIcon() {
+  return (
+    <svg width="9" height="10" viewBox="0 0 9 10" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.unexpectedConnectionsRefreshIcon}>
+      <path d="M4.85948 2.04346C3.1883 1.53702 1.42299 2.48123 0.916546 4.15241C0.410106 5.82359 1.35432 7.5889 3.0255 8.09534C4.69668 8.60178 6.46199 7.65757 6.96843 5.98639C7.15266 5.37846 7.14493 4.75807 6.98006 4.19036" stroke="currentColor" strokeWidth="0.8"/>
+      <path d="M3.36899 0.455954L4.85396 2.04321L3.1723 3.46778" stroke="currentColor" strokeWidth="0.8"/>
+    </svg>
+
+  );
+}
+
 export default function UnexpectedConnectionsComparison({ postersPayload }) {
+  const router = useRouter();
   const [{ status, data, error }, setState] = useState(initialState);
+  const [isTypingDone, setIsTypingDone] = useState(false);
 
   useEffect(() => {
     if (!postersPayload?.item1 || !postersPayload?.item2) {
       return;
     }
 
+    setIsTypingDone(false);
     let isCancelled = false;
     const controller = new AbortController();
 
@@ -98,19 +112,35 @@ export default function UnexpectedConnectionsComparison({ postersPayload }) {
   }
 
   return (
-    <div
-      className={styles.unexpectedConnectionsAnalysis}
-      aria-live="polite"
-      role={status === 'error' ? 'alert' : undefined}
-    >
-      <p>
-        <TypewriterMessage
-          text={targetText}
-          isLoading={isLoading}
-          typingSpeed={20}
-          loadingSpeed={420}
-        />
-      </p>
-    </div>
+    <>
+      <div className={`${styles.unexpectedConnectionsItem} ${styles.unexpectedConnectionsComparisonItem}`}>
+        <div
+          className={styles.unexpectedConnectionsAnalysis}
+          aria-live="polite"
+          role={status === 'error' ? 'alert' : undefined}
+        >
+          <p>
+            <TypewriterMessage
+              text={targetText}
+              isLoading={isLoading}
+              typingSpeed={20}
+              loadingSpeed={420}
+              onComplete={() => setIsTypingDone(true)}
+            />
+          </p>
+        </div>
+      </div>
+      {isTypingDone && (
+        <button
+          type="button"
+          className={styles.unexpectedConnectionsRefreshBtn}
+          onClick={() => router.refresh()}
+          aria-label="Refresh"
+        >
+          <RefreshIcon />
+          <span>Refresh</span>
+        </button>
+      )}
+    </>
   );
 }
