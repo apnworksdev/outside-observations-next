@@ -58,7 +58,9 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
     },
     metadata {
       artName,
-      fileName
+      fileName,
+      year { value },
+      source
     },
     aiDescription,
     aiMoodTags[]->{
@@ -120,7 +122,9 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && (sl
     },
     metadata {
       artName,
-      fileName
+      fileName,
+      year { value },
+      source
     },
     aiDescription,
     aiMoodTags[]->{

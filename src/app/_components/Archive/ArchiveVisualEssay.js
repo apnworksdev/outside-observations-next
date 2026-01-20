@@ -7,7 +7,7 @@ import styles from '@app/_assets/archive/archive-page.module.css';
 
 const ROTATION_INTERVAL = 2000; // 2 seconds
 
-export default function ArchiveVisualEssay({ entry, width = 1200, height }) {
+export default function ArchiveVisualEssay({ entry, width = 1200, height, onCurrentImageChange }) {
   const visualEssayImages = entry?.visualEssayImages || [];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -120,6 +120,13 @@ export default function ArchiveVisualEssay({ entry, width = 1200, height }) {
       }
     };
   }, [isVisible, validImages.length]);
+
+  // Notify parent when the currently displayed image changes (for hover overlay, link ?image=, etc.)
+  useEffect(() => {
+    if (onCurrentImageChange && currentImage) {
+      onCurrentImageChange(currentImage, currentIndex);
+    }
+  }, [currentImage, currentIndex, onCurrentImageChange]);
 
   // Early return after all hooks
   if (validImages.length === 0 || !currentImage) {

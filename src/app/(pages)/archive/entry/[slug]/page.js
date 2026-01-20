@@ -65,12 +65,14 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function ArchiveEntryPage({ params }) {
+export default async function ArchiveEntryPage({ params, searchParams }) {
   let resolvedParams;
+  let resolvedSearchParams = {};
   let entry;
 
   try {
     resolvedParams = await params;
+    resolvedSearchParams = searchParams != null ? await searchParams : {};
     
     if (!resolvedParams?.slug) {
       console.error('ArchiveEntryPage: Missing slug parameter');
@@ -102,6 +104,16 @@ export default async function ArchiveEntryPage({ params }) {
 
   const entryType = entry?.mediaType || 'image';
 
+  // Parse ?image=N for visual essays: scroll to that image on load
+  const raw = resolvedSearchParams?.image;
+  const imageParam = Array.isArray(raw) ? raw[0] : raw;
+  const imageIndex =
+    imageParam != null && imageParam !== ''
+      ? parseInt(String(imageParam), 10)
+      : null;
+  const initialImageIndex =
+    Number.isFinite(imageIndex) && imageIndex >= 0 ? imageIndex : null;
+
   // Get the slug for visit tracking
   const entrySlug = resolvedParams.slug;
 
@@ -111,13 +123,13 @@ export default async function ArchiveEntryPage({ params }) {
       <Suspense
         fallback={
           <div className={styles.archiveEntryContentWrapper} data-entry-type={entryType}>
-            <ArchiveEntryArticle entry={entry} />
+            <ArchiveEntryArticle entry={entry} initialImageIndex={initialImageIndex} />
           </div>
         }
       >
         <ArchiveEntryBackdrop>
           <div className={styles.archiveEntryContentWrapper} data-entry-type={entryType}>
-            <ArchiveEntryArticle entry={entry} />
+            <ArchiveEntryArticle entry={entry} initialImageIndex={initialImageIndex} />
           </div>
           <aside className={styles.archiveEntryAside}>
             <ArchiveEntryMetadata entry={entry} />

@@ -36,7 +36,12 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
   const slug = entry.metadata?.slug || entry.slug
   const hasSlug = slug?.current
   const slugValue = slug?.current || null;
-  const href = hasSlug ? `/archive/entry/${slug.current}` : null;
+  const isVisualEssay = entry.mediaType === 'visualEssay';
+  const [currentImage, setCurrentImage] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const href = hasSlug
+    ? `/archive/entry/${slug.current}${isVisualEssay ? `?image=${currentImageIndex}` : ''}`
+    : null;
   const prefetchHandlers = usePrefetchOnHover(href, 300);
   // Set priority for first 4 images (above the fold)
   const isPriority = index < 4;
@@ -45,15 +50,32 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
     ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
     : POSTER_WIDTH;
 
-  const isVisualEssay = entry.mediaType === 'visualEssay';
-  
   // Check if entry has been visited (hydration-safe)
   const isVisited = useArchiveEntryVisited(slugValue);
+
+  // For visual essays, overlay uses the currently displayed image's metadata
+  const overlayMeta = isVisualEssay && currentImage?.metadata
+    ? currentImage.metadata
+    : entry.metadata;
+  const overlayYear = overlayMeta?.year?.value ?? entry.year ?? '';
+  const overlaySource = overlayMeta?.source || entry.source || '';
+  const overlayArtName = overlayMeta?.artName || entry.artName || '';
+
+  const hasYear = String(overlayYear ?? '').trim() !== '';
+  const hasSource = String(overlaySource ?? '').trim() !== '';
+  const hasArtName = String(overlayArtName ?? '').trim() !== '';
 
   const content = (
     <div className={styles.archiveEntryImageWrapper}>
       {isVisualEssay ? (
-        <ArchiveVisualEssay entry={entry} width={POSTER_WIDTH} />
+        <ArchiveVisualEssay
+          entry={entry}
+          width={POSTER_WIDTH}
+          onCurrentImageChange={(img, idx) => {
+            setCurrentImage(img);
+            if (typeof idx === 'number') setCurrentImageIndex(idx);
+          }}
+        />
       ) : isVideo && entry.video ? (
         <SanityVideo
           video={entry.video}
@@ -84,9 +106,15 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
       )}
       <div className={styles.archiveEntryImageOverlay}>
         <div className={styles.archiveEntryImageOverlayContent}>
-          <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.metadata?.year?.value ?? entry.year ?? ''}</p></div>
-          <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.metadata?.source || entry.source}</p></div>
-          <div className={styles.archiveEntryImageOverlayContentItem}><p>{entry.metadata?.artName || entry.artName}</p></div>
+          {hasYear && (
+            <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayYear}</p></div>
+          )}
+          {hasSource && (
+            <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlaySource}</p></div>
+          )}
+          {hasArtName && (
+            <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayArtName}</p></div>
+          )}
         </div>
       </div>
     </div>

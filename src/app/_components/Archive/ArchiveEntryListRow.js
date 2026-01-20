@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
 import SanityVideo from '@/sanity/components/SanityVideo';
@@ -13,7 +14,11 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
   const hasSlug = slug?.current
   const slugValue = slug?.current || null;
   const posterWidth = 400;
-  const href = hasSlug ? `/archive/entry/${slug.current}` : null;
+  const isVisualEssay = entry.mediaType === 'visualEssay';
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const href = hasSlug
+    ? `/archive/entry/${slug.current}${isVisualEssay ? `?image=${currentImageIndex}` : ''}`
+    : null;
   const prefetchHandlers = usePrefetchOnHover(href, 300);
   // Set priority for first 3 rows (above the fold in list view)
   const isPriority = index < 3;
@@ -38,7 +43,11 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
         </div>
         <div className={styles.itemPoster}>
           {entry.mediaType === 'visualEssay' ? (
-            <ArchiveVisualEssay entry={entry} width={posterWidth} />
+            <ArchiveVisualEssay
+              entry={entry}
+              width={posterWidth}
+              onCurrentImageChange={(_, idx) => { if (typeof idx === 'number') setCurrentImageIndex(idx); }}
+            />
           ) : entry.mediaType === 'video' ? (
             <SanityVideo
               video={entry.video}

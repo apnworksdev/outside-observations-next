@@ -1,5 +1,6 @@
 import SanityImage from '@/sanity/components/SanityImage';
 import ArchiveEntryVideo from './ArchiveEntryVideo';
+import ScrollToVisualEssayImage from './ScrollToVisualEssayImage';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
 // Helper function to render portable text blocks
@@ -30,7 +31,7 @@ function renderTextMarkup(blocks) {
     .filter(Boolean);
 }
 
-export function ArchiveEntryArticle({ entry, headingId }) {
+export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
   // Validation: Check if required fields are missing (development only)
   if (process.env.NODE_ENV !== 'production') {
     const hasArtName = entry?.metadata?.artName || entry?.artName;
@@ -73,7 +74,11 @@ export function ArchiveEntryArticle({ entry, headingId }) {
           const layout = aspectRatio && aspectRatio > 1 ? 'landscape' : 'portrait';
           
           return (
-            <div key={image._id || index} className={`${styles.archiveEntryVisualImageWrapper} ${styles[layout]}`}>
+            <div
+              key={image._id || index}
+              id={`ve-image-${index}`}
+              className={`${styles.archiveEntryVisualImageWrapper} ${styles[layout]}`}
+            >
               <div className={styles.archiveEntryModalContentWrapper}>
                 <div className={styles.archiveEntryModalBody}>
                   <div className={styles.archiveEntryModalHeader}>
@@ -100,6 +105,15 @@ export function ArchiveEntryArticle({ entry, headingId }) {
             </div>
           );
         })}
+        <ScrollToVisualEssayImage
+          imageIndex={
+            initialImageIndex != null &&
+            initialImageIndex >= 0 &&
+            initialImageIndex < validImageCount
+              ? initialImageIndex
+              : null
+          }
+        />
       </article>
     );
   }
