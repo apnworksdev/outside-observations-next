@@ -12,6 +12,7 @@
 
 import { useState, useEffect } from 'react'
 import styles from '@app/_assets/vectorStore.module.css'
+import { removeFromVectorStore } from '@/sanity/lib/vectorStore'
 
 export default function VectorStorePage() {
   const [items, setItems] = useState([])
@@ -83,20 +84,7 @@ export default function VectorStorePage() {
     setDeleteStatus(null)
 
     try {
-      const deletePromises = Array.from(selectedItems).map(async (itemId) => {
-        const response = await fetch(`/api/vector-store/delete-item/${encodeURIComponent(itemId)}`, {
-          method: 'DELETE'
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || `Failed to delete ${itemId}: ${response.status}`)
-        }
-
-        return await response.json()
-      })
-
-      await Promise.all(deletePromises)
+      await Promise.all(Array.from(selectedItems).map((itemId) => removeFromVectorStore(itemId)))
       
       setDeleteStatus({ 
         type: 'success', 

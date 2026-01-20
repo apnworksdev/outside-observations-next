@@ -356,6 +356,7 @@ export function VisualEssayImagesInput(props) {
           newReferences.push({
             _type: 'reference',
             _ref: createdDoc._id,
+            _weak: true,
             _key: `visualEssayImage-${Date.now()}-${keyCounter++}-${Math.random().toString(36).slice(2, 10)}`,
           })
 

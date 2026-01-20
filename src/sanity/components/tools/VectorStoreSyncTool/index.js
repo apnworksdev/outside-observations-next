@@ -5,6 +5,7 @@ import {Button, Card, Stack, Text} from '@sanity/ui'
 import {useClient} from 'sanity'
 
 import {apiVersion} from '../../../env'
+import {upsertInVectorStore} from '../../../lib/vectorStore'
 
 const normalizeId = (id) => {
   if (!id) return ''
@@ -15,6 +16,8 @@ const normalizeId = (id) => {
 // can be unreliable with nested references. We only fetch minimal fields needed for filtering.
 // Note: For very large datasets (1000+), consider adding pagination
 const fetchArchiveEntriesQuery = '*[_type == "archiveEntry"]{_id, aiDescription, "posterAssetRef": poster.asset._ref, "posterAssetId": poster.asset._id}'
+
+const fetchVisualEssayImagesQuery = '*[_type == "visualEssayImage"]{_id, aiDescription, "imageAssetRef": image.asset._ref, "imageAssetId": image.asset._id}'
 
 export function VectorStoreSyncTool() {
   const client = useClient({apiVersion})
@@ -40,39 +43,37 @@ export function VectorStoreSyncTool() {
       }
 
       const vectorData = await vectorResponse.json()
-      const existingIds = Array.isArray(vectorData.imageIds) ? vectorData.imageIds : []
+      const rawIds = vectorData.imageIds || vectorData.itemIds || vectorData.items || vectorData.ids
+      const existingIds = Array.isArray(rawIds) ? rawIds : []
       const existingIdSet = new Set(existingIds)
       const existingCanonicalSet = new Set(existingIds.map((id) => normalizeId(id)).filter(Boolean))
-      setMessage('Fetching archive entries from Sanity…')
+      setMessage('Fetching archive entries and visual essay images from Sanity…')
 
-      // Fetch archive entries - we only fetch minimal fields to reduce payload size
-      // For large datasets, this is more efficient than fetching full documents
-      const allDocuments = await client.fetch(fetchArchiveEntriesQuery)
-      const totalCount = allDocuments.length
-      
-      // Filter in JavaScript for entries that have both aiDescription and poster.asset
-      // This is more reliable than GROQ filters with nested references
-      const documents = allDocuments
-        .filter(doc => {
-          // Check if aiDescription exists and is not empty
-          const hasAiDescription = doc.aiDescription && 
-            typeof doc.aiDescription === 'string' && 
-            doc.aiDescription.trim() !== ''
-          
-          // Check if poster.asset exists (using the pre-extracted ref/id fields)
+      const [archiveEntries, visualEssayImages] = await Promise.all([
+        client.fetch(fetchArchiveEntriesQuery),
+        client.fetch(fetchVisualEssayImagesQuery),
+      ])
+
+      const archiveDocs = archiveEntries
+        .filter((doc) => {
+          const hasAiDescription = doc.aiDescription && typeof doc.aiDescription === 'string' && doc.aiDescription.trim() !== ''
           const hasPosterAsset = !!(doc.posterAssetRef || doc.posterAssetId)
-          
           return hasAiDescription && hasPosterAsset
         })
-        .map(doc => ({
-          _id: doc._id,
-          aiDescription: doc.aiDescription
-        }))
-      
-      const filteredCount = documents.length
+        .map((doc) => ({_id: doc._id, aiDescription: doc.aiDescription}))
+
+      const visualEssayDocs = visualEssayImages
+        .filter((doc) => {
+          const hasAiDescription = doc.aiDescription && typeof doc.aiDescription === 'string' && doc.aiDescription.trim() !== ''
+          const hasImageAsset = !!(doc.imageAssetRef || doc.imageAssetId)
+          return hasAiDescription && hasImageAsset
+        })
+        .map((doc) => ({_id: doc._id, aiDescription: doc.aiDescription}))
+
+      const documents = [...archiveDocs, ...visualEssayDocs]
 
       if (!documents.length) {
-        setMessage('No archive entries with AI descriptions found to index.')
+        setMessage('No archive entries or visual essay images with AI descriptions found to index.')
         return
       }
 
@@ -130,27 +131,7 @@ export function VectorStoreSyncTool() {
         setMessage(`Indexing ${i + 1} of ${totalToIndex}: ${entry.id}…`)
 
         try {
-          const response = await fetch('/api/vector-store/add-new-item', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              id: entry.id,
-              description: entry.description,
-            }),
-          })
-
-          if (!response.ok) {
-            let errorPayload = {}
-            try {
-              errorPayload = await response.json()
-            } catch (parseError) {
-              // ignore parsing errors
-            }
-            throw new Error(errorPayload.error || errorPayload.message || `Failed with status ${response.status}`)
-          }
-
+          await upsertInVectorStore({id: entry.id, description: entry.description})
           successCount += 1
           successIds.push(entry.id)
         } catch (error) {
@@ -209,8 +190,8 @@ export function VectorStoreSyncTool() {
             Add Missing Images to Vector Store
           </Text>
           <Text size={1} muted>
-            Checks every archive entry with an AI description and indexes any that are missing from the
-            external vector store.
+            Checks every archive entry and visual essay image with an AI description and indexes any that
+            are missing from the external vector store.
           </Text>
         </Stack>
         <Button

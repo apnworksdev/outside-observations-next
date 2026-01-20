@@ -98,6 +98,7 @@ export const archiveEntry = defineType({
         {
           type: 'reference',
           to: [{type: 'visualEssayImage'}],
+          weak: true,
         },
       ],
       hidden: ({parent}) => parent?.mediaType !== 'visualEssay',

@@ -12,7 +12,7 @@ import {structureTool} from 'sanity/structure'
 import {apiVersion, dataset, projectId} from './src/sanity/env'
 import {schema} from './src/sanity/schemaTypes'
 import {structure} from './src/sanity/structure'
-import {archiveEntryVectorStoreActions} from './src/sanity/documentActions/archiveEntryVectorStoreActions'
+import {vectorStoreDocumentActions} from './src/sanity/documentActions/vectorStoreDocumentActions'
 
 export default defineConfig({
   basePath: '/studio',
@@ -20,7 +20,7 @@ export default defineConfig({
   dataset,
   schema,
   document: {
-    actions: archiveEntryVectorStoreActions,
+    actions: vectorStoreDocumentActions,
   },
   plugins: [
     structureTool({structure}),

@@ -44,10 +44,12 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
   // Determine expected media type based on field type and document mediaType
   // For image fields, support both 'image' and 'text' media types
   // For file fields, support 'video' for videos and 'visualEssay' for PDFs
+  // For visualEssayImage documents (no mediaType), always process image fields
+  const isVisualEssayImageDoc = documentValue?._type === 'visualEssayImage'
   const expectedMediaTypes = isImageField 
     ? ['image', 'text'] 
     : (isPDF ? ['visualEssay'] : ['video'])
-  const shouldProcessAI = expectedMediaTypes.includes(mediaType)
+  const shouldProcessAI = expectedMediaTypes.includes(mediaType) || (isImageField && isVisualEssayImageDoc)
 
   // Media type labels
   const mediaLabel = isImageField ? 'image' : (isPDF ? 'PDF' : 'video')
@@ -73,9 +75,10 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
       return
     }
 
-    // Verify media type matches
+    // Verify media type matches (skip for visualEssayImage - always process images)
     const currentMediaType = documentValue?.mediaType
-    if (!expectedMediaTypes.includes(currentMediaType)) {
+    const docIsVisualEssayImage = documentValue?._type === 'visualEssayImage'
+    if (!docIsVisualEssayImage && !expectedMediaTypes.includes(currentMediaType)) {
       const allowedTypes = expectedMediaTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(' or ')
       setError(`AI processing is only available for ${mediaLabel}s when media type is set to "${allowedTypes}"`)
       return
@@ -383,6 +386,13 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
 
     // Only process if asset ID actually changed and mediaType matches
     if (currentAssetId && currentAssetId !== processedAssetRef.current && !isProcessing && shouldProcessAI) {
+      // Don't auto-run if both AI fields already filled (won't overwrite, avoid unnecessary API call)
+      const hasDesc = (currentAiDescription || '').toString().trim() !== ''
+      const hasTags = Array.isArray(currentAiMoodTags) && currentAiMoodTags.length > 0
+      if (hasDesc && hasTags) {
+        lastAssetIdRef.current = currentAssetId
+        return
+      }
       lastAssetIdRef.current = currentAssetId
       processedAssetRef.current = currentAssetId
 
@@ -395,7 +405,7 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
         lastAssetIdRef.current = null
       }
     }
-  }, [assetId, isProcessing, handleAIProcess, shouldProcessAI])
+  }, [assetId, isProcessing, handleAIProcess, shouldProcessAI, currentAiDescription, currentAiMoodTags])
 
   useEffect(() => {
     const currentValue = props.value

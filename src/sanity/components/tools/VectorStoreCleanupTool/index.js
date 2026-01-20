@@ -5,15 +5,16 @@ import {Button, Card, Stack, Text} from '@sanity/ui'
 import {useClient} from 'sanity'
 
 import {apiVersion} from '../../../env'
+import {removeFromVectorStore} from '../../../lib/vectorStore'
 
 const normalizeId = (id) => {
   if (!id) return ''
   return id.startsWith('drafts.') ? id.slice(7) : id
 }
 
-// Fetch archive entries - we filter in JavaScript since GROQ's defined() in WHERE clauses
-// can be unreliable with nested references. We only fetch minimal fields needed for filtering.
+// Fetch archive entries and visual essay images for validation
 const fetchArchiveEntriesQuery = '*[_type == "archiveEntry"]{_id, aiDescription, "posterAssetRef": poster.asset._ref, "posterAssetId": poster.asset._id}'
+const fetchVisualEssayImagesQuery = '*[_type == "visualEssayImage"]{_id, aiDescription, "imageAssetRef": image.asset._ref, "imageAssetId": image.asset._id}'
 
 export function VectorStoreCleanupTool() {
   const client = useClient({apiVersion})
@@ -40,7 +41,8 @@ export function VectorStoreCleanupTool() {
       }
 
       const vectorData = await vectorResponse.json()
-      const vectorStoreIds = Array.isArray(vectorData.imageIds) ? vectorData.imageIds : []
+      const rawIds = vectorData.imageIds || vectorData.itemIds || vectorData.items || vectorData.ids
+      const vectorStoreIds = Array.isArray(rawIds) ? rawIds : []
       
       if (!vectorStoreIds.length) {
         setMessage('Vector store is empty. Nothing to clean up.')
@@ -49,34 +51,38 @@ export function VectorStoreCleanupTool() {
 
       setMessage(`Found ${vectorStoreIds.length} entries in vector store. Checking against Sanity…`)
 
-      // Fetch all archive entries from Sanity
-      const allDocuments = await client.fetch(fetchArchiveEntriesQuery)
-      const totalCount = allDocuments.length
-      
-      // Build a set of valid canonical IDs that exist in Sanity and have descriptions
+      const [archiveEntries, visualEssayImages] = await Promise.all([
+        client.fetch(fetchArchiveEntriesQuery),
+        client.fetch(fetchVisualEssayImagesQuery),
+      ])
+
       const validIds = new Set()
       const validCanonicalIds = new Set()
-      
-      allDocuments
-        .filter(doc => {
-          // Check if aiDescription exists and is not empty
-          const hasAiDescription = doc.aiDescription && 
-            typeof doc.aiDescription === 'string' && 
-            doc.aiDescription.trim() !== ''
-          
-          // Check if poster.asset exists
+
+      const addValid = (doc) => {
+        const canonicalId = normalizeId(doc._id)
+        if (canonicalId) {
+          validIds.add(doc._id)
+          validIds.add(`drafts.${canonicalId}`)
+          validCanonicalIds.add(canonicalId)
+        }
+      }
+
+      archiveEntries
+        .filter((doc) => {
+          const hasAiDescription = doc.aiDescription && typeof doc.aiDescription === 'string' && doc.aiDescription.trim() !== ''
           const hasPosterAsset = !!(doc.posterAssetRef || doc.posterAssetId)
-          
           return hasAiDescription && hasPosterAsset
         })
-        .forEach(doc => {
-          const canonicalId = normalizeId(doc._id)
-          if (canonicalId) {
-            validIds.add(doc._id)
-            validIds.add(`drafts.${canonicalId}`)
-            validCanonicalIds.add(canonicalId)
-          }
+        .forEach(addValid)
+
+      visualEssayImages
+        .filter((doc) => {
+          const hasAiDescription = doc.aiDescription && typeof doc.aiDescription === 'string' && doc.aiDescription.trim() !== ''
+          const hasImageAsset = !!(doc.imageAssetRef || doc.imageAssetId)
+          return hasAiDescription && hasImageAsset
         })
+        .forEach(addValid)
 
       // Find orphaned entries (in vector store but not in Sanity, or missing descriptions)
       const orphanedIds = vectorStoreIds.filter((id) => {
@@ -91,7 +97,7 @@ export function VectorStoreCleanupTool() {
 
       if (!orphanedIds.length) {
         setMessage('No orphaned entries found ✅')
-        setDetails(`All ${vectorStoreIds.length} vector store entries have corresponding entries in Sanity with descriptions.`)
+        setDetails(`All ${vectorStoreIds.length} vector store entries have corresponding archive entries or visual essay images in Sanity with descriptions.`)
         return
       }
 
@@ -107,20 +113,7 @@ export function VectorStoreCleanupTool() {
         setMessage(`Removing ${i + 1} of ${orphanedIds.length}: ${orphanedId}…`)
 
         try {
-          const response = await fetch(`/api/vector-store/delete-item/${encodeURIComponent(orphanedId)}`, {
-            method: 'DELETE',
-          })
-
-          if (!response.ok) {
-            let errorPayload = {}
-            try {
-              errorPayload = await response.json()
-            } catch (parseError) {
-              // ignore parsing errors
-            }
-            throw new Error(errorPayload.error || errorPayload.message || `Failed with status ${response.status}`)
-          }
-
+          await removeFromVectorStore(orphanedId)
           successCount += 1
           successIds.push(orphanedId)
         } catch (error) {
@@ -161,8 +154,9 @@ export function VectorStoreCleanupTool() {
             Cleanup Orphaned Entries
           </Text>
           <Text size={1} muted>
-            Removes entries from the vector store that no longer exist in Sanity or no longer have AI descriptions.
-            This helps maintain data integrity between Sanity and the vector store.
+            Removes entries from the vector store that no longer exist in Sanity (archive entries or visual essay
+            images) or no longer have AI descriptions. This helps maintain data integrity between Sanity and the
+            vector store.
           </Text>
         </Stack>
         <Button
