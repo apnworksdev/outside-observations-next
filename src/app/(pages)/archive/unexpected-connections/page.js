@@ -1,5 +1,6 @@
-import { getRandomArchivePosters } from '@app/_data/archive';
+import { getTwoRandomForUnexpectedConnections } from '@app/_data/unexpectedConnections';
 import UnexpectedConnectionsContent from '@app/_components/Archive/UnexpectedConnectionsContent';
+import UnexpectedConnectionsEmpty from '@app/_components/Archive/UnexpectedConnectionsEmpty';
 
 export const metadata = {
   title: 'Unexpected Connections - Outside Observation',
@@ -9,68 +10,20 @@ export const metadata = {
 export const revalidate = 0;
 
 export default async function UnexpectedConnectionsPage() {
-  const posters = await getRandomArchivePosters(2);
-  const posterWidth = 600;
+  const mediaWidth = 600;
+  const { preparedItems, comparisonPayload } = await getTwoRandomForUnexpectedConnections({
+    mediaWidth,
+  });
 
-  if (!posters || posters.length === 0) {
-    return (
-      <section>
-        <p>No archive posters available yet.</p>
-      </section>
-    );
+  if (!preparedItems?.length) {
+    return <UnexpectedConnectionsEmpty message="No eligible items in the pool." />;
   }
-
-  const preparedPosters = posters
-    .filter((entry) => entry?.poster?.asset?._ref)
-    .map((entry) => {
-      const aspectRatio = entry.poster?.dimensions?.aspectRatio || 1;
-      const calculatedHeight = Math.round(posterWidth / aspectRatio);
-      const tags = entry.metadata?.tags || entry.tags || []
-      const moodTags = Array.isArray(tags)
-        ? tags.map((tag) => tag?.name).filter(Boolean)
-        : [];
-      const description =
-        typeof entry.aiDescription === 'string' && entry.aiDescription.trim().length > 0
-          ? entry.aiDescription.trim()
-          : null;
-
-      return {
-        entry,
-        calculatedHeight,
-        moodTags,
-        description,
-      };
-    });
-
-  const comparisonPayload =
-    preparedPosters.length >= 2
-      ? {
-          item1: {
-            id: preparedPosters[0].entry._id,
-            name: preparedPosters[0].entry.metadata?.artName || preparedPosters[0].entry.artName || 'Archive Entry',
-            description:
-              preparedPosters[0].description ??
-              `Archive entry ${preparedPosters[0].entry.metadata?.artName || preparedPosters[0].entry.artName || preparedPosters[0].entry._id}`,
-            mood_tags: preparedPosters[0].moodTags,
-          },
-          item2: {
-            id: preparedPosters[1].entry._id,
-            name: preparedPosters[1].entry.metadata?.artName || preparedPosters[1].entry.artName || 'Archive Entry',
-            description:
-              preparedPosters[1].description ??
-              `Archive entry ${preparedPosters[1].entry.metadata?.artName || preparedPosters[1].entry.artName || preparedPosters[1].entry._id}`,
-            mood_tags: preparedPosters[1].moodTags,
-          },
-        }
-      : null;
 
   return (
     <UnexpectedConnectionsContent
-      posters={preparedPosters}
+      items={preparedItems}
       comparisonPayload={comparisonPayload}
-      posterWidth={posterWidth}
+      mediaWidth={mediaWidth}
     />
   );
 }
-
-

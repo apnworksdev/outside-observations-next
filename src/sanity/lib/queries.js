@@ -183,3 +183,85 @@ export const SITE_SETTINGS_QUERY = defineQuery(`*[_type == "siteSettings"][0] {
     'dimensions': asset->metadata.dimensions
   }
 }`)
+
+/**
+ * Pool: archive entry IDs eligible for Unexpected Connections.
+ * mediaType image/video/text, poster.asset, for video also video.asset, and length(aiDescription) > 0.
+ * We use length(aiDescription) > 0 instead of defined()/!= "" which can be unreliable for text fields.
+ */
+export const ARCHIVE_ENTRIES_ELIGIBLE_IDS_FOR_UNEXPECTED_QUERY = defineQuery(
+  `*[_type == "archiveEntry"
+    && mediaType in ["image", "video", "text"]
+    && defined(poster.asset)
+    && (mediaType != "video" || defined(video.asset))
+    && length(aiDescription) > 0] {
+    _id,
+    _type
+  }`
+)
+
+/**
+ * Pool: visual essay image IDs eligible for Unexpected Connections.
+ * image.asset and length(aiDescription) > 0 (avoids defined/!= "" for text).
+ */
+export const VISUAL_ESSAY_IMAGES_ELIGIBLE_IDS_FOR_UNEXPECTED_QUERY = defineQuery(
+  `*[_type == "visualEssayImage"
+    && defined(image.asset)
+    && length(aiDescription) > 0] {
+    _id,
+    _type
+  }`
+)
+
+/**
+ * Fetch full archive entries by IDs for Unexpected Connections (after picking 2 from pool).
+ */
+export const ARCHIVE_ENTRIES_BY_IDS_FOR_UNEXPECTED_QUERY = defineQuery(
+  `*[_type == "archiveEntry" && _id in $ids] {
+    _id,
+    mediaType,
+    metadata { artName, tags[]->{ _id, name }, slug { current } },
+    artName,
+    slug { current },
+    poster {
+      ...,
+      asset,
+      "lqip": asset->metadata.lqip,
+      "dimensions": asset->metadata.dimensions
+    },
+    video { asset->{ url, mimeType } },
+    aiMoodTags[]->{ _id, name },
+    aiDescription,
+    tags[]->{ _id, name }
+  }`
+)
+
+/**
+ * Fetch full visual essay images by IDs for Unexpected Connections (after picking 2 from pool).
+ */
+export const VISUAL_ESSAY_IMAGES_BY_IDS_FOR_UNEXPECTED_QUERY = defineQuery(
+  `*[_type == "visualEssayImage" && _id in $ids] {
+    _id,
+    metadata { artName },
+    image {
+      ...,
+      asset,
+      "lqip": asset->metadata.lqip,
+      "dimensions": asset->metadata.dimensions
+    },
+    aiMoodTags[]->{ _id, name },
+    aiDescription
+  }`
+)
+
+/**
+ * Find the parent archive entry (visualEssay) that references this visualEssayImage,
+ * and the index of that image in the filtered visualEssayImages (same logic as ArchiveEntryContent).
+ * Returns { slug, imageIndex } or null.
+ */
+export const PARENT_ARCHIVE_FOR_VISUAL_ESSAY_IMAGE_QUERY = defineQuery(
+  `*[_type == "archiveEntry" && mediaType == "visualEssay" && $visualId in visualEssayImages[]._ref][0]{
+    "slug": coalesce(metadata.slug.current, slug.current),
+    "visualEssayImages": visualEssayImages[]->{ _id, image { asset } }
+  }`
+)

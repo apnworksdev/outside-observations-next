@@ -322,7 +322,7 @@
 }
 
 :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.lab-nav) {
-  margin-top: calc(var(--unexpected-primary-poster-height) + var(--gap));
+  margin-top: calc(var(--unexpected-primary-media-height) + var(--gap));
 }
 
 @media screen and (max-width: 768px) {

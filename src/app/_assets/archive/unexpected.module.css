@@ -1,3 +1,21 @@
+/* Empty state: no eligible items in the pool */
+.unexpectedConnectionsEmpty {
+  background-color: var(--fg-color-75);
+  color: var(--bg-color);
+  padding-top: 4px;
+  padding-left: var(--padding);
+  padding-right: var(--padding);
+  padding-bottom: 5px;
+  width: max-content;
+  max-width: 100%;
+  margin-top: var(--archive-container-top-margin);
+  margin-left: var(--gap);
+}
+
+.unexpectedConnectionsEmptyMessage {
+  margin: 0;
+}
+
 .unexpectedConnectionsContainer {
   padding-top: var(--archive-container-top-margin);
   padding-left: var(--padding);
@@ -61,7 +79,7 @@
   width: fit-content;
 }
 
-.unexpectedConnectionsItemPosterWrapper {
+.unexpectedConnectionsItemMediaWrapper {
   width: 100%;
   height: auto;
   line-height: 0;
@@ -70,10 +88,40 @@
   padding-left: var(--item-gap);
 }
 
-.unexpectedConnectionsItemPoster {
+.unexpectedConnectionsMediaLink {
+  display: block;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+.unexpectedConnectionsMediaLink:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.unexpectedConnectionsItemMedia {
   width: 100%;
   height: auto;
   object-fit: contain;
+}
+
+/* SanityVideo container: uses --video-aspect-ratio-padding from SanityVideo */
+.unexpectedConnectionsVideo {
+  position: relative;
+  width: 100%;
+  padding-bottom: var(--video-aspect-ratio-padding, 100%);
+  overflow: hidden;
+}
+
+.unexpectedConnectionsVideo video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .unexpectedConnectionsAnalysis {
