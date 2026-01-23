@@ -1,6 +1,7 @@
 import SanityImage from '@/sanity/components/SanityImage';
 import ArchiveEntryVideo from './ArchiveEntryVideo';
 import ScrollToVisualEssayImage from './ScrollToVisualEssayImage';
+import { ProtectedMediaWrapper } from './ProtectedMediaWrapper';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
 // Helper function to render portable text blocks
@@ -92,13 +93,21 @@ export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
                     )}
                   </div>
                   <div className={styles.archiveEntryModalPosterContainer}>
-                    <SanityImage
-                      image={image.image}
-                      alt={image.metadata?.artName || image.metadata?.fileName || 'Visual essay image'}
-                      width={imageWidth}
-                      height={imageHeight}
-                      className={styles.archiveEntryModalPoster}
-                    />
+                    <ProtectedMediaWrapper
+                      contentWarning={entry.metadata?.contentWarning}
+                      className={styles.archiveEntryModalPosterInner}
+                    >
+                      <SanityImage
+                        image={image.image}
+                        alt={image.metadata?.artName || image.metadata?.fileName || 'Visual essay image'}
+                        width={imageWidth}
+                        height={imageHeight}
+                        className={styles.archiveEntryModalPoster}
+                        placeholder={image?.image?.lqip ? 'blur' : undefined}
+                        blurDataURL={image?.image?.lqip || undefined}
+                        priority
+                      />
+                    </ProtectedMediaWrapper>
                   </div>
                 </div>
               </div>
@@ -139,16 +148,22 @@ export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
                 video={entry.video}
                 poster={entry.poster}
                 alt={entry.metadata?.artName || entry.artName}
+                contentWarning={entry.metadata?.contentWarning}
               />
             ) : (
-              <SanityImage
-                image={entry.poster}
-                alt={entry.metadata?.artName || entry.artName}
-                width={posterWidth}
-                height={posterHeight}
-                className={styles.archiveEntryModalPoster}
-                priority
-              />
+              <ProtectedMediaWrapper
+                contentWarning={entry.metadata?.contentWarning}
+                className={styles.archiveEntryModalPosterInner}
+              >
+                <SanityImage
+                  image={entry.poster}
+                  alt={entry.metadata?.artName || entry.artName}
+                  width={posterWidth}
+                  height={posterHeight}
+                  className={styles.archiveEntryModalPoster}
+                  priority
+                />
+              </ProtectedMediaWrapper>
             )}
           </div>
         </div>

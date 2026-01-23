@@ -331,7 +331,7 @@
   height: 100%;
   background-color: var(--bg-color-75);
   border: 0.5px solid var(--gray-color);
-  z-index: 1;
+  z-index: 3;
   display: flex;
   justify-content: flex-start;
   align-items: flex-end;
@@ -416,7 +416,7 @@
     scroll-snap-align: start;
   }
 
-  .itemColumnFileName, .itemColumnType, .itemColumnTags {
+  .itemColumnFileName, .itemColumnType, .itemColumnTags, .itemColumnMoodTags {
     display: none;
   }
 

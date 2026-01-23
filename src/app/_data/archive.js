@@ -3,15 +3,15 @@
 import { unstable_cache } from 'next/cache';
 
 import { client } from '@/sanity/lib/client';
-import { ARCHIVE_ENTRIES_QUERY, SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
+import { ARCHIVE_ENTRIES_LIST_QUERY, ARCHIVE_ENTRIES_QUERY, SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
 
 /**
- * Fetches archive entries with error handling
+ * Fetches archive entries for list view (optimized - lighter payload)
  * Returns empty array on error to prevent page crashes
  */
 const fetchArchiveEntries = async () => {
   try {
-    const entries = await client.fetch(ARCHIVE_ENTRIES_QUERY);
+    const entries = await client.fetch(ARCHIVE_ENTRIES_LIST_QUERY);
     
     // Validate response is an array
     if (!Array.isArray(entries)) {
@@ -28,9 +28,35 @@ const fetchArchiveEntries = async () => {
   }
 };
 
+/**
+ * Fetches full archive entries (with all data - for pages that need it)
+ */
+const fetchFullArchiveEntries = async () => {
+  try {
+    const entries = await client.fetch(ARCHIVE_ENTRIES_QUERY);
+    
+    // Validate response is an array
+    if (!Array.isArray(entries)) {
+      console.error('getFullArchiveEntries: Expected array, got:', typeof entries);
+      return [];
+    }
+    
+    return entries;
+  } catch (error) {
+    console.error('Failed to fetch full archive entries:', error);
+    return [];
+  }
+};
+
 export const getArchiveEntries = unstable_cache(
   fetchArchiveEntries,
-  ['archive-entries'],
+  ['archive-entries-list'],
+  { revalidate: 60 }
+);
+
+export const getFullArchiveEntries = unstable_cache(
+  fetchFullArchiveEntries,
+  ['archive-entries-full'],
   { revalidate: 60 }
 );
 

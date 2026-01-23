@@ -92,6 +92,12 @@
   max-width: 100%;
 }
 
+.archiveEntryModalPosterInner {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
 .archiveEntryModalPoster {
   max-width: 100%;
   max-height: calc(80vh - 50px);

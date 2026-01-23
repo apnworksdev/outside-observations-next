@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { getCookie } from '@/app/_helpers/cookies';
 
 import {
   VIEW_CHANGE_EVENT,
@@ -15,16 +16,11 @@ function readViewCookie() {
     return 'images';
   }
 
-  const cookieEntry = document.cookie
-    .split(';')
-    .map((entry) => entry.trim())
-    .find((entry) => entry.startsWith(`${VIEW_COOKIE_NAME}=`));
-
-  if (!cookieEntry) {
+  const value = getCookie(VIEW_COOKIE_NAME);
+  if (!value) {
     return 'images';
   }
 
-  const [, value = ''] = cookieEntry.split('=');
   const decoded = decodeURIComponent(value);
   return decoded === 'images' || decoded === 'list' ? decoded : 'images';
 }

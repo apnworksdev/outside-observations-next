@@ -3,6 +3,8 @@
 import { useRef, useState, useEffect, useCallback, memo } from 'react';
 import { urlForImage } from '@/sanity/lib/image';
 import SanityImage from '@/sanity/components/SanityImage';
+import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
+import { MediaProtector } from '@/app/_components/MediaProtector';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
 // Format time as MM:SS (always 2 digits for minutes and seconds)
@@ -104,11 +106,12 @@ DurationDisplay.displayName = 'DurationDisplay';
  * ArchiveEntryVideo - Simple video player for archive entry pages
  * Click to play/pause
  */
-export default function ArchiveEntryVideo({ video, poster, alt }) {
+export default function ArchiveEntryVideo({ video, poster, alt, contentWarning = false }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFull, setIsFull] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const { hasConsent } = useContentWarningConsent();
 
   const videoUrl = video?.asset?.url;
   const videoMimeType = video?.asset?.mimeType || 'video/mp4';
@@ -232,6 +235,7 @@ export default function ArchiveEntryVideo({ video, poster, alt }) {
         '--video-aspect-ratio-padding': aspectRatioPadding,
       }}
       onClick={handleVideoClick}
+      onContextMenu={contentWarning && !hasConsent ? (e) => e.preventDefault() : undefined}
     >
       <video
         ref={videoRef}
@@ -258,6 +262,7 @@ export default function ArchiveEntryVideo({ video, poster, alt }) {
       >
         <source src={videoUrl} type={videoMimeType} />
       </video>
+      <MediaProtector contentWarning={contentWarning} />
       <div 
         className={styles.archiveEntryVideoControls}
         onClick={(e) => e.stopPropagation()}

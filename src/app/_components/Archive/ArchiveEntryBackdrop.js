@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
-export default function ArchiveEntryBackdrop({ children }) {
+export default function ArchiveEntryBackdrop({ children, entry }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -29,7 +29,11 @@ export default function ArchiveEntryBackdrop({ children }) {
   };
 
   return (
-    <div className={styles.archiveEntryBackdrop} onClick={handleBackdropClick} role="presentation">
+    <div 
+      className={styles.archiveEntryBackdrop} 
+      onClick={handleBackdropClick} 
+      role="presentation"
+    >
       <div className={styles.archiveEntryBackdropContent} onClick={handleContentClick}>{children}</div>
     </div>
   );

@@ -80,6 +80,7 @@
 }
 
 .unexpectedConnectionsItemMediaWrapper {
+  position: relative;
   width: 100%;
   height: auto;
   line-height: 0;
@@ -89,6 +90,7 @@
 }
 
 .unexpectedConnectionsMediaLink {
+  position: relative;
   display: block;
   width: 100%;
   text-decoration: none;

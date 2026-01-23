@@ -1,16 +1,19 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import SanityImage from '@/sanity/components/SanityImage';
 import { urlForImage } from '@/sanity/lib/image';
+import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
+import { MediaProtector } from '@/app/_components/MediaProtector';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
 const ROTATION_INTERVAL = 2000; // 2 seconds
 
-export default function ArchiveVisualEssay({ entry, width = 1200, height, onCurrentImageChange }) {
+export default function ArchiveVisualEssay({ entry, width = 1200, height, onCurrentImageChange, contentWarning = false, priority = false }) {
   const visualEssayImages = entry?.visualEssayImages || [];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const { hasConsent } = useContentWarningConsent();
   const intervalRef = useRef(null);
   const observerRef = useRef(null);
   const containerRef = useRef(null);
@@ -133,11 +136,18 @@ export default function ArchiveVisualEssay({ entry, width = 1200, height, onCurr
     return null;
   }
 
+  const handleContextMenu = useCallback((e) => {
+    if (contentWarning && !hasConsent) {
+      e.preventDefault();
+    }
+  }, [contentWarning, hasConsent]);
+
   return (
     <div 
       ref={containerRef} 
       className={styles.archiveVisualEssayContainer}
       style={{ paddingBottom: aspectRatioPadding }}
+      onContextMenu={handleContextMenu}
     >
       <div className={styles.archiveVisualEssayImageWrapper}>
         <SanityImage
@@ -145,9 +155,13 @@ export default function ArchiveVisualEssay({ entry, width = 1200, height, onCurr
           alt={currentImage.metadata?.artName || currentImage.metadata?.fileName || 'Visual essay image'}
           width={width}
           height={imageHeight}
-          priority={currentIndex === 0}
+          priority={priority && currentIndex === 0}
+          placeholder={currentImage?.image?.lqip ? 'blur' : undefined}
+          blurDataURL={currentImage?.image?.lqip || undefined}
+          quality={priority && currentIndex === 0 ? 85 : 75}
           className={styles.archiveVisualEssayImage}
         />
+        <MediaProtector contentWarning={contentWarning} />
       </div>
     </div>
   );

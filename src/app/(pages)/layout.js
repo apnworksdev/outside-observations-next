@@ -11,6 +11,7 @@ import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveSearchStateProvider } from '@/app/_components/Archive/ArchiveSearchStateProvider';
 import { VisitorCountProvider } from '@/app/_components/VisitorCountProvider';
 import { RadioIframeProvider } from '@/app/_components/RadioIframeProvider';
+import { ContentWarningConsentProvider } from '@/app/_contexts/ContentWarningConsentContext';
 import RadioIframe from '@/app/_components/RadioIframe';
 import PageTransition from '@/app/_components/PageTransition';
 
@@ -44,7 +45,8 @@ export default function RootLayout({ children }) {
           <BodyHydrationGuard />
           <VisitorCountProvider>
             <RadioIframeProvider>
-              <ArchiveSearchStateProvider>
+              <ContentWarningConsentProvider>
+                <ArchiveSearchStateProvider>
                 <ErrorBoundary>
                   <div data-hide-on-studio="true">
                     <div className={styles.linesGrid} data-first-visit-animate="lines">
@@ -77,7 +79,8 @@ export default function RootLayout({ children }) {
                     {children}
                   </PageTransition>
                 </ErrorBoundary>
-              </ArchiveSearchStateProvider>
+                </ArchiveSearchStateProvider>
+              </ContentWarningConsentProvider>
             </RadioIframeProvider>
           </VisitorCountProvider>
         </ErrorBoundary>

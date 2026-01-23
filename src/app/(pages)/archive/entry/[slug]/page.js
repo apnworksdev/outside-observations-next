@@ -127,7 +127,7 @@ export default async function ArchiveEntryPage({ params, searchParams }) {
           </div>
         }
       >
-        <ArchiveEntryBackdrop>
+        <ArchiveEntryBackdrop entry={entry}>
           <div className={styles.archiveEntryContentWrapper} data-entry-type={entryType}>
             <ArchiveEntryArticle entry={entry} initialImageIndex={initialImageIndex} />
           </div>

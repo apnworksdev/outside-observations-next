@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useMemo, useRef, useState, useCallback, useEffect, useLayoutEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { getCookie, setCookie } from '@/app/_helpers/cookies';
 import { useArchiveSearchState } from './ArchiveSearchStateProvider';
 
 const ArchiveEntriesContext = createContext(null);
@@ -19,17 +20,11 @@ function readViewCookie() {
     return 'images';
   }
 
-  const cookieString = document.cookie || '';
-  const cookieEntry = cookieString
-    .split(';')
-    .map((entry) => entry.trim())
-    .find((entry) => entry.startsWith(`${VIEW_COOKIE_NAME}=`));
-
-  if (!cookieEntry) {
+  const value = getCookie(VIEW_COOKIE_NAME);
+  if (!value) {
     return 'images';
   }
 
-  const [, value = ''] = cookieEntry.split('=');
   const decoded = decodeURIComponent(value);
   return isValidView(decoded) ? decoded : 'images';
 }
@@ -39,7 +34,11 @@ function writeViewCookie(view) {
     return;
   }
 
-  document.cookie = `${VIEW_COOKIE_NAME}=${encodeURIComponent(view)}; Max-Age=${VIEW_COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Lax`;
+  setCookie(VIEW_COOKIE_NAME, encodeURIComponent(view), {
+    maxAge: VIEW_COOKIE_MAX_AGE_SECONDS,
+    path: '/',
+    sameSite: 'Lax'
+  });
 }
 
 export function setArchiveViewPreference(view) {
@@ -62,7 +61,9 @@ function hasMedia(entry) {
   
   // Visual essay: needs at least one valid image in visualEssayImages
   if (mediaType === 'visualEssay') {
-    const images = entry.visualEssayImages || [];
+    const images = entry.visualEssayImages;
+    // Ensure images is an array before calling .some()
+    if (!Array.isArray(images)) return false;
     return images.some(img => img?.image?.asset?._ref);
   }
   

@@ -5,8 +5,10 @@ import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
 import SanityVideo from '@/sanity/components/SanityVideo';
 import ArchiveVisualEssay from '@/app/_components/Archive/ArchiveVisualEssay';
+import { ProtectedMediaWrapper } from '@/app/_components/Archive/ProtectedMediaWrapper';
 import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
 import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
+import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
 export default function ArchiveEntryListRow({ entry, index = 0 }) {
@@ -25,6 +27,10 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
   
   // Check if entry has been visited (hydration-safe)
   const isVisited = useArchiveEntryVisited(slugValue);
+
+  // Get consent state from context
+  const { hasConsent } = useContentWarningConsent();
+  const hasContentWarning = entry.metadata?.contentWarning === true;
   const content = (
     <div className={styles.itemWrapper}>
       <div className={`${styles.itemColumn} ${styles.itemColumnYear}`}>
@@ -46,32 +52,42 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
             <ArchiveVisualEssay
               entry={entry}
               width={posterWidth}
+              contentWarning={entry.metadata?.contentWarning}
+              priority={isPriority}
               onCurrentImageChange={(_, idx) => { if (typeof idx === 'number') setCurrentImageIndex(idx); }}
             />
           ) : entry.mediaType === 'video' ? (
-            <SanityVideo
-              video={entry.video}
-              poster={entry.poster}
-              alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
-              className={styles.archiveEntryVideo}
-              fallbackClassName={styles.archiveEntryImage}
-              width={posterWidth}
-              height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
-              priority={isPriority}
-              preload="metadata"
-              muted
-              playsInline
-            />
+            <ProtectedMediaWrapper
+              contentWarning={entry.metadata?.contentWarning}
+            >
+              <SanityVideo
+                video={entry.video}
+                poster={entry.poster}
+                alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
+                className={styles.archiveEntryVideo}
+                fallbackClassName={styles.archiveEntryImage}
+                width={posterWidth}
+                height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
+                priority={isPriority}
+                preload="metadata"
+                muted
+                playsInline
+              />
+            </ProtectedMediaWrapper>
           ) : (
-            <SanityImage
-              image={entry.poster}
-              alt={entry.metadata?.artName || entry.artName || 'Archive entry poster'}
-              width={posterWidth}
-              height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
-              priority={isPriority}
-              loading={isPriority ? undefined : 'lazy'}
-              blurDataURL={entry?.poster?.lqip || undefined}
-            />
+            <ProtectedMediaWrapper contentWarning={entry.metadata?.contentWarning}>
+              <SanityImage
+                image={entry.poster}
+                alt={entry.metadata?.artName || entry.artName || 'Archive entry poster'}
+                width={posterWidth}
+                height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
+                priority={isPriority}
+                loading={isPriority ? undefined : 'lazy'}
+                placeholder={entry?.poster?.lqip ? 'blur' : undefined}
+                blurDataURL={entry?.poster?.lqip || undefined}
+                quality={isPriority ? 85 : 75}
+              />
+            </ProtectedMediaWrapper>
           )}
         </div>
       </div>
@@ -98,7 +114,11 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
     'data-visited': isVisited ? 'true' : 'false',
   };
 
-  return hasSlug ? (
+  // Disable link if contentWarning is active and user hasn't consented
+  const isLinkDisabled = hasContentWarning && !hasConsent;
+  const shouldRenderLink = hasSlug && !isLinkDisabled;
+
+  return shouldRenderLink ? (
     <Link 
       href={href} 
       {...containerProps}

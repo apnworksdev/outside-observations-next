@@ -6,6 +6,7 @@ import Link from 'next/link';
 import styles from '@app/_assets/archive/unexpected.module.css';
 import SanityImage from '@/sanity/components/SanityImage';
 import SanityVideo from '@/sanity/components/SanityVideo';
+import { ProtectedMediaWrapper } from '@/app/_components/Archive/ProtectedMediaWrapper';
 import UnexpectedConnectionsComparison from './UnexpectedConnectionsComparison';
 
 function setGlobalPrimaryMediaHeight(value) {
@@ -155,6 +156,12 @@ export default function UnexpectedConnectionsContent({
               />
             );
 
+          const protectedMedia = (
+            <ProtectedMediaWrapper contentWarning={entry.metadata?.contentWarning}>
+              {media}
+            </ProtectedMediaWrapper>
+          );
+
           return (
             <div
               key={itemKey}
@@ -171,10 +178,10 @@ export default function UnexpectedConnectionsContent({
               >
                 {href ? (
                   <Link href={href} className={styles.unexpectedConnectionsMediaLink}>
-                    {media}
+                    {protectedMedia}
                   </Link>
                 ) : (
-                  media
+                  protectedMedia
                 )}
               </div>
             </div>

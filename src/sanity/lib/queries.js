@@ -1,5 +1,75 @@
 import {defineQuery} from 'next-sanity'
 
+/**
+ * Optimized query for archive list - only fetches data needed for list display
+ * Much lighter than ARCHIVE_ENTRIES_QUERY (excludes aiDescription, aiMoodTags, full visual essay images)
+ */
+export const ARCHIVE_ENTRIES_LIST_QUERY = defineQuery(`*[_type == "archiveEntry"] | order(coalesce(metadata.year, year) desc) {
+  _id,
+  metadata {
+    year,
+    slug {
+      current,
+      _type
+    },
+    artName,
+    fileName,
+    source,
+    contentWarning,
+    tags[]->{
+      _id,
+      name
+    }
+  },
+  year,
+  slug {
+    current,
+    _type
+  },
+  artName,
+  fileName,
+  source,
+  tags[]->{
+    _id,
+    name
+  },
+  mediaType,
+  video{
+    asset->{
+      _id,
+      url,
+      originalFilename,
+      mimeType
+    }
+  },
+  poster{
+    ...,
+    asset,
+    'lqip': asset->metadata.lqip,
+    'dimensions': asset->metadata.dimensions
+  },
+  // Fetch all visual essay images but without aiDescription/aiMoodTags (lighter payload)
+  visualEssayImages[]->{
+    _id,
+    image{
+      ...,
+      asset,
+      'lqip': asset->metadata.lqip,
+      'dimensions': asset->metadata.dimensions
+    },
+    metadata {
+      artName,
+      fileName,
+      year { value },
+      source
+    }
+  }
+}`)
+
+/**
+ * Full query for archive entries - includes all data (used for individual entry pages)
+ * Keep this for backward compatibility and for pages that need full data
+ */
 export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | order(coalesce(metadata.year, year) desc) {
   _id,
   metadata {
@@ -11,6 +81,7 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
     artName,
     fileName,
     source,
+    contentWarning,
     tags[]->{
       _id,
       name
@@ -78,6 +149,7 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && (sl
     artName,
     fileName,
     source,
+    contentWarning,
     tags[]->{
       _id,
       name
@@ -164,6 +236,9 @@ export const ARCHIVE_ENTRIES_BY_IDS_QUERY = defineQuery(`*[_type == "archiveEntr
   },
   artName,
   mediaType,
+  metadata {
+    contentWarning
+  },
   poster{
     ...,
     asset,
@@ -220,7 +295,12 @@ export const ARCHIVE_ENTRIES_BY_IDS_FOR_UNEXPECTED_QUERY = defineQuery(
   `*[_type == "archiveEntry" && _id in $ids] {
     _id,
     mediaType,
-    metadata { artName, tags[]->{ _id, name }, slug { current } },
+    metadata { 
+      artName, 
+      contentWarning,
+      tags[]->{ _id, name }, 
+      slug { current } 
+    },
     artName,
     slug { current },
     poster {

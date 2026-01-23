@@ -1,0 +1,99 @@
+/**
+ * MediaProtector overlay – shown when content has contentWarning in Sanity.
+ * Covers image/video to protect it (visual cue + blocks context menu on overlay).
+ * Shows consent button if user hasn't accepted yet.
+ * Parent must have position: relative.
+ */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: all;
+  user-select: none;
+  /* Prevent dragging */
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  /* Semi-transparent layer so content is still visible but clearly protected */
+  background: var(--blur-transparent-color);
+  /* Ensure it's always visible */
+  opacity: 1 !important;
+  /* Center consent UI */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--bg-color);
+}
+
+.consentIconContainer {
+  padding-top: 57px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.consentMessage {
+  text-align: center;
+  font-family: var(--arial-font-family);
+  font-size: 10px;
+  line-height: 1;
+}
+
+.consentButtonContainer {
+  max-width: 125px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--padding) 0;
+  margin: 0 auto;
+}
+
+.consentButton {
+  background-color: var(--bg-color-75);
+  color: var(--dark-gray-color);
+  height: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: var(--padding);
+  padding-right: var(--padding);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+}
+
+.consentButton:hover {
+  background-color: var(--bg-color);
+}
+
+.consentBottomMessage {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  font-size: 7px;
+  line-height: 1;
+  font-family: var(--arial-font-family);
+}
+
+/**
+ * ProtectedMediaWrapper styles
+ */
+.wrapperBlurred > *:first-child {
+  filter: blur(50px);
+  transform: scale(1.5);
+  transition: filter 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.wrapperWithOverflow {
+  overflow: hidden;
+}

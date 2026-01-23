@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
+import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
 
 import SanityImage from '@/sanity/components/SanityImage';
 import SanityVideo from '@/sanity/components/SanityVideo';
-
-import styles from '@app/_assets/archive/archive-page.module.css';
+import { ProtectedMediaWrapper } from '@/app/_components/Archive/ProtectedMediaWrapper';
 import ArchiveEntry from '@/app/_components/Archive/ArchiveEntryListRow';
 import ArchiveVisualEssay from '@/app/_components/Archive/ArchiveVisualEssay';
 import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
@@ -16,6 +16,8 @@ import { useArchiveEntries, useArchiveSortController } from './ArchiveEntriesPro
 import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveListErrorFallback } from '@/app/_components/ErrorFallbacks';
+
+import styles from '@app/_assets/archive/archive-page.module.css';
 
 function setGlobalArchiveListHeight(value) {
   if (typeof document === 'undefined') {
@@ -53,6 +55,10 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
   // Check if entry has been visited (hydration-safe)
   const isVisited = useArchiveEntryVisited(slugValue);
 
+  // Get consent state from context
+  const { hasConsent } = useContentWarningConsent();
+  const hasContentWarning = entry.metadata?.contentWarning === true;
+
   // For visual essays, overlay uses the currently displayed image's metadata
   const overlayMeta = isVisualEssay && currentImage?.metadata
     ? currentImage.metadata
@@ -65,58 +71,75 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
   const hasSource = String(overlaySource ?? '').trim() !== '';
   const hasArtName = String(overlayArtName ?? '').trim() !== '';
 
+  // Hide metadata overlay if contentWarning is true and user hasn't consented
+  const shouldShowMetadataOverlay = !hasContentWarning || hasConsent;
+
   const content = (
     <div className={styles.archiveEntryImageWrapper}>
       {isVisualEssay ? (
         <ArchiveVisualEssay
           entry={entry}
           width={POSTER_WIDTH}
+          contentWarning={entry.metadata?.contentWarning}
+          priority={isPriority}
           onCurrentImageChange={(img, idx) => {
             setCurrentImage(img);
             if (typeof idx === 'number') setCurrentImageIndex(idx);
           }}
         />
       ) : isVideo && entry.video ? (
-        <SanityVideo
-          video={entry.video}
-          poster={entry.poster}
-          alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
-          className={styles.archiveEntryVideo}
-          fallbackClassName={styles.archiveEntryImage}
-          width={POSTER_WIDTH}
-          height={posterHeight}
-          priority={isPriority}
-          preload="metadata"
-          muted
-          playsInline
-          onLoad={onImageLoad}
-        />
+        <ProtectedMediaWrapper
+          contentWarning={entry.metadata?.contentWarning}
+        >
+          <SanityVideo
+            video={entry.video}
+            poster={entry.poster}
+            alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
+            className={styles.archiveEntryVideo}
+            fallbackClassName={styles.archiveEntryImage}
+            width={POSTER_WIDTH}
+            height={posterHeight}
+            priority={isPriority}
+            preload="metadata"
+            muted
+            playsInline
+            onLoad={onImageLoad}
+          />
+        </ProtectedMediaWrapper>
       ) : (
-        <SanityImage
-          image={entry.poster}
-          alt={entry.metadata?.artName || entry.artName || 'Archive entry poster'}
-          className={styles.archiveEntryImage}
-          width={POSTER_WIDTH}
-          height={posterHeight}
-          priority={isPriority}
-          loading={isPriority ? undefined : 'lazy'}
-          blurDataURL={entry?.poster?.lqip || undefined}
-          onLoad={onImageLoad}
-        />
+        <ProtectedMediaWrapper
+          contentWarning={entry.metadata?.contentWarning}
+        >
+          <SanityImage
+            image={entry.poster}
+            alt={entry.metadata?.artName || entry.artName || 'Archive entry poster'}
+            className={styles.archiveEntryImage}
+            width={POSTER_WIDTH}
+            height={posterHeight}
+            priority={isPriority}
+            loading={isPriority ? undefined : 'lazy'}
+            placeholder={entry?.poster?.lqip ? 'blur' : undefined}
+            blurDataURL={entry?.poster?.lqip || undefined}
+            quality={isPriority ? 85 : 75}
+            onLoad={onImageLoad}
+          />
+        </ProtectedMediaWrapper>
       )}
-      <div className={styles.archiveEntryImageOverlay}>
-        <div className={styles.archiveEntryImageOverlayContent}>
-          {hasYear && (
-            <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayYear}</p></div>
-          )}
-          {hasSource && (
-            <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlaySource}</p></div>
-          )}
-          {hasArtName && (
-            <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayArtName}</p></div>
-          )}
+      {shouldShowMetadataOverlay && (
+        <div className={styles.archiveEntryImageOverlay}>
+          <div className={styles.archiveEntryImageOverlayContent}>
+            {hasYear && (
+              <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayYear}</p></div>
+            )}
+            {hasSource && (
+              <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlaySource}</p></div>
+            )}
+            {hasArtName && (
+              <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayArtName}</p></div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 
@@ -125,9 +148,13 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
     'data-visited': isVisited ? 'true' : 'false',
   };
 
+  // Disable link if contentWarning is active and user hasn't consented
+  const isLinkDisabled = hasContentWarning && !hasConsent;
+  const shouldRenderLink = hasSlug && !isLinkDisabled;
+
   return (
     <div className={styles.archiveEntryImageContainer}>
-      {hasSlug ? (
+      {shouldRenderLink ? (
         <Link
           href={href}
           {...linkProps}

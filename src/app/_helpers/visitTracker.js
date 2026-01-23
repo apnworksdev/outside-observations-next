@@ -15,22 +15,7 @@ const VISIT_COOKIE_NAME = 'has_visited_website';
 // localStorage key (synced from cookie, for backwards compatibility)
 const WEBSITE_VISIT_KEY = 'has_visited_website';
 
-/**
- * Get cookie value by name
- * @param {string} name - Cookie name
- * @returns {string|null} Cookie value or null if not found
- */
-const getCookie = (name) => {
-  if (typeof document === 'undefined') return null;
-  
-  try {
-    const cookies = document.cookie.split(';').map(c => c.trim());
-    const cookie = cookies.find(c => c.startsWith(`${name}=`));
-    return cookie ? cookie.split('=')[1] : null;
-  } catch {
-    return null;
-  }
-};
+import { getCookie, setCookie } from './cookies';
 
 /**
  * Check if this is the user's first visit to the website (any page)
@@ -86,14 +71,7 @@ export const markWebsiteAsVisited = () => {
     }
     
     // Set cookie (single source of truth)
-    const expires = new Date();
-    expires.setFullYear(expires.getFullYear() + 1);
-    
-    // Add Secure flag if on HTTPS (production) for better security
-    const isSecure = window.location.protocol === 'https:';
-    const secureFlag = isSecure ? '; Secure' : '';
-    
-    document.cookie = `${VISIT_COOKIE_NAME}=true; expires=${expires.toUTCString()}; path=/; SameSite=Lax${secureFlag}`;
+    setCookie(VISIT_COOKIE_NAME, 'true', { expiresYears: 1 });
     
     // Sync to localStorage for backwards compatibility
     try {
