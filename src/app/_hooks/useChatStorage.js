@@ -92,7 +92,6 @@ export function useChatStorage(messages, setMessages, messageIdRef) {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]); // setMessages is stable from useState, messagesRef is updated via separate effect
 
   // Save on unmount

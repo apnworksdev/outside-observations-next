@@ -362,7 +362,7 @@ export const MediaWithAIButton = React.forwardRef((props, ref) => {
     } finally {
       setIsProcessing(false)
     }
-  }, [currentAiDescription, currentAiMoodTags, formBuilder, client, documentValue, isImageField, expectedMediaTypes, mediaLabel, mediaLabelCapitalized])
+  }, [currentAiDescription, currentAiMoodTags, formBuilder, client, documentValue, isImageField, isFileField, isPDF, expectedMediaTypes, mediaLabel, mediaLabelCapitalized])
 
   // Track the last asset ID to prevent unnecessary effect runs
   const lastAssetIdRef = useRef(null)

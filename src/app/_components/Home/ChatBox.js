@@ -103,7 +103,7 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
     const timeoutId = setTimeout(fetchChatFirstMessage, 100);
     
     return () => clearTimeout(timeoutId);
-  }, []); // Only run once on mount
+  }, [DEFAULT_FIRST_MESSAGE]); // Only run once on mount
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value);

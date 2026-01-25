@@ -131,16 +131,16 @@ export default function ArchiveVisualEssay({ entry, width = 1200, height, onCurr
     }
   }, [currentImage, currentIndex, onCurrentImageChange]);
 
-  // Early return after all hooks
-  if (validImages.length === 0 || !currentImage) {
-    return null;
-  }
-
   const handleContextMenu = useCallback((e) => {
     if (contentWarning && !hasConsent) {
       e.preventDefault();
     }
   }, [contentWarning, hasConsent]);
+
+  // Early return after all hooks
+  if (validImages.length === 0 || !currentImage) {
+    return null;
+  }
 
   return (
     <div 
