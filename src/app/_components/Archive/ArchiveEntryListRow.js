@@ -103,7 +103,14 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
       </div>
       <div className={`${styles.itemColumn} ${styles.itemColumnType}`}>
         <div className={styles.itemColumnContent}>
-          <p>{entry.mediaType ? entry.mediaType.charAt(0).toUpperCase() + entry.mediaType.slice(1) : 'Image'}</p>
+          <p>
+            {entry.mediaType
+              ? entry.mediaType
+                  .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+                  .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+                  .trim()
+              : 'Image'}
+          </p>
         </div>
       </div>
     </div>

@@ -37,6 +37,13 @@ export const siteSettings = defineType({
 
 Use the menu on the left to explore, or tell me what you're looking for and I'll point you in the right direction.`,
     }),
+    defineField({
+      name: 'labQuote',
+      title: 'Lab Quote',
+      type: 'text',
+      description: 'Quote displayed in the lab',
+      rows: 4,
+    }),
   ],
   preview: {
     prepare() {
