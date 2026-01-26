@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { gsap } from 'gsap';
-import CircleAnimation from '@/app/_components/Home/CircleAnimation';
 import { isFirstWebsiteVisit } from '@/app/_helpers/visitTracker';
 
 /**
@@ -23,21 +22,26 @@ export default function PageTransition({ children }) {
   const previousPathnameRef = useRef(pathname);
   const isNavigatingRef = useRef(false);
   const isInitialMountRef = useRef(true);
-  const [showCircleLoader, setShowCircleLoader] = useState(false);
+  const linesAnimationRef = useRef(null);
+  const contentFadeInAnimationRef = useRef(null);
+  const navFadeInAnimationRef = useRef(null);
+  const navigationFadeInAnimationRef = useRef(null);
+  const [showLoader, setShowLoader] = useState(false);
   const [loaderComplete, setLoaderComplete] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   // Memoize children separation to avoid recalculation on every render
-  const { navChild, contentChildren } = useMemo(() => {
+  const { navChild, linesChild, contentChildren } = useMemo(() => {
     const childrenArray = Array.isArray(children) ? children : [children];
     return {
       navChild: childrenArray[0], // First child is nav
-      contentChildren: childrenArray.slice(1), // Rest is content
+      linesChild: childrenArray[1], // Second child is lines
+      contentChildren: childrenArray.slice(2), // Rest is content
     };
   }, [children]);
 
-  // Determine if we should show CircleAnimation (client-side only to avoid hydration issues)
-  useEffect(() => {
+  // Use useLayoutEffect to hide content synchronously before paint (prevents flash)
+  useLayoutEffect(() => {
     setIsClient(true);
     
     // Only check on initial mount
@@ -61,9 +65,9 @@ export default function PageTransition({ children }) {
         document.body.classList.add('home-animation-complete');
       }
     } else {
-      // Not home page - show CircleAnimation if it hasn't been shown this session
+      // Not home page - show loader if it hasn't been shown this session
       try {
-        const hasShownLoader = sessionStorage.getItem('circleLoaderShown') === 'true';
+        const hasShownLoader = sessionStorage.getItem('loaderShown') === 'true';
         shouldShow = !hasShownLoader;
       } catch {
         // If sessionStorage fails, don't show loader
@@ -71,13 +75,22 @@ export default function PageTransition({ children }) {
       }
     }
     
-    setShowCircleLoader(shouldShow);
+    setShowLoader(shouldShow);
     
-    // Hide content initially if showing loader
+    // Hide content and nav immediately if showing loader (runs synchronously before paint)
     if (shouldShow) {
       const content = contentRef.current;
+      const nav = navRef.current;
+      const lines = document.getElementById('lines-grid');
+      
       if (content) {
         gsap.set(content, { opacity: 0 });
+      }
+      if (nav) {
+        gsap.set(nav, { opacity: 0 });
+      }
+      if (lines) {
+        gsap.set(lines, { transform: 'translateY(-100%)' });
       }
     }
     
@@ -141,29 +154,98 @@ export default function PageTransition({ children }) {
     };
   }, [router, pathname]);
 
-  // Handle CircleAnimation completion - fade in content and mark as shown
+  const handleLoaderComplete = useCallback(() => {
+    setLoaderComplete(true);
+  }, []);
+
+  // Animate lines when showLoader is true
   useEffect(() => {
-    if (!loaderComplete || !showCircleLoader) return;
+    if (!showLoader || !isClient || loaderComplete) return;
     
-    // Mark that CircleAnimation has been shown this session
+    // Find the lines element by its id
+    const lines = document.getElementById('lines-grid');
+    if (!lines) return;
+    
+    // Kill any existing animation
+    if (linesAnimationRef.current) {
+      linesAnimationRef.current.kill();
+    }
+    
+    // Animate lines from translateY(-100%) to translateY(0%)
+    linesAnimationRef.current = gsap.to(lines, {
+      transform: 'translateY(0%)',
+      duration: 0.8,
+      ease: 'none',
+      onComplete: () => {
+        handleLoaderComplete();
+        linesAnimationRef.current = null;
+      },
+    });
+    
+    return () => {
+      if (linesAnimationRef.current) {
+        linesAnimationRef.current.kill();
+        linesAnimationRef.current = null;
+      }
+    };
+  }, [showLoader, isClient, loaderComplete, handleLoaderComplete]);
+
+  // Handle loader completion - fade in content and mark as shown
+  useEffect(() => {
+    if (!loaderComplete || !showLoader) return;
+    
+    // Mark that loader has been shown this session
     try {
-      sessionStorage.setItem('circleLoaderShown', 'true');
+      sessionStorage.setItem('loaderShown', 'true');
     } catch {
       // Silently fail if sessionStorage is unavailable
+    }
+
+    // Kill any existing animations
+    if (navFadeInAnimationRef.current) {
+      navFadeInAnimationRef.current.kill();
+    }
+    if (contentFadeInAnimationRef.current) {
+      contentFadeInAnimationRef.current.kill();
+    }
+
+    const nav = navRef.current;
+    if (nav) {
+      navFadeInAnimationRef.current = gsap.to(nav, {
+        opacity: 1,
+        duration: 0.3,
+        ease: 'power2.out',
+        onComplete: () => {
+          navFadeInAnimationRef.current = null;
+        },
+      });
     }
     
     const content = contentRef.current;
     if (content) {
-      gsap.to(content, {
+      contentFadeInAnimationRef.current = gsap.to(content, {
         opacity: 1,
-        duration: 0.4,
+        duration: 0.3,
         ease: 'power2.out',
+        delay: 0.3,
         onComplete: () => {
           isNavigatingRef.current = false;
+          contentFadeInAnimationRef.current = null;
         },
       });
     }
-  }, [loaderComplete, showCircleLoader]);
+    
+    return () => {
+      if (navFadeInAnimationRef.current) {
+        navFadeInAnimationRef.current.kill();
+        navFadeInAnimationRef.current = null;
+      }
+      if (contentFadeInAnimationRef.current) {
+        contentFadeInAnimationRef.current.kill();
+        contentFadeInAnimationRef.current = null;
+      }
+    };
+  }, [loaderComplete, showLoader]);
 
   // Handle pathname change - fade in new content (no CircleAnimation on navigation)
   useEffect(() => {
@@ -179,7 +261,7 @@ export default function PageTransition({ children }) {
     }
 
     // On navigation, don't show CircleAnimation (only shown on initial website entry)
-    setShowCircleLoader(false);
+    setShowLoader(false);
     setLoaderComplete(false);
 
     // Handle home page header visibility (defensive check in case cookies are disabled)
@@ -188,26 +270,35 @@ export default function PageTransition({ children }) {
       document.body.classList.add('home-animation-complete');
     }
 
+    // Kill any existing navigation animation
+    if (navigationFadeInAnimationRef.current) {
+      navigationFadeInAnimationRef.current.kill();
+    }
+
     // Fade in new content
     const content = contentRef.current;
     if (content) {
       gsap.set(content, { opacity: 0 });
-      gsap.to(content, {
+      navigationFadeInAnimationRef.current = gsap.to(content, {
         opacity: 1,
         duration: 0.4,
         ease: 'power2.out',
         onComplete: () => {
           isNavigatingRef.current = false;
+          navigationFadeInAnimationRef.current = null;
         },
       });
     }
     
     previousPathnameRef.current = pathname;
+    
+    return () => {
+      if (navigationFadeInAnimationRef.current) {
+        navigationFadeInAnimationRef.current.kill();
+        navigationFadeInAnimationRef.current = null;
+      }
+    };
   }, [pathname]);
-
-  const handleLoaderComplete = () => {
-    setLoaderComplete(true);
-  };
 
   return (
     <>
@@ -215,10 +306,8 @@ export default function PageTransition({ children }) {
       <div ref={navRef}>
         {navChild}
       </div>
-      {/* CircleAnimation loader - shows on all pages except home on first visit */}
-      {isClient && showCircleLoader && !loaderComplete && (
-        <CircleAnimation onComplete={handleLoaderComplete} />
-      )}
+      {/* Lines animation - shows on all pages except home on first visit */}
+      {linesChild}
       {/* Content - fades in/out */}
       <div ref={contentRef}>
         {contentChildren}

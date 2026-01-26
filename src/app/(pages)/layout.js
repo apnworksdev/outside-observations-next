@@ -48,15 +48,6 @@ export default function RootLayout({ children }) {
               <ContentWarningConsentProvider>
                 <ArchiveSearchStateProvider>
                 <ErrorBoundary>
-                  <div data-hide-on-studio="true">
-                    <div className={styles.linesGrid} data-first-visit-animate="lines">
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <div className={styles.linesGridItem} key={index} />
-                      ))}
-                    </div>
-                  </div>
-                </ErrorBoundary>
-                <ErrorBoundary>
                   <BodyPageTypeUpdater />
                 </ErrorBoundary>
                 <ErrorBoundary>
@@ -75,6 +66,11 @@ export default function RootLayout({ children }) {
                   <PageTransition>
                     <div data-hide-on-studio="true" data-first-visit-animate="header">
                       <HeaderNav />
+                    </div>
+                    <div className={styles.linesGrid} data-first-visit-animate="lines" id="lines-grid" data-hide-on-studio="true">
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <div className={styles.linesGridItem} key={index} />
+                      ))}
                     </div>
                     {children}
                   </PageTransition>

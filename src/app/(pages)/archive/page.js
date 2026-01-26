@@ -8,6 +8,9 @@ export const revalidate = 60;
 // Generate metadata for better SEO (cached)
 export async function generateMetadata() {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
+    const url = `${baseUrl}/archive`;
+    
     return {
       title: 'Outside Observation - Archive',
       description: 'Browse archive entries from Outside Observation',
@@ -15,6 +18,7 @@ export async function generateMetadata() {
         title: 'Outside Observation - Archive',
         description: 'Browse archive entries from Outside Observation',
         type: 'website',
+        url: url,
       },
     };
   } catch (error) {
