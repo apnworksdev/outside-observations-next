@@ -93,7 +93,7 @@ class ScrollContainer extends HTMLElement {
         itemPoster.style.bottom = 'auto';
       } else {
         // Container is in lower half - show poster above
-        itemPoster.style.bottom = `calc(100% + 2px)`;
+        itemPoster.style.bottom = `calc(100% + 4px)`;
         itemPoster.style.top = 'auto';
       }
     } catch (error) {
