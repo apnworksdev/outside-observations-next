@@ -19,7 +19,6 @@
   flex: none;
   max-height: calc(100dvh - var(--archive-container-bottom-margin) - var(--archive-container-top-margin));
   overflow: auto;
-  scroll-snap-type: y mandatory;
 }
 
 .containerContent[data-scroll-state='not-needed'] {
@@ -28,7 +27,6 @@
 
 .itemContainer {
   color: var(--bg-color);
-  scroll-snap-align: end;
   position: relative;
   overflow: visible;
 }
@@ -412,9 +410,6 @@
     max-height: calc(100dvh - var(--gap) - var(--archive-container-top-margin));
   }
 
-  .itemContainer {
-    scroll-snap-align: start;
-  }
 
   .itemColumnFileName, .itemColumnType, .itemColumnTags, .itemColumnMoodTags {
     display: none;

@@ -281,8 +281,9 @@ export default function PageTransition({ children }) {
       gsap.set(content, { opacity: 0 });
       navigationFadeInAnimationRef.current = gsap.to(content, {
         opacity: 1,
-        duration: 0.4,
+        duration: 0.3,
         ease: 'power2.out',
+        delay: 0.3,
         onComplete: () => {
           isNavigatingRef.current = false;
           navigationFadeInAnimationRef.current = null;
