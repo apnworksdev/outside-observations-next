@@ -22,8 +22,18 @@ export const urlForImage = (source) => {
 export const sanityImageLoader = ({ src, width, quality = 75 }) => {
   // Sanity image URLs should be full URLs from urlForImage()
   // Add width and quality parameters for Sanity's image optimization
-  const url = new URL(src)
-  url.searchParams.set('w', width.toString())
-  url.searchParams.set('q', quality.toString())
-  return url.toString()
+  try {
+    const url = new URL(src)
+    url.searchParams.set('w', width.toString())
+    url.searchParams.set('q', quality.toString())
+    // Use auto=format to let Sanity serve WebP/AVIF when supported (smaller file sizes)
+    url.searchParams.set('auto', 'format')
+    // Use fit=max to prevent upscaling (saves bandwidth)
+    url.searchParams.set('fit', 'max')
+    return url.toString()
+  } catch (error) {
+    // Fallback: if URL parsing fails, return src as-is (shouldn't happen with valid Sanity URLs)
+    console.warn('Failed to parse image URL in sanityImageLoader:', error)
+    return src
+  }
 }

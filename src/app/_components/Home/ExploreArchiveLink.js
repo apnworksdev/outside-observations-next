@@ -54,6 +54,7 @@ export default function ExploreArchiveLink({
                 className={styles.chatBoxImage}
                 loading="lazy"
                 blurDataURL={entry?.poster?.lqip || undefined}
+                quality={60}
               />
             </div>
           );

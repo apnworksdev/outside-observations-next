@@ -17,7 +17,8 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
   const slug = entry.metadata?.slug || entry.slug
   const hasSlug = slug?.current
   const slugValue = slug?.current || null;
-  const posterWidth = 400;
+  // Reduced from 400px to 300px to save bandwidth - archive thumbnails don't need full resolution
+  const posterWidth = 300;
   const isVisualEssay = entry.mediaType === 'visualEssay';
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const href = hasSlug
@@ -86,8 +87,9 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
                 fallbackClassName={styles.archiveEntryImage}
                 width={posterWidth}
                 height={entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth}
+                maxWidth={posterWidth}
                 priority={isPriority}
-                preload="metadata"
+                preload={isPriority ? "metadata" : "none"}
                 muted
                 playsInline
               />
@@ -103,7 +105,7 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
                 loading={isPriority ? undefined : 'lazy'}
                 placeholder={entry?.poster?.lqip ? 'blur' : undefined}
                 blurDataURL={entry?.poster?.lqip || undefined}
-                quality={isPriority ? 85 : 75}
+                quality={isPriority ? 70 : 60}
               />
             </ProtectedMediaWrapper>
           )}

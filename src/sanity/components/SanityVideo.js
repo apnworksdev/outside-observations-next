@@ -25,6 +25,7 @@ export default function SanityVideo({
   playsInline = true,
   controls = false,
   loop = true,
+  maxWidth, // Optional: limit video resolution for thumbnails
   onLoad,
   onPlay,
   onPause,
@@ -213,6 +214,13 @@ export default function SanityVideo({
         playsInline={playsInline}
         controls={controls}
         loop={loop}
+        width={width}
+        height={height}
+        style={{
+          maxWidth: maxWidth ? `${maxWidth}px` : width ? `${width}px` : undefined,
+          height: 'auto',
+          objectFit: 'contain',
+        }}
         aria-label={alt || 'Video'}
         onLoadedMetadata={() => onLoad?.()}
         onPlay={onPlay}

@@ -33,7 +33,8 @@ function setGlobalArchiveListHeight(value) {
   }
 }
 
-const POSTER_WIDTH = 400;
+// Reduced from 400px to 300px to save bandwidth - archive thumbnails don't need full resolution
+const POSTER_WIDTH = 300;
 
 // Component for archive entry image link with prefetching
 function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
@@ -118,8 +119,9 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
             fallbackClassName={styles.archiveEntryImage}
             width={POSTER_WIDTH}
             height={posterHeight}
+            maxWidth={POSTER_WIDTH}
             priority={isPriority}
-            preload="metadata"
+            preload={isPriority ? "metadata" : "none"}
             muted
             playsInline
             onLoad={onImageLoad}
@@ -139,7 +141,7 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
             loading={isPriority ? undefined : 'lazy'}
             placeholder={entry?.poster?.lqip ? 'blur' : undefined}
             blurDataURL={entry?.poster?.lqip || undefined}
-            quality={isPriority ? 85 : 75}
+            quality={isPriority ? 70 : 60}
             onLoad={onImageLoad}
           />
         </ProtectedMediaWrapper>

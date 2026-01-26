@@ -150,6 +150,7 @@ export default function UnexpectedConnectionsContent({
                 loading={isPrimary ? undefined : 'lazy'}
                 placeholder={entry.poster?.lqip ? 'blur' : undefined}
                 blurDataURL={entry.poster?.lqip || undefined}
+                quality={70}
                 className={styles.unexpectedConnectionsItemMedia}
                 data-primary={isPrimary ? 'true' : 'false'}
                 onLoad={isPrimary ? measurePrimaryMediaHeight : undefined}
