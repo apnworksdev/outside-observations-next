@@ -2,7 +2,7 @@ import {defineQuery} from 'next-sanity'
 
 /**
  * Optimized query for archive list - only fetches data needed for list display
- * Much lighter than ARCHIVE_ENTRIES_QUERY (excludes aiDescription, aiMoodTags, full visual essay images)
+ * Much lighter than ARCHIVE_ENTRIES_QUERY (excludes aiDescription, full visual essay images)
  */
 export const ARCHIVE_ENTRIES_LIST_QUERY = defineQuery(`*[_type == "archiveEntry"] | order(coalesce(metadata.year, year) desc) {
   _id,
@@ -47,6 +47,10 @@ export const ARCHIVE_ENTRIES_LIST_QUERY = defineQuery(`*[_type == "archiveEntry"
     asset,
     'lqip': asset->metadata.lqip,
     'dimensions': asset->metadata.dimensions
+  },
+  aiMoodTags[]->{
+    _id,
+    name
   },
   // Fetch all visual essay images but without aiDescription/aiMoodTags (lighter payload)
   visualEssayImages[]->{

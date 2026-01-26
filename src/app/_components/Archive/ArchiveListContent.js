@@ -73,6 +73,8 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
 
   // Hide metadata overlay if contentWarning is true and user hasn't consented
   const shouldShowMetadataOverlay = !hasContentWarning || hasConsent;
+  // For visual essays, show overlay but with empty content (to keep hover effect)
+  const shouldShowOverlayContent = shouldShowMetadataOverlay && !isVisualEssay;
 
   const content = (
     <div className={styles.archiveEntryImageWrapper}>
@@ -127,17 +129,19 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
       )}
       {shouldShowMetadataOverlay && (
         <div className={styles.archiveEntryImageOverlay}>
-          <div className={styles.archiveEntryImageOverlayContent}>
-            {hasYear && (
-              <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayYear}</p></div>
-            )}
-            {hasSource && (
-              <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlaySource}</p></div>
-            )}
-            {hasArtName && (
-              <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayArtName}</p></div>
-            )}
-          </div>
+          {shouldShowOverlayContent && (
+            <div className={styles.archiveEntryImageOverlayContent}>
+              {hasYear && (
+                <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayYear}</p></div>
+              )}
+              {hasSource && (
+                <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlaySource}</p></div>
+              )}
+              {hasArtName && (
+                <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayArtName}</p></div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

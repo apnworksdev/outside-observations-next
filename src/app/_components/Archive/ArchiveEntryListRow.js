@@ -45,7 +45,7 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
       </div>
       <div className={`${styles.itemColumn} ${styles.itemColumnSource}`}>
         <div className={styles.itemColumnContent}>
-          <p>{entry.metadata?.source || entry.source}</p>
+          <p>{isVisualEssay ? '' : (entry.metadata?.source || entry.source)}</p>
         </div>
         <div className={styles.itemPoster}>
           {entry.mediaType === 'visualEssay' ? (
