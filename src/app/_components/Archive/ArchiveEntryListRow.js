@@ -9,6 +9,8 @@ import { ProtectedMediaWrapper } from '@/app/_components/Archive/ProtectedMediaW
 import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
 import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
 import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
+import { useArchiveEntries } from './ArchiveEntriesProvider';
+import { saveArchiveScrollPosition } from '@/app/_hooks/useArchiveScrollPosition';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
 export default function ArchiveEntryListRow({ entry, index = 0 }) {
@@ -31,6 +33,22 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
   // Get consent state from context
   const { hasConsent } = useContentWarningConsent();
   const hasContentWarning = entry.metadata?.contentWarning === true;
+
+  // Get current view to save scroll position
+  const { view } = useArchiveEntries();
+
+  // Handle mouse down to save scroll position before navigation
+  // Using onMouseDown instead of onClick to ensure it runs before navigation
+  const handleMouseDown = () => {
+    if (view) {
+      try {
+        saveArchiveScrollPosition(view);
+      } catch (error) {
+        // Silently fail if save fails
+      }
+    }
+  };
+
   const content = (
     <div className={styles.itemWrapper}>
       <div className={`${styles.itemColumn} ${styles.itemColumnYear}`}>
@@ -130,6 +148,7 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
       href={href} 
       {...containerProps}
       {...prefetchHandlers}
+      onMouseDown={handleMouseDown}
     >
       {content}
     </Link>

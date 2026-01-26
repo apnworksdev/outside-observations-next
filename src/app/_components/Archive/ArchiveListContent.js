@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { gsap } from 'gsap';
 import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
 import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
 
@@ -14,6 +15,7 @@ import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
 import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper';
 import { useArchiveEntries, useArchiveSortController } from './ArchiveEntriesProvider';
 import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
+import { saveArchiveScrollPosition, useArchiveScrollRestore, restoreArchiveScrollPosition, clearScrollElementCache, ARCHIVE_SCROLL_PERCENTAGE_KEY, ARCHIVE_SCROLL_VIEW_KEY } from '@/app/_hooks/useArchiveScrollPosition';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveListErrorFallback } from '@/app/_components/ErrorFallbacks';
 
@@ -58,6 +60,21 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
   // Get consent state from context
   const { hasConsent } = useContentWarningConsent();
   const hasContentWarning = entry.metadata?.contentWarning === true;
+
+  // Get current view to save scroll position
+  const { view } = useArchiveEntries();
+
+  // Handle mouse down to save scroll position before navigation
+  // Using onMouseDown instead of onClick to ensure it runs before navigation
+  const handleMouseDown = () => {
+    if (view) {
+      try {
+        saveArchiveScrollPosition(view);
+      } catch (error) {
+        // Silently fail if save fails
+      }
+    }
+  };
 
   // For visual essays, overlay uses the currently displayed image's metadata
   const overlayMeta = isVisualEssay && currentImage?.metadata
@@ -163,6 +180,7 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
           href={href}
           {...linkProps}
           {...prefetchHandlers}
+          onMouseDown={handleMouseDown}
         >
           {content}
         </Link>
@@ -188,6 +206,225 @@ export default function ArchiveListContent() {
   const artNameSort = useArchiveSortController('artName', { label: 'Art Name' });
   const sourceSort = useArchiveSortController('source', { label: 'Source/Author' });
   const typeSort = useArchiveSortController('mediaType', { label: 'Type' });
+
+  // Restore scroll position when returning to archive or changing views
+  useArchiveScrollRestore(view);
+
+  // Track the last saved scroll position in a ref
+  const lastScrollPositionRef = useRef({ view: null, position: 0, percentage: 0 });
+
+  // Cache scroll element reference to avoid repeated DOM queries
+  const scrollElementRef = useRef(null);
+
+  // Save scroll position on scroll events (optimized with cached element and change detection)
+  useEffect(() => {
+    if (!view) return;
+
+    let scrollTimeout = null;
+    let rafId = null;
+    let lastSavedPosition = 0;
+    let lastSavedPercentage = 0;
+
+    const handleScroll = () => {
+      // Use requestAnimationFrame for better performance
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+
+      rafId = requestAnimationFrame(() => {
+        const scrollElement = scrollElementRef.current;
+        if (!scrollElement) return;
+
+        // Get current scroll position
+        const scrollPosition = scrollElement.scrollTop;
+        const scrollHeight = scrollElement.scrollHeight;
+        const clientHeight = scrollElement.clientHeight;
+        const maxScroll = scrollHeight - clientHeight;
+        const scrollPercentage = maxScroll > 0 ? scrollPosition / maxScroll : 0;
+
+        // Only update if position changed significantly (avoid unnecessary saves)
+        const positionDiff = Math.abs(scrollPosition - lastSavedPosition);
+        const percentageDiff = Math.abs(scrollPercentage - lastSavedPercentage);
+        
+        // Update ref immediately (for view change detection)
+        lastScrollPositionRef.current = {
+          view,
+          position: scrollPosition,
+          percentage: scrollPercentage
+        };
+
+        // Only save to sessionStorage if position changed meaningfully (threshold: 5px or 0.1%)
+        if (positionDiff > 5 || percentageDiff > 0.001) {
+          // Debounce sessionStorage writes
+          clearTimeout(scrollTimeout);
+          scrollTimeout = setTimeout(() => {
+            lastSavedPosition = scrollPosition;
+            lastSavedPercentage = scrollPercentage;
+            saveArchiveScrollPosition(view);
+          }, 150); // Slightly longer debounce for sessionStorage writes
+        }
+      });
+    };
+
+    const setupScrollListener = () => {
+      // Cache the scroll element reference (query once)
+      if (view === 'list') {
+        scrollElementRef.current = document.querySelector('scroll-container');
+      } else {
+        scrollElementRef.current = document.querySelector('mask-scroll');
+        // Fallback if not found
+        if (!scrollElementRef.current) {
+          const container = document.querySelector('[data-view="images"]');
+          if (container) {
+            scrollElementRef.current = container.querySelector('mask-scroll');
+          }
+        }
+      }
+
+      if (scrollElementRef.current) {
+        scrollElementRef.current.addEventListener('scroll', handleScroll, { passive: true });
+        return true;
+      }
+      return false;
+    };
+
+    // Try immediately, retry if needed
+    if (!setupScrollListener()) {
+      const retryTimeout = setTimeout(() => {
+        setupScrollListener();
+      }, 100);
+      return () => {
+        clearTimeout(retryTimeout);
+        clearTimeout(scrollTimeout);
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+        }
+        if (scrollElementRef.current) {
+          scrollElementRef.current.removeEventListener('scroll', handleScroll);
+        }
+        scrollElementRef.current = null;
+      };
+    }
+
+    return () => {
+      clearTimeout(scrollTimeout);
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+      if (scrollElementRef.current) {
+        scrollElementRef.current.removeEventListener('scroll', handleScroll);
+      }
+      scrollElementRef.current = null;
+    };
+  }, [view]);
+
+  // Save scroll position when view changes - use the ref value (last known position)
+  const previousViewForSaveRef = useRef(view);
+  useEffect(() => {
+    if (previousViewForSaveRef.current && previousViewForSaveRef.current !== view) {
+      // Clear cache when view changes (elements might have changed)
+      clearScrollElementCache();
+      
+      // Use the last known position from the ref (saved during scroll)
+      const lastPosition = lastScrollPositionRef.current;
+      if (lastPosition.view === previousViewForSaveRef.current) {
+        // Save the last known percentage for the old view
+        try {
+          sessionStorage.setItem(ARCHIVE_SCROLL_PERCENTAGE_KEY, String(lastPosition.percentage));
+          sessionStorage.setItem(ARCHIVE_SCROLL_VIEW_KEY, previousViewForSaveRef.current);
+        } catch (error) {
+          // Silently fail if save fails
+        }
+      }
+    }
+    previousViewForSaveRef.current = view;
+  }, [view]);
+
+  // Initialize view content opacity on mount
+  useLayoutEffect(() => {
+    if (viewContentRef.current) {
+      gsap.set(viewContentRef.current, { opacity: 1 });
+    }
+    isInitialMountRef.current = false;
+  }, []);
+
+  // Handle view transition animation - use useLayoutEffect to hide before paint
+  useLayoutEffect(() => {
+    // Skip initial mount
+    if (isInitialMountRef.current) {
+      previousViewRef.current = view;
+      return;
+    }
+
+    // Skip if view hasn't changed
+    if (previousViewRef.current === view) {
+      return;
+    }
+
+    const viewContent = viewContentRef.current;
+    if (!viewContent) {
+      previousViewRef.current = view;
+      return;
+    }
+
+    // Kill any existing animation
+    if (viewTransitionAnimationRef.current) {
+      viewTransitionAnimationRef.current.kill();
+    }
+
+    // Mark that we have a pending view change
+    pendingViewChangeRef.current = true;
+
+    // Immediately hide content synchronously before paint (prevents flash)
+    gsap.set(viewContent, { opacity: 0 });
+
+    previousViewRef.current = view;
+  }, [view]);
+
+  // Fade in new content after view change (runs after React renders new view)
+  useEffect(() => {
+    // Only fade in if we have a pending view change
+    if (!pendingViewChangeRef.current) {
+      return;
+    }
+
+    const viewContent = viewContentRef.current;
+    if (!viewContent) {
+      pendingViewChangeRef.current = false;
+      return;
+    }
+
+    // Wait for React to render new content, then fade in
+    const timeoutId = setTimeout(() => {
+      if (viewContentRef.current) {
+        // Kill any existing animation
+        if (viewTransitionAnimationRef.current) {
+          viewTransitionAnimationRef.current.kill();
+        }
+
+        viewTransitionAnimationRef.current = gsap.to(viewContentRef.current, {
+          opacity: 1,
+          duration: 0.3,
+          ease: 'power2.out',
+          onComplete: () => {
+            viewTransitionAnimationRef.current = null;
+            pendingViewChangeRef.current = false;
+          },
+        });
+      } else {
+        pendingViewChangeRef.current = false;
+      }
+    }, 50); // Small delay to ensure DOM has updated with new view
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (viewTransitionAnimationRef.current) {
+        viewTransitionAnimationRef.current.kill();
+        viewTransitionAnimationRef.current = null;
+      }
+    };
+  }, [view]);
+
   const sortableLegendColumns = useMemo(
     () => [
       { key: 'year', label: 'Year', sort: yearSort },
@@ -197,8 +434,13 @@ export default function ArchiveListContent() {
     [artNameSort, sourceSort, yearSort]
   );
   const contentRef = useRef(null);
+  const viewContentRef = useRef(null);
   const measurementFrameRef = useRef(null);
   const scrollContainerRef = useRef(null);
+  const viewTransitionAnimationRef = useRef(null);
+  const previousViewRef = useRef(view);
+  const pendingViewChangeRef = useRef(false);
+  const isInitialMountRef = useRef(true);
   const [isScrollNeeded, setIsScrollNeeded] = useState(true);
 
   const hasEntries = visibleEntries.length > 0;
@@ -324,30 +566,32 @@ export default function ArchiveListContent() {
           </div>
         )}
         <div ref={contentRef}>
-          {hasEntries ? (
-            view === 'images' ? (
-              <MaskScrollWrapper className={`${styles.containerContent} isAtTop`}>
-                {visibleEntries.map((entry, index) => (
-                  <ArchiveEntryImageLink
-                    key={entry._id}
-                    entry={entry}
-                    index={index}
-                    onImageLoad={handleImageLoad}
-                  />
-                ))}
-              </MaskScrollWrapper>
-            ) : (
-              <ScrollContainerWrapper
-                ref={scrollContainerRef}
-                className={styles.containerContent}
-                data-scroll-state={isScrollNeeded ? 'needed' : 'not-needed'}
-              >
-                {visibleEntries.map((entry, index) => (
-                  <ArchiveEntry key={entry._id} entry={entry} index={index} />
-                ))}
-              </ScrollContainerWrapper>
-            )
-          ) : null}
+          <div ref={viewContentRef}>
+            {hasEntries ? (
+              view === 'images' ? (
+                <MaskScrollWrapper className={`${styles.containerContent} isAtTop`}>
+                  {visibleEntries.map((entry, index) => (
+                    <ArchiveEntryImageLink
+                      key={entry._id}
+                      entry={entry}
+                      index={index}
+                      onImageLoad={handleImageLoad}
+                    />
+                  ))}
+                </MaskScrollWrapper>
+              ) : (
+                <ScrollContainerWrapper
+                  ref={scrollContainerRef}
+                  className={styles.containerContent}
+                  data-scroll-state={isScrollNeeded ? 'needed' : 'not-needed'}
+                >
+                  {visibleEntries.map((entry, index) => (
+                    <ArchiveEntry key={entry._id} entry={entry} index={index} />
+                  ))}
+                </ScrollContainerWrapper>
+              )
+            ) : null}
+          </div>
         </div>
         <div
           className={styles.containerLegend}

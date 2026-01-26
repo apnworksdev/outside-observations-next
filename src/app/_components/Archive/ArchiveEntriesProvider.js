@@ -9,7 +9,17 @@ const ArchiveEntriesContext = createContext(null);
 
 export const VIEW_COOKIE_NAME = 'outside-observations-archive-view';
 export const VIEW_CHANGE_EVENT = 'outside-observations:archive-view-change';
+export const ARCHIVE_FILTERS_CLEAR_EVENT = 'outside-observations:archive-filters-clear';
+export const ARCHIVE_FILTERS_CHANGE_EVENT = 'outside-observations:archive-filters-change';
 const VIEW_COOKIE_MAX_AGE_SECONDS = 60 * 60; // 1 hour
+
+// Session storage keys for archive filter state
+export const SESSION_STORAGE_KEYS = {
+  MOOD_TAGS: 'outside-observations-archive-mood-tags',
+  SORTING: 'outside-observations-archive-sorting',
+  SEARCH_RESULTS: 'outside-observations-archive-search-results',
+  SEARCH_STATUS: 'outside-observations-archive-search-status',
+};
 
 function isValidView(value) {
   return value === 'images' || value === 'list';
@@ -50,6 +60,18 @@ export function setArchiveViewPreference(view) {
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(VIEW_CHANGE_EVENT, { detail: { view } }));
+  }
+}
+
+/**
+ * Dispatch filter change event to notify components outside the provider
+ * about filter state changes (search, mood tags, etc.)
+ */
+function dispatchFilterChangeEvent(hasActiveFilters) {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(ARCHIVE_FILTERS_CHANGE_EVENT, { 
+      detail: { hasActiveFilters } 
+    }));
   }
 }
 
@@ -153,6 +175,54 @@ function getInitialSorting() {
   return { column: null, direction: null };
 }
 
+// Session storage helpers
+export function readFromSessionStorage(key, defaultValue) {
+  if (typeof window === 'undefined') {
+    return defaultValue;
+  }
+
+  try {
+    const item = sessionStorage.getItem(key);
+    if (item === null) {
+      return defaultValue;
+    }
+    return JSON.parse(item);
+  } catch (error) {
+    console.warn(`Failed to read from sessionStorage key "${key}":`, error);
+    return defaultValue;
+  }
+}
+
+export function writeToSessionStorage(key, value) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    if (value === null || value === undefined) {
+      sessionStorage.removeItem(key);
+    } else {
+      sessionStorage.setItem(key, JSON.stringify(value));
+    }
+  } catch (error) {
+    console.warn(`Failed to write to sessionStorage key "${key}":`, error);
+  }
+}
+
+function clearSessionStorage() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  Object.values(SESSION_STORAGE_KEYS).forEach((key) => {
+    try {
+      sessionStorage.removeItem(key);
+    } catch (error) {
+      console.warn(`Failed to clear sessionStorage key "${key}":`, error);
+    }
+  });
+}
+
 function compareSortValues(valueA, valueB, isAscending) {
   const bothNumbers =
     typeof valueA === 'number' &&
@@ -194,6 +264,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     // Otherwise always default to 'images' to ensure server/client match
     return isValidView(initialView) ? initialView : 'images';
   });
+  // Initialize state with default values (same on server and client to prevent hydration mismatch)
   const [searchResults, setSearchResultsState] = useState({ active: false, ids: [], orderedIds: [] });
   const [searchStatus, setSearchStatus] = useState({ status: 'idle', query: null, summary: null, error: null });
   const [sorting, setSorting] = useState(() => getInitialSorting());
@@ -201,11 +272,23 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   const requestIdRef = useRef(0);
   const pendingSearchPayloadRef = useRef(null);
   const previousPathRef = useRef(null);
+  // Ref to track current mood tags for synchronous access in callbacks
+  const selectedMoodTagsRef = useRef([]);
+  const searchQueryRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
   
   // Get search state from global provider (set by ChatBox or other components)
   const { consumeSearchPayload, setSearchPayload: setGlobalSearchPayload, searchPayload: globalSearchPayload } = useArchiveSearchState();
+
+  // Wrap setSorting to automatically save to session storage
+  const setSortingWithStorage = useCallback((nextSorting) => {
+    setSorting((prev) => {
+      const next = typeof nextSorting === 'function' ? nextSorting(prev) : nextSorting;
+      writeToSessionStorage(SESSION_STORAGE_KEYS.SORTING, next);
+      return next;
+    });
+  }, []);
 
   /**
    * `setView` persists the preference and keeps the header toggle in sync by delegating
@@ -265,6 +348,51 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       window.removeEventListener(VIEW_CHANGE_EVENT, handleExternalViewChange);
     };
   }, []);
+
+  /**
+   * Restore filter state from session storage after mount (client-side only)
+   * This happens after hydration to prevent hydration mismatches
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    // Only restore if we're on the archive page
+    if (pathname !== '/archive') {
+      return;
+    }
+
+    // Restore state from session storage
+    const storedSearchResults = readFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_RESULTS, null);
+    const storedSearchStatus = readFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_STATUS, null);
+    const storedSorting = readFromSessionStorage(SESSION_STORAGE_KEYS.SORTING, null);
+    const storedMoodTags = readFromSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, null);
+
+    if (storedSearchResults !== null) {
+      setSearchResultsState(storedSearchResults);
+    }
+    if (storedSearchStatus !== null) {
+      setSearchStatus(storedSearchStatus);
+      searchQueryRef.current = storedSearchStatus?.query ?? null; // Update ref
+    }
+    if (storedSorting !== null) {
+      setSorting(storedSorting);
+    }
+    if (storedMoodTags !== null) {
+      setSelectedMoodTags(storedMoodTags);
+      selectedMoodTagsRef.current = storedMoodTags; // Update ref
+    }
+  }, [pathname]);
+
+  // Keep refs in sync with state for synchronous access in callbacks
+  useEffect(() => {
+    searchQueryRef.current = searchStatus?.query ?? null;
+  }, [searchStatus?.query]);
+
+  useEffect(() => {
+    selectedMoodTagsRef.current = selectedMoodTags;
+  }, [selectedMoodTags]);
 
   /**
    * Derive the list of visible entries. When there is no active search we return all
@@ -379,11 +507,26 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     }
 
     // Clear mood tag filter when applying search results
-    setSelectedMoodTags([]);
+    const clearedMoodTags = [];
+    setSelectedMoodTags(clearedMoodTags);
+    writeToSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, clearedMoodTags);
+    
     setSearchResultsState(payload.resultsState);
+    writeToSessionStorage(SESSION_STORAGE_KEYS.SEARCH_RESULTS, payload.resultsState);
+    
     setSearchStatus(payload.statusState);
-    setSorting(getInitialSorting());
-  }, []);
+    writeToSessionStorage(SESSION_STORAGE_KEYS.SEARCH_STATUS, payload.statusState);
+    searchQueryRef.current = payload.statusState?.query ?? null; // Update ref
+    
+    const clearedSorting = getInitialSorting();
+    setSortingWithStorage(clearedSorting);
+    
+    // Dispatch event immediately with new state
+    if (pathname === '/archive' && typeof window !== 'undefined') {
+      const hasActiveFilters = payload.statusState?.query !== null;
+      dispatchFilterChangeEvent(hasActiveFilters);
+    }
+  }, [setSortingWithStorage, pathname]);
 
   // Method to set search from existing payload (e.g., from chat with already-fetched image IDs)
   // Uses global search state provider for consistency
@@ -425,41 +568,122 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     }
   }, [pathname, applySearchPayload, consumeSearchPayload, globalSearchPayload]);
 
-  const clearSearch = useCallback(() => {
+  const clearSearch = useCallback((skipEventDispatch = false) => {
     requestIdRef.current += 1;
-    setSearchResultsState({ active: false, ids: [], orderedIds: [] });
-    setSearchStatus({ status: 'idle', query: null, summary: null, error: null });
-    setSorting(getInitialSorting());
+    const clearedSearchResults = { active: false, ids: [], orderedIds: [] };
+    const clearedSearchStatus = { status: 'idle', query: null, summary: null, error: null };
+    const clearedSorting = getInitialSorting();
+    
+    setSearchResultsState(clearedSearchResults);
+    writeToSessionStorage(SESSION_STORAGE_KEYS.SEARCH_RESULTS, clearedSearchResults);
+    
+    setSearchStatus(clearedSearchStatus);
+    writeToSessionStorage(SESSION_STORAGE_KEYS.SEARCH_STATUS, clearedSearchStatus);
+    searchQueryRef.current = null; // Update ref synchronously
+    
+    setSortingWithStorage(clearedSorting);
+    
     pendingSearchPayloadRef.current = null;
-  }, []);
+    
+    // Dispatch event immediately using ref for synchronous access
+    if (!skipEventDispatch && pathname === '/archive' && typeof window !== 'undefined') {
+      const hasActiveFilters = selectedMoodTagsRef.current.length > 0;
+      dispatchFilterChangeEvent(hasActiveFilters);
+    }
+  }, [setSortingWithStorage, pathname]);
 
   const setMoodTag = useCallback(
     (tagName) => {
       // Navigate to archive page if not already there
       if (pathname !== '/archive') {
         router.push('/archive');
+        return; // Will apply tag after navigation
       }
+      
+      let nextMoodTags;
       setSelectedMoodTags((prev) => {
         // Toggle: if tag is already selected, remove it; otherwise add it
-        if (prev.includes(tagName)) {
-          return prev.filter((tag) => tag !== tagName);
-        }
-        return [...prev, tagName];
+        nextMoodTags = prev.includes(tagName)
+          ? prev.filter((tag) => tag !== tagName)
+          : [...prev, tagName];
+        // Save to session storage
+        writeToSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, nextMoodTags);
+        return nextMoodTags;
       });
-      // Clear search when filtering by mood tag
-      clearSearch();
+      
+      // Clear search when filtering by mood tag (skip its event dispatch, we'll dispatch after)
+      clearSearch(true);
+      
+      // Dispatch event immediately with final state (mood tags updated, search cleared)
+      if (pathname === '/archive' && typeof window !== 'undefined') {
+        const hasActiveFilters = nextMoodTags.length > 0;
+        dispatchFilterChangeEvent(hasActiveFilters);
+      }
     },
     [clearSearch, pathname, router]
   );
 
   const clearMoodTag = useCallback(() => {
-    setSelectedMoodTags([]);
-  }, []);
+    const cleared = [];
+    setSelectedMoodTags(cleared);
+    writeToSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, cleared);
+    selectedMoodTagsRef.current = cleared; // Update ref
+    
+    // Dispatch event immediately using ref for synchronous access
+    if (pathname === '/archive' && typeof window !== 'undefined') {
+      const hasActiveFilters = searchQueryRef.current !== null;
+      dispatchFilterChangeEvent(hasActiveFilters);
+    }
+  }, [pathname]);
 
   /**
-   * When the user leaves the archive we reset any active search so that a future visit
-   * starts from the default images view. We keep track of the last pathname visited to
-   * detect the transition reliably on client navigation.
+   * Clear all filters (search and mood tags) - used by both context methods and event listener
+   */
+  const clearAllFilters = useCallback(() => {
+    clearSearch();
+    clearMoodTag();
+  }, [clearSearch, clearMoodTag]);
+
+  /**
+   * Dispatch filter change events whenever filter state changes
+   * This is a fallback for any edge cases where immediate dispatch might be missed
+   * Primary dispatch happens immediately in callbacks for better performance
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined' || pathname !== '/archive') {
+      return;
+    }
+
+    const hasActiveFilters = 
+      searchStatus?.query !== null || 
+      selectedMoodTags?.length > 0;
+    
+    dispatchFilterChangeEvent(hasActiveFilters);
+  }, [pathname, searchStatus?.query, selectedMoodTags?.length]);
+
+  /**
+   * Listen for clear filters event from components outside the provider (e.g., HeaderNav)
+   * This allows ArchiveViewToggle to clear filters even when used outside ArchiveEntriesProvider
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined' || pathname !== '/archive') {
+      return;
+    }
+
+    const handleClearFilters = () => {
+      clearAllFilters();
+    };
+
+    window.addEventListener(ARCHIVE_FILTERS_CLEAR_EVENT, handleClearFilters);
+    return () => {
+      window.removeEventListener(ARCHIVE_FILTERS_CLEAR_EVENT, handleClearFilters);
+    };
+  }, [pathname, clearAllFilters]);
+
+  /**
+   * When the user leaves the archive we keep the state in session storage
+   * so it can be restored when they return. We keep track of the last pathname visited
+   * to detect the transition reliably on client navigation.
    */
   useEffect(() => {
     if (!pathname) {
@@ -467,13 +691,10 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       return;
     }
 
-    if (previousPathRef.current === '/archive' && pathname !== '/archive') {
-      clearSearch();
-      clearMoodTag();
-    }
-
+    // State is already saved to session storage when it changes, so we don't need to clear it
+    // when leaving the archive - it will be restored when they return
     previousPathRef.current = pathname;
-  }, [clearSearch, clearMoodTag, pathname]);
+  }, [pathname]);
 
   /**
    * All pieces of state and helper actions are memoised into a stable object, ensuring
@@ -491,12 +712,13 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       setSearchFromPayload,
       clearSearch,
       sorting,
-      setSorting,
+      setSorting: setSortingWithStorage,
       selectedMoodTags,
       setMoodTag,
       clearMoodTag,
+      clearAllFilters,
     }),
-    [clearSearch, clearMoodTag, entries, setSearchFromPayload, searchStatus, selectedMoodTags, setMoodTag, setSorting, setView, sortedEntries, sorting, view]
+    [clearAllFilters, clearSearch, clearMoodTag, entries, setSearchFromPayload, searchStatus, selectedMoodTags, setMoodTag, setSortingWithStorage, setView, sortedEntries, sorting, view]
   );
 
   return <ArchiveEntriesContext.Provider value={value}>{children}</ArchiveEntriesContext.Provider>;
@@ -567,11 +789,9 @@ export function useArchiveSortController(column, { label: customLabel, ariaMessa
       const prevDirection = prevColumn ? previous?.direction ?? null : null;
       const nextDirection = getNextSortDirection(prevDirection);
 
-      if (nextDirection === null) {
-        return getInitialSorting();
-      }
-
-      return { column, direction: nextDirection };
+      return nextDirection === null
+        ? getInitialSorting()
+        : { column, direction: nextDirection };
     });
   }, [column, setSorting]);
 
