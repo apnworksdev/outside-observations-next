@@ -59,12 +59,13 @@
   gap: var(--column-gap);
   padding-right: var(--padding);
   padding-left: var(--padding);
-  padding-top: 6px;
-  padding-bottom: 7px;
+  padding-top: 4px;
+  padding-bottom: 3px;
   flex-shrink: 0;
   width: 0;
   min-width: 100%;
   box-sizing: border-box;
+  align-items: start;
 }
 
 .archiveEntryModalTitle {
@@ -209,7 +210,7 @@
   scroll-snap-align: center;
   width: calc(var(--column-width) * 3 + var(--column-gap) * 2);
   background-color: var(--bg-color);
-  padding: 7px var(--padding);
+  padding: 7px var(--padding) var(--padding);
   height: fit-content;
   display: flex;
   flex-direction: column;
