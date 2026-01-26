@@ -174,8 +174,9 @@ export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
 
 export function ArchiveEntryMetadata({ entry }) {
   const metadata = entry.metadata || {}
+  const isVisualEssay = entry.mediaType === 'visualEssay';
   // Handle year as object with {value, isEstimate} structure or legacy string/number
-  const year = metadata.year?.value ?? entry.year ?? ''
+  const year = metadata.year?.value ?? entry.year ?? '–'
   const artName = metadata.artName || entry.artName
   const fileName = metadata.fileName || entry.fileName
   const source = metadata.source || entry.source
@@ -215,16 +216,23 @@ export function ArchiveEntryMetadata({ entry }) {
         <p>{artName}</p>
       </div>
       <div className={`${styles.archiveEntryModalAsideContentItem} ${styles.archiveEntryModalAsideFileName}`}>
-        <p>{fileName}</p>
+        <p>{isVisualEssay ? '–' : (entry.metadata?.source || entry.source || '–')}</p>
       </div>
       <div className={`${styles.archiveEntryModalAsideContentItem} ${styles.archiveEntryModalAsideSource}`}>
-        <p>{source}</p>
+        <p>{(entry.metadata?.tags || entry.tags || []).filter(Boolean).map((tag) => tag?.name).filter(Boolean).join(', ')}</p>
       </div>
       <div className={`${styles.archiveEntryModalAsideContentItem} ${styles.archiveEntryModalAsideTags}`}>
-        <p>{tags.filter(Boolean).map((tag) => tag?.name).filter(Boolean).join(', ')}</p>
+        <p>{((entry.aiMoodTags || []).filter(Boolean).map((tag) => tag?.name).filter(Boolean).join(', ') || '–')}</p>
       </div>
       <div className={`${styles.archiveEntryModalAsideContentItem} ${styles.archiveEntryModalAsideType}`}>
-        <p>{entry.mediaType ? entry.mediaType.charAt(0).toUpperCase() + entry.mediaType.slice(1) : 'Image'}</p>
+        <p>
+          {entry.mediaType
+            ? entry.mediaType
+                .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+                .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+                .trim()
+            : 'Image'}
+        </p>
       </div>
     </div>
   );

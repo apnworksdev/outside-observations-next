@@ -35,7 +35,7 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
     <div className={styles.itemWrapper}>
       <div className={`${styles.itemColumn} ${styles.itemColumnYear}`}>
         <div className={styles.itemColumnContent}>
-          <p>{entry.metadata?.year?.value ?? entry.year ?? ''}</p>
+          <p>{entry.metadata?.year?.value ?? entry.year ?? '–'}</p>
         </div>
       </div>
       <div className={`${styles.itemColumn} ${styles.itemColumnArtName}`}>
@@ -45,7 +45,7 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
       </div>
       <div className={`${styles.itemColumn} ${styles.itemColumnSource}`}>
         <div className={styles.itemColumnContent}>
-          <p>{isVisualEssay ? '' : (entry.metadata?.source || entry.source)}</p>
+          <p>{isVisualEssay ? '–' : (entry.metadata?.source || entry.source || '–')}</p>
         </div>
         <div className={styles.itemPoster}>
           {entry.mediaType === 'visualEssay' ? (
@@ -98,7 +98,7 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
       </div>
       <div className={`${styles.itemColumn} ${styles.itemColumnMoodTags}`}>
         <div className={styles.itemColumnContent}>
-          <p>{(entry.aiMoodTags || []).filter(Boolean).map((tag) => tag?.name).filter(Boolean).join(', ')}</p>
+          <p>{((entry.aiMoodTags || []).filter(Boolean).map((tag) => tag?.name).filter(Boolean).join(', ') || '–')}</p>
         </div>
       </div>
       <div className={`${styles.itemColumn} ${styles.itemColumnType}`}>
