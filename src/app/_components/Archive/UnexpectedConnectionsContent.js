@@ -8,6 +8,7 @@ import SanityImage from '@/sanity/components/SanityImage';
 import SanityVideo from '@/sanity/components/SanityVideo';
 import { ProtectedMediaWrapper } from '@/app/_components/Archive/ProtectedMediaWrapper';
 import UnexpectedConnectionsComparison from './UnexpectedConnectionsComparison';
+import { trackUnexpectedConnectionsView, trackUnexpectedConnectionsEntryClick } from '@/app/_helpers/gtag';
 
 function setGlobalPrimaryMediaHeight(value) {
   if (typeof document !== 'undefined') {
@@ -61,6 +62,10 @@ export default function UnexpectedConnectionsContent({
   useEffect(() => {
     measurePrimaryMediaHeight();
   }, [measurePrimaryMediaHeight, mediaWidth, primaryItemSignature]);
+
+  useEffect(() => {
+    trackUnexpectedConnectionsView();
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -178,7 +183,14 @@ export default function UnexpectedConnectionsContent({
                 data-primary={isPrimary ? 'true' : 'false'}
               >
                 {href ? (
-                  <Link href={href} className={styles.unexpectedConnectionsMediaLink}>
+                  <Link
+                    href={href}
+                    className={styles.unexpectedConnectionsMediaLink}
+                    onClick={() => {
+                      const slug = entry?.metadata?.slug?.current ?? entry?.slug?.current ?? '';
+                      trackUnexpectedConnectionsEntryClick(slug, index + 1);
+                    }}
+                  >
                     {protectedMedia}
                   </Link>
                 ) : (

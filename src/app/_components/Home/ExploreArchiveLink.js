@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
 import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
+import { trackChatExploreArchiveClick } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/chatbox.module.css';
 
 /**
@@ -28,6 +29,8 @@ export default function ExploreArchiveLink({
       onClick={(e) => {
         e.preventDefault();
         if (itemIds && searchQuery) {
+          const count = Array.isArray(itemIds) ? itemIds.length : (imageEntries?.length ?? 0);
+          trackChatExploreArchiveClick(count, searchQuery);
           onTriggerSearch(messageId, itemIds, searchQuery);
         }
       }}

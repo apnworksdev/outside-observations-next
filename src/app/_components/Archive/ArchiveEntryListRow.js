@@ -11,6 +11,7 @@ import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
 import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
 import { useArchiveEntries } from './ArchiveEntriesProvider';
 import { saveArchiveScrollPosition } from '@/app/_hooks/useArchiveScrollPosition';
+import { trackArchiveEntryClickFromEntry } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
 export default function ArchiveEntryListRow({ entry, index = 0 }) {
@@ -35,19 +36,20 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
   const { hasConsent } = useContentWarningConsent();
   const hasContentWarning = entry.metadata?.contentWarning === true;
 
-  // Get current view to save scroll position
-  const { view } = useArchiveEntries();
+  // Get current view and search status for GA4
+  const { view, searchStatus } = useArchiveEntries();
 
   // Handle mouse down to save scroll position before navigation
-  // Using onMouseDown instead of onClick to ensure it runs before navigation
+  // Using onMouseDown instead of onClick so it runs before Next.js navigation
   const handleMouseDown = () => {
     if (view) {
       try {
         saveArchiveScrollPosition(view);
-      } catch (error) {
-        // Silently fail if save fails
+      } catch {
+        // Ignore storage errors
       }
     }
+    trackArchiveEntryClickFromEntry(entry, view ?? 'list', searchStatus ?? {});
   };
 
   const content = (

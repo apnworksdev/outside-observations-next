@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import styles from '@app/_assets/archive/unexpected.module.css';
 import TypewriterMessage from '@/app/_components/Home/TypewriterMessage';
+import { trackUnexpectedConnectionsRefresh } from '@/app/_helpers/gtag';
 
 const initialState = {
   status: 'idle',
@@ -133,7 +134,10 @@ export default function UnexpectedConnectionsComparison({ comparisonPayload }) {
         <button
           type="button"
           className={styles.unexpectedConnectionsRefreshBtn}
-          onClick={() => router.refresh()}
+          onClick={() => {
+            trackUnexpectedConnectionsRefresh();
+            router.refresh();
+          }}
           aria-label="Refresh"
         >
           <RefreshIcon />

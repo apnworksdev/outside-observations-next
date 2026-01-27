@@ -7,6 +7,7 @@ import { useArchiveEntriesSafe } from '@/app/_components/Archive/ArchiveEntriesP
 import { useChatStorage } from '@/app/_hooks/useChatStorage';
 import { client } from '@/sanity/lib/client';
 import { SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
+import { trackChatMessageSent, trackChatPanelOpen } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/chatbox.module.css';
 import TypewriterMessage from './TypewriterMessage';
 import ExploreArchiveLink from './ExploreArchiveLink';
@@ -50,6 +51,15 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
   // This hook handles loading chat history on mount and saving on updates
   // Chat history is shared across home and archive variants
   useChatStorage(messages, setMessages, messageIdRef);
+
+  // GA4: track chat "open" on home (chat is in-page; archive open is tracked from menu)
+  const chatOpenTrackedRef = useRef(false);
+  useEffect(() => {
+    if (variant === 'home' && !chatOpenTrackedRef.current) {
+      chatOpenTrackedRef.current = true;
+      trackChatPanelOpen('home');
+    }
+  }, [variant]);
 
   // Helper function to update the first message (id: 0) with given text
   const updateFirstMessage = (text) => {
@@ -266,6 +276,8 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
     e.preventDefault();
     if (inputValue.trim() && !isLoading) {
       const userMessage = inputValue.trim();
+
+      trackChatMessageSent(userMessage, variant);
 
       // Add user message immediately
       setMessages((prevMessages) => [

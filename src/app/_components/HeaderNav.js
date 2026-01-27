@@ -8,16 +8,26 @@ import NavItem from '@/app/_components/NavItem';
 import MobileMenuButton from '@/app/_components/MobileMenuButton';
 import HelpNav from '@/app/_components/HelpNav';
 import { useRadioIframe } from '@/app/_components/RadioIframeProvider';
+import {
+  trackNavClick,
+  trackRadioOpen,
+  trackRadioClose,
+  trackRadioExpand,
+  trackOutboundClick,
+} from '@/app/_helpers/gtag';
+
+const SHOP_URL = 'https://outside-observations.myshopify.com/';
 
 export default function HeaderNav() {
   const { openRadio, closeRadio, expandRadio, isOpen: isRadioOpen, isMinimized } = useRadioIframe();
 
   // Cookie reading is handled client-side by ArchiveViewToggle component
   // This allows static generation while still reading view preference on the client
-  
+
   const handleRadioClick = (e) => {
     e.preventDefault();
     if (!isRadioOpen) {
+      trackRadioOpen();
       openRadio();
     }
   };
@@ -26,7 +36,12 @@ export default function HeaderNav() {
     <header id="main-header" className={styles.header}>
       <div className={styles.navTitleContainer}>
         <div className={styles.navTitle}>
-          <Link href="/archive" className={styles.navBubble} data-transition="nav">
+          <Link
+            href="/archive"
+            className={styles.navBubble}
+            data-transition="nav"
+            onClick={() => trackNavClick('logo', 'same_page')}
+          >
             O
             <span className={`${styles.navTitleSpan} ${styles.outside}`}>utside</span>
             O
@@ -43,13 +58,21 @@ export default function HeaderNav() {
             href="/archive"
             section="archive"
             label="Archive"
+            onClick={() => trackNavClick('archive', 'same_page')}
           >
             <div className={styles.archiveNavOptions}>
               <ArchiveViewToggle
                 className={`${styles.archiveNavOption} ${styles.navBubble}`}
               />
               <div className={styles.backToArchiveButton}>
-                <Link href="/archive" className={styles.navBubble} data-transition="nav">Back</Link>
+                <Link
+                  href="/archive"
+                  className={styles.navBubble}
+                  data-transition="nav"
+                  onClick={() => trackNavClick('back_to_archive', 'same_page')}
+                >
+                  Back
+                </Link>
               </div>
               <HelpNav />
             </div>
@@ -60,6 +83,7 @@ export default function HeaderNav() {
             href="/lab"
             section="lab"
             label="Lab"
+            onClick={() => trackNavClick('lab', 'same_page')}
           />
           <NavItem
             className={`${styles.navLi} radio-nav`}
@@ -75,6 +99,7 @@ export default function HeaderNav() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    trackRadioExpand();
                     expandRadio();
                   }}
                   className={`${styles.radioNavButton} ${styles.expandButton}`}
@@ -83,6 +108,7 @@ export default function HeaderNav() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    trackRadioClose();
                     closeRadio();
                   }}
                   className={`${styles.radioNavButton} ${styles.closeButton}`}
@@ -94,11 +120,12 @@ export default function HeaderNav() {
           <NavItem
             className={`${styles.navLi} shop-nav`}
             innerNavBubble={true}
-            href="https://outside-observations.myshopify.com/"
+            href={SHOP_URL}
             section="shop"
             target="_blank"
             rel="noreferrer"
             label="Shop"
+            onClick={() => trackOutboundClick('shop', SHOP_URL)}
           />
         </menu>
       </nav>

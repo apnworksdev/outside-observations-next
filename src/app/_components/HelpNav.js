@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { gsap } from 'gsap';
-
+import { trackHelpOpen } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/nav.module.css';
 
 export default function HelpNav() {
@@ -34,6 +34,7 @@ export default function HelpNav() {
   }, [isHelpNavOpen]);
 
   const handleHelpNavToggle = () => {
+    if (!isHelpNavOpen) trackHelpOpen();
     setIsHelpNavOpen(!isHelpNavOpen);
   };
 

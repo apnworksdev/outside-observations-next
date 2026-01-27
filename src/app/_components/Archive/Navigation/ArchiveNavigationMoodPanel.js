@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import { useArchiveEntries } from '@/app/_components/Archive/ArchiveEntriesProvider';
+import { trackMoodSelect } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/archive/archive-navigation.module.css';
 
 const MOOD_TAGS = [
@@ -60,6 +61,7 @@ export default function ArchiveNavigationMoodPanel() {
 
   const handleTagClick = useCallback(
     (tagName) => {
+      trackMoodSelect(tagName);
       setMoodTag(tagName);
     },
     [setMoodTag]

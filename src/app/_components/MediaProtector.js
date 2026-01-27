@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
+import { trackContentWarningConsent } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/media-protector.module.css';
 
 const ConsentIcon = () => {
@@ -33,6 +34,7 @@ export function MediaProtector({ contentWarning, className = '' }) {
   }, []);
 
   const handleAccept = useCallback(() => {
+    trackContentWarningConsent();
     setConsent();
   }, [setConsent]);
 

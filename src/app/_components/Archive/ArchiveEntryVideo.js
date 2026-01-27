@@ -5,6 +5,7 @@ import { urlForImage } from '@/sanity/lib/image';
 import SanityImage from '@/sanity/components/SanityImage';
 import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
 import { MediaProtector } from '@/app/_components/MediaProtector';
+import { trackVideoPlay, trackVideoPause, trackVideoComplete, trackVideoFullscreen } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
 // Format time as MM:SS (always 2 digits for minutes and seconds)
@@ -104,9 +105,9 @@ DurationDisplay.displayName = 'DurationDisplay';
 
 /**
  * ArchiveEntryVideo - Simple video player for archive entry pages
- * Click to play/pause
+ * Click to play/pause. entrySlug is used for GA4 (which video was played/paused/completed).
  */
-export default function ArchiveEntryVideo({ video, poster, alt, contentWarning = false }) {
+export default function ArchiveEntryVideo({ video, poster, alt, contentWarning = false, entrySlug = '' }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFull, setIsFull] = useState(false);
@@ -141,8 +142,10 @@ export default function ArchiveEntryVideo({ video, poster, alt, contentWarning =
 
   const handleToggleFull = useCallback((e) => {
     e.stopPropagation();
+    // Track before state update so we only fire once (state updater can run twice in Strict Mode)
+    trackVideoFullscreen(entrySlug, isFull ? 'exit' : 'enter');
     setIsFull((prev) => !prev);
-  }, []);
+  }, [entrySlug, isFull]);
 
   // Add/remove full class on video element (must be before any early returns)
   useEffect(() => {
@@ -243,9 +246,16 @@ export default function ArchiveEntryVideo({ video, poster, alt, contentWarning =
         preload="auto"
         playsInline
         controls={false}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        onPlay={() => {
+          trackVideoPlay(entrySlug);
+          setIsPlaying(true);
+        }}
+        onPause={() => {
+          trackVideoPause(entrySlug);
+          setIsPlaying(false);
+        }}
         onEnded={() => {
+          trackVideoComplete(entrySlug);
           setIsPlaying(false);
           const videoElement = videoRef.current;
           if (videoElement) {

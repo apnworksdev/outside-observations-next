@@ -122,6 +122,7 @@ export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
               ? initialImageIndex
               : null
           }
+          entrySlug={entry.metadata?.slug?.current ?? entry.slug?.current ?? ''}
         />
       </article>
     );
@@ -149,6 +150,7 @@ export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
                 poster={entry.poster}
                 alt={entry.metadata?.artName || entry.artName}
                 contentWarning={entry.metadata?.contentWarning}
+                entrySlug={entry.metadata?.slug?.current ?? entry.slug?.current ?? ''}
               />
             ) : (
               <ProtectedMediaWrapper

@@ -7,6 +7,7 @@ import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { HomeErrorFallback, ChatErrorFallback } from '@/app/_components/ErrorFallbacks';
 import { markWebsiteAsVisited } from '@/app/_helpers/visitTracker';
 import { clearChatStorage } from '@/app/_helpers/chatStorage';
+import { trackFirstVisitAnimationSkip } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/error.module.css';
 
 /**
@@ -54,6 +55,7 @@ export default function HomeContent() {
               <p className={styles.message}>Animation failed to load. Starting chat interface...</p>
               <button
                 onClick={() => {
+                  trackFirstVisitAnimationSkip();
                   reset();
                   handleAnimationComplete();
                 }}

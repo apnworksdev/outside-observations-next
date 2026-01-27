@@ -1,4 +1,5 @@
 import Countdown from '@/app/_components/Countdown/Countdown';
+import ArchiveClosedViewTracker from '@/app/_components/Archive/ArchiveClosedViewTracker';
 import styles from '@app/_assets/archive/closed.module.css';
 import { getSiteSettings } from '@/app/_data/archive';
 import Image from 'next/image';
@@ -12,6 +13,7 @@ export default async function ClosedPage() {
 
   return (
     <div className={styles.container}>
+      <ArchiveClosedViewTracker />
       <div className={styles.closedArchiveImageContainer}>
         <Image
           src={urlFor(siteSettings.closedArchiveImage).width(800).url()}

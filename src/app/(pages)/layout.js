@@ -1,6 +1,7 @@
 import '@app/_assets/variables.css';
 import '@app/_assets/globals.css';
 import styles from '@app/_assets/main.module.css';
+import Script from 'next/script';
 import HeaderNav from '@app/_components/HeaderNav';
 import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
 import BodyHydrationGuard from '@/app/_helpers/BodyHydrationGuard';
@@ -14,6 +15,8 @@ import { RadioIframeProvider } from '@/app/_components/RadioIframeProvider';
 import { ContentWarningConsentProvider } from '@/app/_contexts/ContentWarningConsentContext';
 import RadioIframe from '@/app/_components/RadioIframe';
 import PageTransition from '@/app/_components/PageTransition';
+import PageSectionTracker from '@/app/_components/PageSectionTracker';
+import { GA4_MEASUREMENT_ID } from '@/app/_helpers/gtag';
 
 export const metadata = {
   title: 'Outside Observation',
@@ -41,6 +44,18 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga4-config" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA4_MEASUREMENT_ID}');
+          `}
+        </Script>
         <ErrorBoundary>
           <BodyHydrationGuard />
           <VisitorCountProvider>
@@ -49,6 +64,9 @@ export default function RootLayout({ children }) {
                 <ArchiveSearchStateProvider>
                 <ErrorBoundary>
                   <BodyPageTypeUpdater />
+                </ErrorBoundary>
+                <ErrorBoundary>
+                  <PageSectionTracker />
                 </ErrorBoundary>
                 <ErrorBoundary>
                   <VisitorTracker />

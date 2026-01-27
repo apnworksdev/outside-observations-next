@@ -15,6 +15,7 @@ import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
 import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper';
 import { useArchiveEntries, useArchiveSortController } from './ArchiveEntriesProvider';
 import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
+import { trackArchiveEntryClickFromEntry, trackArchiveLoaded, trackArchiveSort } from '@/app/_helpers/gtag';
 import { saveArchiveScrollPosition, useArchiveScrollRestore, restoreArchiveScrollPosition, clearScrollElementCache, ARCHIVE_SCROLL_PERCENTAGE_KEY, ARCHIVE_SCROLL_VIEW_KEY } from '@/app/_hooks/useArchiveScrollPosition';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveListErrorFallback } from '@/app/_components/ErrorFallbacks';
@@ -62,19 +63,20 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
   const { hasConsent } = useContentWarningConsent();
   const hasContentWarning = entry.metadata?.contentWarning === true;
 
-  // Get current view to save scroll position
-  const { view } = useArchiveEntries();
+  // Get current view and search status for GA4
+  const { view, searchStatus } = useArchiveEntries();
 
   // Handle mouse down to save scroll position before navigation
-  // Using onMouseDown instead of onClick to ensure it runs before navigation
+  // Using onMouseDown instead of onClick so it runs before Next.js navigation
   const handleMouseDown = () => {
     if (view) {
       try {
         saveArchiveScrollPosition(view);
-      } catch (error) {
-        // Silently fail if save fails
+      } catch {
+        // Ignore storage errors
       }
     }
+    trackArchiveEntryClickFromEntry(entry, view ?? 'images', searchStatus ?? {});
   };
 
   // For visual essays, overlay uses the currently displayed image's metadata
@@ -211,6 +213,15 @@ export default function ArchiveListContent() {
 
   // Restore scroll position when returning to archive or changing views
   useArchiveScrollRestore(view);
+
+  // GA4: which view was used when landing on archive (list vs images usage)
+  const archiveLoadedSentRef = useRef(false);
+  useEffect(() => {
+    if (view && !archiveLoadedSentRef.current) {
+      archiveLoadedSentRef.current = true;
+      trackArchiveLoaded(view);
+    }
+  }, [view]);
 
   // Track the last saved scroll position in a ref
   const lastScrollPositionRef = useRef({ view: null, position: 0, percentage: 0 });
@@ -427,6 +438,15 @@ export default function ArchiveListContent() {
     };
   }, [view]);
 
+  // Same cycle as ArchiveEntriesProvider: null → desc → asc → null
+  const handleSortClick = useCallback((sort) => {
+    const order = ['desc', 'asc', null];
+    const curr = sort.direction ?? null;
+    const nextDir = order[(order.indexOf(curr) + 1) % order.length];
+    if (nextDir) trackArchiveSort(sort.column, nextDir);
+    sort.toggleSort();
+  }, []);
+
   const sortableLegendColumns = useMemo(
     () => [
       { key: 'year', label: 'Year', sort: yearSort },
@@ -605,7 +625,7 @@ export default function ArchiveListContent() {
               <button
                 type="button"
                 className={styles.containerLegendColumnButton}
-                onClick={sort.toggleSort}
+                onClick={() => handleSortClick(sort)}
                 data-sort-state={sort.dataState}
                 aria-label={sort.ariaLabel}
               >
@@ -630,7 +650,7 @@ export default function ArchiveListContent() {
             <button
               type="button"
               className={styles.containerLegendColumnButton}
-              onClick={typeSort.toggleSort}
+              onClick={() => handleSortClick(typeSort)}
               data-sort-state={typeSort.dataState}
               aria-label={typeSort.ariaLabel}
             >

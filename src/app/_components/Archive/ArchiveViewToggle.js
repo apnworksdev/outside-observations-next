@@ -14,6 +14,7 @@ import {
   SESSION_STORAGE_KEYS,
   readFromSessionStorage,
 } from '@/app/_components/Archive/ArchiveEntriesProvider';
+import { trackArchiveViewSwitch, trackArchiveFiltersClear } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/nav.module.css';
 
 function readViewCookie() {
@@ -80,6 +81,9 @@ export default function ArchiveViewToggle({ className, initialExternalView = 'im
       if (nextView !== 'images' && nextView !== 'list') {
         return;
       }
+      if (currentView !== nextView) {
+        trackArchiveViewSwitch(nextView);
+      }
 
       if (archiveContext?.setView) {
         archiveContext.setView(nextView);
@@ -88,7 +92,7 @@ export default function ArchiveViewToggle({ className, initialExternalView = 'im
         setExternalView(nextView);
       }
     },
-    [archiveContext]
+    [archiveContext, currentView]
   );
 
   /**
@@ -178,12 +182,26 @@ export default function ArchiveViewToggle({ className, initialExternalView = 'im
    * Uses direct context method when available (fastest), otherwise dispatches event
    */
   const handleClearFilters = useCallback(() => {
+    let hadSearch = false;
+    let hadMood = false;
+    try {
+      if (archiveContext) {
+        hadSearch = !!archiveContext.searchStatus?.query;
+        hadMood = (archiveContext.selectedMoodTags?.length ?? 0) > 0;
+      } else if (typeof window !== 'undefined') {
+        const searchStatus = readFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_STATUS, { query: null });
+        const moodTags = readFromSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, []);
+        hadSearch = searchStatus?.query != null;
+        hadMood = Array.isArray(moodTags) && moodTags.length > 0;
+      }
+    } catch {
+      // SessionStorage can throw (e.g. private mode); still clear filters below
+    }
+    trackArchiveFiltersClear(hadSearch, hadMood);
+
     if (archiveContext?.clearAllFilters) {
-      // Use context method directly when available (fastest path)
       archiveContext.clearAllFilters();
     } else {
-      // Dispatch event when outside provider context
-      // ArchiveEntriesProvider will listen and clear filters
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent(ARCHIVE_FILTERS_CLEAR_EVENT));
       }

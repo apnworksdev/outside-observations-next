@@ -10,6 +10,7 @@ import ArchiveNavigationMoodPanel from './ArchiveNavigationMoodPanel';
 import ArchiveNavigationChatPanel from './ArchiveNavigationChatPanel';
 import VisitorNotificationToast from '@/app/_components/VisitorNotificationToast';
 import { useVisitorCount } from '@/app/_components/VisitorCountProvider';
+import { trackMenuOpen, trackMenuClose, trackMenuItemClick, trackChatPanelOpen } from '@/app/_helpers/gtag';
 
 const NAVIGATION_ITEMS = [
   {
@@ -68,6 +69,11 @@ export default function ArchiveNavigationContainer() {
    * makes "Chat" behave like a toggle rather than a sticky state.
    */
   const handleOpenChange = useCallback((nextOpen) => {
+    if (nextOpen) {
+      trackMenuOpen();
+    } else {
+      trackMenuClose();
+    }
     setIsNavigationOpen(nextOpen);
 
     if (!nextOpen) {
@@ -80,7 +86,13 @@ export default function ArchiveNavigationContainer() {
     (itemId, href) => {
       // Don't open panel for live button (it shows count on hover instead)
       if (itemId === 'live') {
+        trackMenuItemClick('live');
         return;
+      }
+
+      trackMenuItemClick(itemId);
+      if (itemId === 'chat') {
+        trackChatPanelOpen('archive');
       }
 
       // Keep navigation open when selecting items (works on both desktop and mobile)

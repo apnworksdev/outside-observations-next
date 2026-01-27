@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { trackVisualEssayEntryAtImage } from '@/app/_helpers/gtag';
 
 /**
  * Find the nearest horizontal scroll container (overflow-x auto/scroll and scrollWidth > clientWidth).
@@ -22,11 +23,18 @@ function findHorizontalScrollParent(el) {
  * Client component that scrolls to a specific visual essay image on mount.
  * Used when navigating from the archive with ?image=N to open the entry at that image.
  * Centers the image horizontally in the scroll strip by computing scrollLeft on the scroll container.
+ * Fires GA4 visual_essay_entry_at_image when entry was opened at a specific image.
  */
-export default function ScrollToVisualEssayImage({ imageIndex }) {
+export default function ScrollToVisualEssayImage({ imageIndex, entrySlug = '' }) {
+  const trackedRef = useRef(false);
+
   useEffect(() => {
     if (imageIndex == null || !Number.isFinite(imageIndex) || imageIndex < 0) {
       return;
+    }
+    if (entrySlug && !trackedRef.current) {
+      trackedRef.current = true;
+      trackVisualEssayEntryAtImage(entrySlug, imageIndex);
     }
     const el = document.getElementById(`ve-image-${imageIndex}`);
     if (!el) return;
@@ -53,7 +61,7 @@ export default function ScrollToVisualEssayImage({ imageIndex }) {
       requestAnimationFrame(scroll);
     });
     return () => cancelAnimationFrame(raf);
-  }, [imageIndex]);
+  }, [imageIndex, entrySlug]);
 
   return null;
 }

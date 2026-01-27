@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
 import CircleAnimation from '@/app/_components/Home/CircleAnimation';
+import { trackFirstVisitAnimationComplete } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/home.module.css';
 
 /**
@@ -43,6 +44,7 @@ export default function FirstVisitAnimation({ onComplete, children }) {
     // Create shared timeline
     const tl = gsap.timeline({
       onComplete: () => {
+        trackFirstVisitAnimationComplete();
         if (onCompleteRef.current) {
           onCompleteRef.current();
         }
