@@ -1,0 +1,63 @@
+.container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  width: 100%;
+  padding: var(--padding, 9px);
+  padding-bottom: calc(var(--padding, 9px) + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  column-gap: var(--column-gap);
+}
+
+.banner {
+  grid-column: 6 / 9;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap, 1px);
+  background-color: var(--bg-color);
+  border: 1px solid var(--bg-color);
+}
+
+.bannerContent {
+  background-color: var(--gray-color);
+  color: var(--bg-color);
+  padding-top: 6px;
+  padding-right: var(--padding);
+  padding-bottom: 7px;
+  padding-left: var(--padding);
+}
+
+.link {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.actions {
+  display: flex;
+  gap: var(--gap, 1px);
+}
+
+.buttonAccept,
+.buttonReject {
+  flex: 1;
+  background-color: var(--gray-color);
+  color: var(--bg-color);
+  padding-top: 6px;
+  padding-right: var(--padding);
+  padding-bottom: 7px;
+  padding-left: var(--padding);
+}
+
+@media screen and (max-width: 768px) {
+  .container {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .banner {
+    grid-column: 2 / 6;
+  }
+}

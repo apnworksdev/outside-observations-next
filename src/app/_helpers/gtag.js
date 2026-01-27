@@ -10,6 +10,9 @@ const GA4_MEASUREMENT_ID =
     ? process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID
     : 'G-28FFYLDLLZ';
 
+/** localStorage key for cookie consent (must match value in layout.js consent script). */
+export const COOKIE_CONSENT_ANALYTICS_KEY = 'cookie_consent_analytics';
+
 export function gtag() {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag(...arguments);
@@ -323,6 +326,14 @@ export function trackPageSection(pathname) {
   }
 
   trackEvent('page_section', params);
+}
+
+/**
+ * Update GA4 consent state (Consent Mode). Call after user accepts or rejects analytics cookies.
+ * @param {boolean} granted - true to allow analytics cookies, false to deny
+ */
+export function updateAnalyticsConsent(granted) {
+  gtag('consent', 'update', { analytics_storage: granted ? 'granted' : 'denied' });
 }
 
 export { GA4_MEASUREMENT_ID };

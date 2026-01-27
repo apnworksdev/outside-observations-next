@@ -16,6 +16,7 @@ import { ContentWarningConsentProvider } from '@/app/_contexts/ContentWarningCon
 import RadioIframe from '@/app/_components/RadioIframe';
 import PageTransition from '@/app/_components/PageTransition';
 import PageSectionTracker from '@/app/_components/PageSectionTracker';
+import CookieConsentBanner from '@/app/_components/CookieConsentBanner';
 import { GA4_MEASUREMENT_ID } from '@/app/_helpers/gtag';
 
 export const metadata = {
@@ -44,14 +45,25 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+        {/* Consent default must run before gtag so GA4 respects it (Consent Mode v2) */}
+        <Script id="ga4-consent-default" strategy="beforeInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            try {
+              var allowed = window.localStorage.getItem('cookie_consent_analytics') === 'true';
+              gtag('consent', 'default', { analytics_storage: allowed ? 'granted' : 'denied' });
+            } catch (e) {
+              gtag('consent', 'default', { analytics_storage: 'denied' });
+            }
+          `}
+        </Script>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA4_MEASUREMENT_ID}`}
           strategy="afterInteractive"
         />
         <Script id="ga4-config" strategy="afterInteractive">
           {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', '${GA4_MEASUREMENT_ID}');
           `}
@@ -97,6 +109,9 @@ export default function RootLayout({ children }) {
               </ContentWarningConsentProvider>
             </RadioIframeProvider>
           </VisitorCountProvider>
+          <ErrorBoundary>
+            <CookieConsentBanner />
+          </ErrorBoundary>
         </ErrorBoundary>
       </body>
     </html>
