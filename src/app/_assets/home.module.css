@@ -94,42 +94,30 @@
 
 .homeContainer {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: var(--padding);
+  right: var(--padding);
+  width: calc(var(--column-width) * 2 + var(--column-gap));
+  min-width: 250px;
+  max-width: 350px;
   pointer-events: none;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 1;
-}
-
-.homeContent {
-  width: 100%;
-  display: grid;
-  padding: var(--padding);
-  grid-template-columns: repeat(var(--columns), 1fr);
-  column-gap: var(--column-gap);
-  row-gap: var(--gap);
-  pointer-events: auto;
+  flex-direction: column;
+  gap: var(--gap);
+  z-index: 2;
 }
 
 .homeContentText {
-  grid-column: 6 / 9;
-  display: flex;
-  flex-direction: column;
-  gap: var(--padding);
+  pointer-events: auto;
   background-color: var(--gray-color);
   color: var(--bg-color);
-  padding-top: var(--padding);
+  padding-top: 6px;
   padding-right: var(--padding);
-  padding-bottom: var(--padding);
+  padding-bottom: 7px;
   padding-left: var(--padding);
 }
 
 .homeActions {
-  grid-column: 6 / 9;
+  pointer-events: auto;
   display: flex;
   gap: var(--gap);
 }
@@ -141,26 +129,18 @@
   padding: var(--padding) 0;
 }
 
-.homeArchiveLink {
-  flex: 1;
-  text-align: center;
-  text-decoration: none;
-  color: var(--bg-color);
-  background-color: var(--gray-color);
-  padding: var(--padding);
-}
-
 .homeImageContainer {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1;
+  z-index: 1;
 }
 
 .homeImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
 }

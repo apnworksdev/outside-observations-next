@@ -37,6 +37,31 @@ export const siteSettings = defineType({
       }
     }),
     defineField({
+      name: 'newsletter',
+      title: 'Newsletter',
+      type: 'object',
+      description: 'Title and description shown above the newsletter signup and archive link on the home page (returning visitors).',
+      options: {
+        collapsible: true,
+        collapsed: false,
+      },
+      fields: [
+        defineField({
+          name: 'title',
+          title: 'Title',
+          type: 'string',
+          initialValue: 'Sign up to stay updated.',
+        }),
+        defineField({
+          name: 'description',
+          title: 'Description',
+          type: 'text',
+          rows: 4,
+          initialValue: "Look at anything carefully enough, even a speck of dust, and you'll find something you missed.",
+        }),
+      ],
+    }),
+    defineField({
       name: 'chatFirstMessage',
       title: 'Chat First Message',
       type: 'text',

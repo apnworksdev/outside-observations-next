@@ -255,6 +255,10 @@ export const SITE_SETTINGS_QUERY = defineQuery(`*[_type == "siteSettings"][0] {
   _id,
   title,
   chatFirstMessage,
+  newsletter {
+    title,
+    description
+  },
   labQuote,
   closedArchiveImage{
     ...,

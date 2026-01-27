@@ -4,7 +4,7 @@
   pointer-events: none;
 }
 
-:global(body[data-page="home"].home-animation-complete) .header {
+:global(body[data-page="home"][data-home-visitor="first"].home-animation-complete) .header {
   opacity: 1;
   transition-delay: var(--transition-time);
   pointer-events: auto;

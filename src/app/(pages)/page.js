@@ -47,12 +47,16 @@ export default async function Home() {
   const dimensions = homeImage?.dimensions;
   const homeImageWidth = dimensions?.width ?? 1200;
   const homeImageHeight = dimensions?.height ?? undefined;
+  const homeTitle = siteSettings?.newsletter?.title ?? undefined;
+  const homeDescription = siteSettings?.newsletter?.description ?? undefined;
 
   return (
     <HomeContent
       homeImage={homeImage}
       homeImageWidth={homeImageWidth}
       homeImageHeight={homeImageHeight}
+      homeTitle={homeTitle}
+      homeDescription={homeDescription}
     />
   );
 }

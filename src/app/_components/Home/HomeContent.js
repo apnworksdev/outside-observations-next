@@ -23,11 +23,18 @@ import homeStyles from '@app/_assets/home.module.css';
  *
  * Returning visitor is resolved client-side from localStorage (server cannot read it).
  */
+const DEFAULT_HOME_TITLE = 'Sign up to stay updated.';
+const DEFAULT_HOME_DESCRIPTION = "Look at anything carefully enough, even a speck of dust, and you'll find something you missed.";
+
 export default function HomeContent({
   homeImage = null,
   homeImageWidth = 1200,
   homeImageHeight,
+  homeTitle,
+  homeDescription,
 }) {
+  const title = homeTitle?.trim() || DEFAULT_HOME_TITLE;
+  const description = homeDescription?.trim() || DEFAULT_HOME_DESCRIPTION;
   const [animationComplete, setAnimationComplete] = useState(false);
   // Resolved from localStorage after hydration; null = not yet known (treat as returning to avoid flash)
   const [resolvedReturningVisitor, setResolvedReturningVisitor] = useState(null);
@@ -53,6 +60,13 @@ export default function HomeContent({
     markWebsiteAsVisited();
   };
 
+  // Body attribute for CSS: first-visit home (animation/chat) vs returning home (welcome + newsletter)
+  useEffect(() => {
+    if (resolvedReturningVisitor === null) return;
+    document.body.setAttribute('data-home-visitor', isReturningVisitor ? 'returning' : 'first');
+    return () => document.body.removeAttribute('data-home-visitor');
+  }, [isReturningVisitor, resolvedReturningVisitor]);
+
   // Manage body class for CSS-based header visibility control (first-visit flow only)
   useEffect(() => {
     if (isReturningVisitor) {
@@ -73,36 +87,31 @@ export default function HomeContent({
       <ErrorBoundary fallback={HomeErrorFallback}>
         <>
         <div className={homeStyles.homeContainer}>
-          <div className={homeStyles.homeContent}>
-            <div className={homeStyles.homeContentText}>
-              <h1 className={homeStyles.homeContentTextTitle}>Welcome to Outside Observations®</h1>
-              <p className={homeStyles.homeContentTextDescription}>
-                We&apos;re glad you&apos;re here.
-                Use the menu on the left to explore, or tell me what you&apos;re looking for and I&apos;ll point you in the right direction.
-              </p>
-            </div>
-            <div className={homeStyles.homeActions}>
-              <div className={homeStyles.homeKlaviyoFormContainer}>
-                <KlaviyoForm />
-              </div>
-              <Link href="/archive" className={homeStyles.homeArchiveLink}>
-                Go to archive
-              </Link>
+          <div className={homeStyles.homeContentText}>
+            <h1 className={homeStyles.homeContentTextTitle}>{title}</h1>
+            <br/>
+            <p className={homeStyles.homeContentTextDescription}>{description}</p>
+          </div>
+          <div className={homeStyles.homeActions}>
+            <div className={homeStyles.homeKlaviyoFormContainer}>
+              <KlaviyoForm />
             </div>
           </div>
         </div>
         {homeImage?.asset?._ref && (
-          <div className={homeStyles.homeImageContainer}>
-            <SanityImage
-              image={homeImage}
-              alt="Outside Observations® Home Image"
-              width={homeImageWidth}
-              height={homeImageHeight ?? homeImageWidth}
-              className={homeStyles.homeImage}
-              priority={true}
-              loading="eager"
-            />
-          </div>
+          <Link href="/archive">
+            <div className={homeStyles.homeImageContainer}>
+              <SanityImage
+                image={homeImage}
+                alt="Outside Observations® Home Image"
+                width={homeImageWidth}
+                height={homeImageHeight ?? homeImageWidth}
+                className={homeStyles.homeImage}
+                priority={true}
+                loading="eager"
+              />
+            </div>
+          </Link>
         )}
         </>
       </ErrorBoundary>
