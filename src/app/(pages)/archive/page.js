@@ -7,28 +7,36 @@ export const revalidate = 60;
 
 // Generate metadata for better SEO (cached)
 export async function generateMetadata() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
-    const url = `${baseUrl}/archive`;
-    
-    return {
-      title: 'Outside Observation - Archive',
-      description: 'Browse archive entries from Outside Observation',
-      openGraph: {
-        title: 'Outside Observation - Archive',
-        description: 'Browse archive entries from Outside Observation',
-        type: 'website',
-        url: url,
-      },
-    };
-  } catch (error) {
-    console.error('Failed to generate metadata for archive page:', error);
-    // Return default metadata on error
-    return {
-      title: 'Outside Observation - Archive',
-      description: 'Browse archive entries from Outside Observation',
-    };
-  }
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
+  const canonicalUrl = `${baseUrl}/archive`;
+  const title = 'Archive | Outside Observation';
+  const description = 'Browse and explore archive entries from Outside Observation.';
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: canonicalUrl,
+      images: [
+        {
+          url: `${baseUrl}/share-image.png`,
+          width: 1200,
+          height: 630,
+          alt: 'Outside Observation - Archive',
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${baseUrl}/share-image.png`],
+    },
+    alternates: { canonical: canonicalUrl },
+  };
 }
 
 export default function Archive() {

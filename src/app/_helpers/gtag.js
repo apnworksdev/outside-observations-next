@@ -4,7 +4,11 @@
  * Event names and params are chosen for clear reporting in GA4 (Explorations, custom dimensions).
  */
 
-const GA4_MEASUREMENT_ID = 'G-38CH7V80XK';
+// Use NEXT_PUBLIC_GA4_MEASUREMENT_ID in .env.local to test a different property (e.g. on localhost).
+const GA4_MEASUREMENT_ID =
+  typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_GA4_MEASUREMENT_ID
+    ? process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID
+    : 'G-28FFYLDLLZ';
 
 export function gtag() {
   if (typeof window !== 'undefined' && window.gtag) {

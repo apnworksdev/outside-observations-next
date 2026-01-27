@@ -3,12 +3,25 @@ import { unstable_cache } from 'next/cache';
 import { Suspense } from 'react';
 import { client } from '@/sanity/lib/client';
 import { ARCHIVE_ENTRY_QUERY, ARCHIVE_ENTRY_SLUGS } from '@/sanity/lib/queries';
+import { urlFor } from '@/sanity/lib/image';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 import { ArchiveEntryArticle, ArchiveEntryMetadata } from '@/app/_components/Archive/ArchiveEntryContent';
 import ArchiveEntryBackdrop from '@/app/_components/Archive/ArchiveEntryBackdrop';
 import ArchiveEntryVisitTracker from '@/app/_components/Archive/ArchiveEntryVisitTracker';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveEntryErrorFallback } from '@/app/_components/ErrorFallbacks';
+
+const SITE_TITLE = 'Outside Observation';
+const META_DESCRIPTION_MAX_LENGTH = 160;
+
+function truncateDescription(text) {
+  if (!text || typeof text !== 'string') return '';
+  const trimmed = text.trim();
+  if (trimmed.length <= META_DESCRIPTION_MAX_LENGTH) return trimmed;
+  const cut = trimmed.slice(0, META_DESCRIPTION_MAX_LENGTH - 1).trim();
+  const lastSpace = cut.lastIndexOf(' ');
+  return lastSpace > 0 ? cut.slice(0, lastSpace) + '…' : cut + '…';
+}
 
 // Enable ISR - revalidate every 60 seconds
 export const revalidate = 60;
@@ -38,6 +51,79 @@ const getCachedArchiveEntry = (slug) => {
     { revalidate: 60 }
   )();
 };
+
+export async function generateMetadata({ params }) {
+  let slug;
+  try {
+    const resolved = await params;
+    slug = resolved?.slug;
+  } catch {
+    return { title: SITE_TITLE };
+  }
+  if (!slug) return { title: SITE_TITLE };
+
+  let entry;
+  try {
+    entry = await getCachedArchiveEntry(slug);
+  } catch {
+    return { title: SITE_TITLE };
+  }
+  if (!entry) return { title: SITE_TITLE };
+
+  const artName = entry.metadata?.artName || entry.artName || 'Archive entry';
+  const title = `${artName} | ${SITE_TITLE}`;
+
+  const rawDescription =
+    entry.aiDescription ||
+    [artName, entry.metadata?.source || entry.source, entry.metadata?.year?.value ?? entry.year]
+      .filter(Boolean)
+      .join(' · ');
+  const description = truncateDescription(rawDescription);
+
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
+  const canonicalUrl = `${baseUrl}/archive/entry/${slug}`;
+
+  let ogImageUrl = null;
+  const poster = entry.poster;
+  const firstVisualImage = entry.visualEssayImages?.[0]?.image;
+  const imageSource = poster || firstVisualImage;
+  if (imageSource) {
+    try {
+      ogImageUrl = urlFor(imageSource).width(1200).height(630).fit('max').url();
+    } catch {
+      // ignore
+    }
+  }
+  if (!ogImageUrl) {
+    ogImageUrl = `${baseUrl}/share-image.png`;
+  }
+
+  return {
+    title,
+    description: description || undefined,
+    openGraph: {
+      title,
+      description: description || undefined,
+      type: 'article',
+      url: canonicalUrl,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: artName,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description: description || undefined,
+      images: [ogImageUrl],
+    },
+    alternates: { canonical: canonicalUrl },
+  };
+}
 
 export async function generateStaticParams() {
   try {

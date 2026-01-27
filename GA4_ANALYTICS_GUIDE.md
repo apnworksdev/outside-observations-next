@@ -2,7 +2,7 @@
 
 This document describes all Google Analytics (GA4) events implemented on the site and the steps to configure GA4 and Search Console for reporting.
 
-**Measurement ID:** `G-38CH7V80XK`
+**Measurement ID:** Configurable via `NEXT_PUBLIC_GA4_MEASUREMENT_ID` (default: `G-28FFYLDLLZ`).
 
 ---
 
@@ -221,8 +221,40 @@ In **Admin** → **Data display** → **Events**, open an event (e.g. `lab_submi
 
 ---
 
-## 4. Where tracking lives in code
+## 4. Testing GA4 on localhost (before launch)
 
+To confirm the new GA4 property is receiving events without publishing the site:
+
+1. **Use the new Measurement ID locally**  
+   In the project root, create or edit `.env.local` and set:
+   ```bash
+   NEXT_PUBLIC_GA4_MEASUREMENT_ID=G-28FFYLDLLZ
+   ```
+   (If this is already the default in code, localhost will use it automatically; the env var is useful to switch between properties.)
+
+2. **Run the dev server**  
+   ```bash
+   pnpm dev
+   ```
+   Open **http://localhost:3000** (or your dev URL) and click around: navigate, open the menu, send a chat message, etc.
+
+3. **Check that events are received in GA4**
+   - In **GA4**, go to **Reports → Realtime**. You should see 1 user (you) and events updating as you interact.
+   - For a detailed event stream: **Admin → DebugView**. To enable DebugView, either:
+     - Install the [Google Analytics Debugger](https://chrome.google.com/webstore/detail/google-analytics-debugger/jnkmfdileelhofjcijamephohjechhna) Chrome extension and turn it on for localhost, then reload; or  
+     - Add `?debug_mode=true` to the gtag config (see [GA4 debug mode](https://support.google.com/analytics/answer/7201382)).
+   - Optional: In **Engagement → Events**, wait a few minutes and you should see your custom events (e.g. `page_section`, `menu_open`) with a recent timestamp.
+
+4. **Production**  
+   When you deploy, set `NEXT_PUBLIC_GA4_MEASUREMENT_ID=G-28FFYLDLLZ` in your hosting env (e.g. Netlify) so the live site uses the same property. If you omit it, the code will use the default ID (`G-28FFYLDLLZ`).
+
+GA4 does **not** filter out localhost by default, so local traffic will appear in the same property as production unless you use a separate measurement ID or add a [data filter](https://support.google.com/analytics/answer/10108813) to exclude hostname `localhost`.
+
+---
+
+## 5. Where tracking lives in code
+
+- **Measurement ID:** `src/app/_helpers/gtag.js` (default `G-28FFYLDLLZ`, overridable via `NEXT_PUBLIC_GA4_MEASUREMENT_ID`).
 - **gtag helpers:** `src/app/_helpers/gtag.js`
 - **GA4 script:** `src/app/(pages)/layout.js` (Script components, measurement ID from gtag)
 - **Page/section + entry point:** `src/app/_components/PageSectionTracker.js` (route change)

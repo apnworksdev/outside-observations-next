@@ -20,7 +20,7 @@ import { GA4_MEASUREMENT_ID } from '@/app/_helpers/gtag';
 
 export const metadata = {
   title: 'Outside Observation',
-  description: 'A new chapter of Outside Observations is taking shape. Stay updated on our upcoming launch.',
+  description: 'A new chapter of Outside Observations. Explore the archive and discover unexpected connections.',
   icons: {
     icon: [
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },

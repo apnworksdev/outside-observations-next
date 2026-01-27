@@ -6,9 +6,9 @@ import HomeContent from '@/app/_components/Home/HomeContent';
 export async function generateMetadata() {
   const siteSettings = await getSiteSettings();
   const siteTitle = siteSettings?.title || 'Outside Observation';
-  const description = 'Browse archive entries from Outside Observation';
-  
-  // Get absolute URL for OpenGraph image (using local file from public folder)
+  const description =
+    'A new chapter of Outside Observations. Explore the archive and discover unexpected connections.';
+
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
   const ogImageUrl = `${baseUrl}/share-image.png`;
 
@@ -19,25 +19,23 @@ export async function generateMetadata() {
       title: siteTitle,
       description,
       type: 'website',
-      ...(ogImageUrl && {
-        images: [
-          {
-            url: ogImageUrl,
-            width: 1200,
-            height: 630,
-            alt: 'Outside Observation',
-          },
-        ],
-      }),
+      url: baseUrl,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: siteTitle,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: siteTitle,
       description,
-      ...(ogImageUrl && {
-        images: [ogImageUrl],
-      }),
+      images: [ogImageUrl],
     },
+    alternates: { canonical: baseUrl },
   };
 }
 

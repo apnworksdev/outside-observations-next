@@ -1,5 +1,12 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Ensure correct workspace root when multiple lockfiles exist (e.g. monorepo parent)
+  outputFileTracingRoot: path.join(__dirname),
   // Removed experimental.turbo SVG loader config since @svgr/webpack is not installed
   // If you need SVG imports later, install @svgr/webpack and uncomment:
   // experimental: {

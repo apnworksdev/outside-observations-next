@@ -14,6 +14,8 @@ You **must** set these environment variables in Netlify's dashboard (Site settin
 
 **Optional (have defaults):**
 - `NEXT_PUBLIC_SANITY_API_VERSION` - Defaults to "2025-09-22" if not set
+- `NEXT_PUBLIC_SITE_URL` - Canonical and Open Graph URLs (defaults to `https://outside-observation.com`)
+- `NEXT_PUBLIC_GA4_MEASUREMENT_ID` - GA4 measurement ID (defaults to your GA4 property in code)
 
 **How to set:**
 1. Go to Netlify Dashboard → Your Site → Site settings → Environment variables
