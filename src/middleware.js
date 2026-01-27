@@ -4,16 +4,6 @@ import { resolvePageType } from '@/lib/resolvePageType'
 export function middleware(request) {
   const pathname = request.nextUrl.pathname
 
-  // Redirect home page to archive if user has visited before (check cookie)
-  // This ensures first-time visitors see the home page animation, while returning
-  // visitors are immediately redirected to archive without any flash of content
-  if (pathname === '/') {
-    const hasVisitedCookie = request.cookies.get('has_visited_website')
-    if (hasVisitedCookie?.value === 'true') {
-      return NextResponse.redirect(new URL('/archive', request.url))
-    }
-  }
-
   // Redirect /studio to Archive entries list
   if (pathname === '/studio' || pathname === '/studio/structure') {
     return NextResponse.redirect(new URL('/studio/structure/archive', request.url))
@@ -25,7 +15,6 @@ export function middleware(request) {
     const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1')
     
     if (!isLocalhost) {
-      // Redirect directly to archive to avoid double redirect (home redirects to archive for returning visitors)
       return NextResponse.redirect(new URL('/archive', request.url))
     }
   }
@@ -66,6 +55,11 @@ export function middleware(request) {
   const response = NextResponse.next()
   response.headers.set('x-page-type', pageType)
   response.headers.set('x-pathname', pathname)
+  // Home: tell the page whether this is a returning visitor (for two-state homepage)
+  if (pathname === '/') {
+    const hasVisitedCookie = request.cookies.get('has_visited_website')
+    response.headers.set('x-is-returning-visitor', hasVisitedCookie?.value === 'true' ? 'true' : 'false')
+  }
   return response
 }
 

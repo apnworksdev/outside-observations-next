@@ -51,15 +51,10 @@ export default function PageTransition({ children }) {
     let shouldShow = false;
     
     if (isHomePage) {
-      // On home page: Middleware redirects non-first-time visitors to /archive,
-      // so if we reach here, it's a first-time visitor.
-      // First-time visitors on home should NOT see CircleAnimation because
-      // FirstVisitAnimation will handle the entire animation sequence.
-      // Never show CircleAnimation on home page - FirstVisitAnimation handles it.
+      // Home has two states: first-time (animation) and returning (welcome view).
+      // Never show CircleAnimation on home - FirstVisitAnimation or the returning view handles it.
       shouldShow = false;
-      
-      // For returning visitors on home (edge case: cookies disabled, middleware didn't redirect),
-      // ensure header is visible immediately since they won't see FirstVisitAnimation
+      // If returning visitor on home, ensure header is visible (HomeContent also sets this)
       const isFirstVisit = isFirstWebsiteVisit();
       if (!isFirstVisit) {
         document.body.classList.add('home-animation-complete');

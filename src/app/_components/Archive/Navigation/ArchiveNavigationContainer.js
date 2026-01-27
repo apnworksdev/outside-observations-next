@@ -9,6 +9,7 @@ import ArchiveNavigation from './ArchiveNavigation';
 import ArchiveNavigationMoodPanel from './ArchiveNavigationMoodPanel';
 import ArchiveNavigationChatPanel from './ArchiveNavigationChatPanel';
 import VisitorNotificationToast from '@/app/_components/VisitorNotificationToast';
+import ArchiveNavigationReminder, { markArchiveNavigationUsed } from './ArchiveNavigationReminder';
 import { useVisitorCount } from '@/app/_components/VisitorCountProvider';
 import { trackMenuOpen, trackMenuClose, trackMenuItemClick, trackChatPanelOpen } from '@/app/_helpers/gtag';
 
@@ -53,7 +54,13 @@ export default function ArchiveNavigationContainer() {
   const [panelId, setPanelId] = useState(null);
   const [isNavigationHovered, setIsNavigationHovered] = useState(false);
   const [externalLabelChange, setExternalLabelChange] = useState(null);
+  const [isReminderOpen, setIsReminderOpen] = useState(false);
+  const reminderRef = useRef(null);
   const lastShownNotificationRef = useRef(null);
+
+  const dismissReminder = useCallback(() => {
+    reminderRef.current?.dismiss?.();
+  }, []);
   const router = useRouter();
   const pathname = usePathname();
   const { notifications } = useVisitorCount();
@@ -70,6 +77,7 @@ export default function ArchiveNavigationContainer() {
    */
   const handleOpenChange = useCallback((nextOpen) => {
     if (nextOpen) {
+      markArchiveNavigationUsed();
       trackMenuOpen();
     } else {
       trackMenuClose();
@@ -201,7 +209,10 @@ export default function ArchiveNavigationContainer() {
   }, [notifications, isNavigationOpen]);
 
   return (
-    <div className={styles.archiveNavigationContainer}>
+    <div
+      className={styles.archiveNavigationContainer}
+      data-reminder-open={isReminderOpen ? 'true' : undefined}
+    >
       <div
         className={styles.archiveNavigationPanel}
         id={panelId ?? undefined}
@@ -212,19 +223,33 @@ export default function ArchiveNavigationContainer() {
       >
         {panelContent ? <panelContent.Content /> : null}
       </div>
-      <ArchiveNavigation
-        isOpen={isHidden ? false : isNavigationOpen}
-        onOpenChange={handleOpenChange}
-        onItemSelect={handleItemSelect}
-        items={NAVIGATION_ITEMS}
-        activeItemId={activeItemId}
-        panelId={panelId}
-        isPanelOpen={isPanelOpen}
-        isHidden={isHidden}
-        onMouseEnter={() => !isNavigationOpen && setIsNavigationHovered(true)}
-        onMouseLeave={() => setIsNavigationHovered(false)}
-        externalLabelChange={externalLabelChange}
-      />
+      {!isHidden && (
+        <ArchiveNavigationReminder
+          ref={reminderRef}
+          isNavigationOpen={isNavigationOpen}
+          isHidden={isHidden}
+          onVisibilityChange={setIsReminderOpen}
+        />
+      )}
+      <div
+        className={styles.archiveNavWrapper}
+        onMouseEnter={isReminderOpen ? dismissReminder : undefined}
+        onClick={isReminderOpen ? dismissReminder : undefined}
+      >
+        <ArchiveNavigation
+          isOpen={isHidden ? false : isNavigationOpen}
+          onOpenChange={handleOpenChange}
+          onItemSelect={handleItemSelect}
+          items={NAVIGATION_ITEMS}
+          activeItemId={activeItemId}
+          panelId={panelId}
+          isPanelOpen={isPanelOpen}
+          isHidden={isHidden}
+          onMouseEnter={() => !isNavigationOpen && setIsNavigationHovered(true)}
+          onMouseLeave={() => setIsNavigationHovered(false)}
+          externalLabelChange={externalLabelChange}
+        />
+      </div>
       {!isHidden && (
         <>
           {/* Bottom gradient - shown for mood/search panels */}

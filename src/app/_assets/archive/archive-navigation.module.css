@@ -18,6 +18,26 @@
   pointer-events: none;
 }
 
+/* Wrapper: hover scale + transition (nav keeps idle animation, timing never resets) */
+.archiveNavWrapper {
+  transform-origin: bottom right;
+  transition: transform var(--transition-time) var(--transition-effect);
+}
+
+@media (hover: hover) {
+  .archiveNavWrapper:hover:has(.archiveNavigation[data-state='closed']) {
+    transform: scale(1.1);
+  }
+  .archiveNavWrapper:hover .archiveNavigation[data-state='closed'] {
+    animation: none;
+    --archive-nav-hovered: 1;
+  }
+  /* Pause button pulse too so nav scale and circles stay in sync when hover ends */
+  .archiveNavWrapper:hover .archiveNavigation[data-state='closed'] .archiveNavigationButtons[data-state='closed'] .archiveNavigationButton {
+    animation: none;
+  }
+}
+
 /* ------------------------------------------------------------ */
 /*                    MAIN NAVIGATION BUTTON                    */
 /* ------------------------------------------------------------ */
@@ -50,13 +70,6 @@
   height: var(--open-archive-button-size);
 }
 
-@media (hover: hover) {
-  .archiveNavigation[data-state='closed']:hover {
-    transform: scale(1.1);
-    /* Signal to notification that navigation is being hovered */
-    --archive-nav-hovered: 1;
-  }
-}
 
 /* ------------------------------------------------------------ */
 /*                      TOGGLE BUTTON                           */
@@ -94,6 +107,41 @@
   pointer-events: none;
   z-index: 1;
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .archiveNavigation[data-state='closed'] {
+    animation: archiveNavClosedScale 12s ease-in-out infinite;
+  }
+  .archiveNavigation[data-state='closed'] .archiveNavigationButtons[data-state='closed'] .archiveNavigationButton {
+    animation: archiveNavClosedPulse 12s ease-in-out infinite;
+  }
+  .archiveNavigation[data-state='closed'] .archiveNavigationButtons[data-state='closed'] .archiveNavigationButton:nth-child(1) { animation-delay: 0s; }
+  .archiveNavigation[data-state='closed'] .archiveNavigationButtons[data-state='closed'] .archiveNavigationButton:nth-child(2) { animation-delay: -0.9s; }
+  .archiveNavigation[data-state='closed'] .archiveNavigationButtons[data-state='closed'] .archiveNavigationButton:nth-child(3) { animation-delay: -0.3s; }
+  .archiveNavigation[data-state='closed'] .archiveNavigationButtons[data-state='closed'] .archiveNavigationButton:nth-child(4) { animation-delay: -0.6s; }
+  /* When the reminder popup is open, pause idle animations; hover scale still applies */
+  .archiveNavigationContainer[data-reminder-open='true'] .archiveNavigation[data-state='closed'] {
+    animation: none;
+  }
+  .archiveNavigationContainer[data-reminder-open='true'] .archiveNavigation[data-state='closed'] .archiveNavigationButtons[data-state='closed'] .archiveNavigationButton {
+    animation: none;
+  }
+}
+
+@keyframes archiveNavClosedScale {
+  0%, 50%, 54%, 65%, 69%, 100% { transform: scale(1);}
+  52%, 67% { transform: scale(1.05); }
+}
+
+/* One keyframe per button so transform interpolates (--scale-factor animation doesn’t in many browsers). */
+@keyframes archiveNavClosedPulse {
+  0%, 56%, 59%, 71%, 74%, 100% { transform: translate(-50%, -50%) var(--pulse-pos) scale(1); }
+  57.5%, 72.5% { transform: translate(-50%, -50%) var(--pulse-pos) scale(1.35); }
+}
+.archiveNavigation[data-state='closed'] .archiveNavigationButtonSearch { --pulse-pos: translate(calc(-0.5 * var(--star-radius)), calc(-0.5 * var(--star-radius))); }
+.archiveNavigation[data-state='closed'] .archiveNavigationButtonMood { --pulse-pos: translate(calc(0.5 * var(--star-radius)), calc(-0.5 * var(--star-radius))); }
+.archiveNavigation[data-state='closed'] .archiveNavigationButtonUnexpected { --pulse-pos: translate(calc(-0.5 * var(--star-radius)), calc(0.5 * var(--star-radius))); }
+.archiveNavigation[data-state='closed'] .archiveNavigationButtonLive { --pulse-pos: translate(calc(0.5 * var(--star-radius)), calc(0.5 * var(--star-radius))); }
 
 .archiveNavigationButtons[data-state='open'] .archiveNavigationButton {
   pointer-events: auto;
@@ -155,6 +203,30 @@
   display: none;
 }
 
+/* Open state: 2s intro (button labels visible then hide, central label appears) – same on mobile and desktop */
+.archiveNavigation[data-state='open'] .archiveNavigationButton {
+  background-color: transparent;
+  animation: buttonBackgroundAnimation var(--transition-time) var(--transition-effect) 2s forwards;
+}
+
+.archiveNavigation[data-state='open'] .archiveNavigationButtonLabel {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--bg-color);
+  text-align: center;
+  opacity: 1;
+  animation: hideLabelAfterDelay var(--transition-time) var(--transition-effect) 2s forwards;
+}
+
+/* Use transition + delay for intro so opacity is not stuck on animation; hover text change can then transition */
+.archiveNavigation[data-state='open'] .archiveNavigationLabel {
+  opacity: 0;
+  transition: opacity 0.22s var(--transition-effect);
+}
+
 /* ------------------------------------------------------------ */
 /*                         LABELS                               */
 /* ------------------------------------------------------------ */
@@ -179,7 +251,7 @@
 
 .archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='true'] {
   opacity: 1;
-  transition-delay: 0.22s;
+  transition-delay: 2s;
 }
 
 .archiveNavigation[data-state='open'] .archiveNavigationLabel[data-visibility='visible'][data-delay='false'] {
@@ -466,29 +538,6 @@
     height: 50vh;
   }
 
-  .archiveNavigation[data-state='open'] .archiveNavigationButton {
-    background-color: transparent;
-    animation: buttonBackgroundAnimation var(--transition-time) var(--transition-effect) 2s forwards;
-  }
-
-  .archiveNavigation[data-state='open'] .archiveNavigationButtonLabel {
-    display: block;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: var(--bg-color);
-    text-align: center;
-    opacity: 1;
-    animation: hideLabelAfterDelay var(--transition-time) var(--transition-effect) 2s forwards;
-  }
-
-  .archiveNavigation[data-state='open'] .archiveNavigationLabel {
-    opacity: 0;
-    visibility: hidden;
-    animation: showLabelAfterDelay var(--transition-time) var(--transition-effect) 2s forwards;
-  }
-
   .archiveNavigationPanel {
     width: 100%;
   }
@@ -572,4 +621,31 @@
     opacity: 1;
     visibility: visible;
   }
+}
+
+/* ------------------------------------------------------------ */
+
+/*              ARCHIVE NAVIGATION REMINDER POPUP               */
+
+/* ------------------------------------------------------------ */
+
+.archiveNavigationReminder {
+  position: relative;
+  background-color: var(--fg-color-75);
+  border-radius: var(--border-radius);
+  max-width: calc(100vw - (var(--padding) * 2));
+  width: 300px;
+  padding: var(--padding);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  color: var(--bg-color);
+  cursor: pointer;
+}
+
+.archiveNavigationReminderTitle {
+  font-weight: bold;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-style: dotted;
 }

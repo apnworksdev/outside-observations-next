@@ -37,7 +37,7 @@ export default function HeaderNav() {
       <div className={styles.navTitleContainer}>
         <div className={styles.navTitle}>
           <Link
-            href="/archive"
+            href="/"
             className={styles.navBubble}
             data-transition="nav"
             onClick={() => trackNavClick('logo', 'same_page')}

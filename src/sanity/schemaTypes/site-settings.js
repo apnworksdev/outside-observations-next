@@ -28,6 +28,15 @@ export const siteSettings = defineType({
       }
     }),
     defineField({
+      name: 'homeImage',
+      title: 'Home Image',
+      type: 'image',
+      description: 'Image shown on the homepage for visitors who have been to the site before.',
+      options: {
+        hotspot: true
+      }
+    }),
+    defineField({
       name: 'chatFirstMessage',
       title: 'Chat First Message',
       type: 'text',

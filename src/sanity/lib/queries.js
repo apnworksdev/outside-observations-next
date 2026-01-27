@@ -261,6 +261,12 @@ export const SITE_SETTINGS_QUERY = defineQuery(`*[_type == "siteSettings"][0] {
     asset,
     'lqip': asset->metadata.lqip,
     'dimensions': asset->metadata.dimensions
+  },
+  homeImage{
+    ...,
+    asset,
+    'lqip': asset->metadata.lqip,
+    'dimensions': asset->metadata.dimensions
   }
 }`)
 
