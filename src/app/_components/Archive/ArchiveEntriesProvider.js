@@ -2,16 +2,15 @@
 
 import { createContext, useContext, useMemo, useRef, useState, useCallback, useEffect, useLayoutEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { getCookie, setCookie } from '@/app/_helpers/cookies';
+import { getLocalStorage, setLocalStorage } from '@/app/_helpers/localStorage';
 import { useArchiveSearchState } from './ArchiveSearchStateProvider';
 
 const ArchiveEntriesContext = createContext(null);
 
-export const VIEW_COOKIE_NAME = 'outside-observations-archive-view';
+export const VIEW_STORAGE_KEY = 'outside-observations-archive-view';
 export const VIEW_CHANGE_EVENT = 'outside-observations:archive-view-change';
 export const ARCHIVE_FILTERS_CLEAR_EVENT = 'outside-observations:archive-filters-clear';
 export const ARCHIVE_FILTERS_CHANGE_EVENT = 'outside-observations:archive-filters-change';
-const VIEW_COOKIE_MAX_AGE_SECONDS = 60 * 60; // 1 hour
 
 // Session storage keys for archive filter state
 export const SESSION_STORAGE_KEYS = {
@@ -25,30 +24,29 @@ function isValidView(value) {
   return value === 'images' || value === 'list';
 }
 
-function readViewCookie() {
-  if (typeof document === 'undefined') {
+function readViewFromStorage() {
+  if (typeof window === 'undefined') {
     return 'images';
   }
 
-  const value = getCookie(VIEW_COOKIE_NAME);
+  const value = getLocalStorage(VIEW_STORAGE_KEY);
   if (!value) {
     return 'images';
   }
 
-  const decoded = decodeURIComponent(value);
-  return isValidView(decoded) ? decoded : 'images';
+  return isValidView(value) ? value : 'images';
 }
 
-function writeViewCookie(view) {
-  if (typeof document === 'undefined') {
+export function readArchiveViewFromStorage() {
+  return readViewFromStorage();
+}
+
+function writeViewToStorage(view) {
+  if (typeof window === 'undefined') {
     return;
   }
 
-  setCookie(VIEW_COOKIE_NAME, encodeURIComponent(view), {
-    maxAge: VIEW_COOKIE_MAX_AGE_SECONDS,
-    path: '/',
-    sameSite: 'Lax'
-  });
+  setLocalStorage(VIEW_STORAGE_KEY, view);
 }
 
 export function setArchiveViewPreference(view) {
@@ -56,7 +54,7 @@ export function setArchiveViewPreference(view) {
     return;
   }
 
-  writeViewCookie(view);
+  writeViewToStorage(view);
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(VIEW_CHANGE_EVENT, { detail: { view } }));
@@ -258,7 +256,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     return safeInitialEntries;
   });
   // Initialize view: Always start with 'images' to match server render and prevent hydration mismatch
-  // The view will be updated from cookie/data attribute in useEffect after mount
+  // The view will be updated from localStorage in useLayoutEffect after mount
   const [view, setViewState] = useState(() => {
     // Only use initialView prop if provided (for server-side passing)
     // Otherwise always default to 'images' to ensure server/client match
@@ -292,7 +290,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
 
   /**
    * `setView` persists the preference and keeps the header toggle in sync by delegating
-   * to `setArchiveViewPreference`, which writes the cookie and dispatches a global event.
+   * to `setArchiveViewPreference`, which writes to localStorage and dispatches a global event.
    * Guard clauses ensure that repeated requests for the current view become no-ops.
    */
   const setView = useCallback((nextView) => {
@@ -307,9 +305,9 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   }, []);
 
   /**
-   * On mount we synchronise the initial view with any cookie that might have been set
-   * on a previous visit. We use useLayoutEffect to update synchronously before paint,
-   * preventing any visual flash when the correct view is restored from cookie.
+   * On mount we synchronise the initial view with any value stored in localStorage.
+   * We use useLayoutEffect to update synchronously before paint,
+   * preventing any visual flash when the correct view is restored.
    * We also subscribe to the global `VIEW_CHANGE_EVENT` so that other surfaces
    * (like the header toggle rendered outside this provider) can change the current view
    * and keep the archive in lockstep.
@@ -320,9 +318,9 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     }
 
     setViewState((prev) => {
-      const cookieView = readViewCookie();
-      if (isValidView(cookieView) && cookieView !== prev) {
-        return cookieView;
+      const storedView = readViewFromStorage();
+      if (isValidView(storedView) && storedView !== prev) {
+        return storedView;
       }
       return prev;
     });
@@ -338,7 +336,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
           return prev;
         }
 
-        writeViewCookie(nextView);
+        writeViewToStorage(nextView);
         return nextView;
       });
     };

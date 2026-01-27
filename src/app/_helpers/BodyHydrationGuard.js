@@ -4,7 +4,7 @@ import { useLayoutEffect } from 'react';
 
 /**
  * BodyHydrationGuard - Hides body content until React has hydrated and view preference is loaded.
- * This prevents layout flash when the archive view preference is restored from cookie.
+ * This prevents layout flash when the archive view preference is restored from localStorage.
  * Uses useLayoutEffect to run synchronously before paint.
  */
 export default function BodyHydrationGuard() {

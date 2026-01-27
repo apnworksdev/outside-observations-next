@@ -1,4 +1,3 @@
-import { headers } from 'next/headers';
 import { getSiteSettings } from '@/app/_data/archive';
 import HomeContent from '@/app/_components/Home/HomeContent';
 
@@ -43,9 +42,7 @@ export async function generateMetadata() {
 export const revalidate = 60;
 
 export default async function Home() {
-  const [headersList, siteSettings] = await Promise.all([headers(), getSiteSettings()]);
-  const isReturningVisitor = headersList.get('x-is-returning-visitor') === 'true';
-
+  const siteSettings = await getSiteSettings();
   const homeImage = siteSettings?.homeImage;
   const dimensions = homeImage?.dimensions;
   const homeImageWidth = dimensions?.width ?? 1200;
@@ -53,7 +50,6 @@ export default async function Home() {
 
   return (
     <HomeContent
-      isReturningVisitor={isReturningVisitor}
       homeImage={homeImage}
       homeImageWidth={homeImageWidth}
       homeImageHeight={homeImageHeight}

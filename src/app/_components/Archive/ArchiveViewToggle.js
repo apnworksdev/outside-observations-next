@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { getCookie } from '@/app/_helpers/cookies';
 
 import {
   VIEW_CHANGE_EVENT,
-  VIEW_COOKIE_NAME,
+  readArchiveViewFromStorage,
   ARCHIVE_FILTERS_CLEAR_EVENT,
   ARCHIVE_FILTERS_CHANGE_EVENT,
   setArchiveViewPreference,
@@ -17,18 +16,11 @@ import {
 import { trackArchiveViewSwitch, trackArchiveFiltersClear } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/nav.module.css';
 
-function readViewCookie() {
-  if (typeof document === 'undefined') {
+function readViewFromStorage() {
+  if (typeof window === 'undefined') {
     return 'images';
   }
-
-  const value = getCookie(VIEW_COOKIE_NAME);
-  if (!value) {
-    return 'images';
-  }
-
-  const decoded = decodeURIComponent(value);
-  return decoded === 'images' || decoded === 'list' ? decoded : 'images';
+  return readArchiveViewFromStorage();
 }
 
 export default function ArchiveViewToggle({ className, initialExternalView = 'images' }) {
@@ -40,7 +32,7 @@ export default function ArchiveViewToggle({ className, initialExternalView = 'im
 
   /**
    * The toggle is used both inside and outside the archive provider. When we don’t have
-   * context we fall back to cookies + global events, keeping the toggle in sync with
+   * context we fall back to localStorage + global events, keeping the toggle in sync with
    * whatever the archive sets. Inside the provider we defer to the shared state instead.
    */
   isomorphicLayoutEffect(() => {
@@ -48,7 +40,7 @@ export default function ArchiveViewToggle({ className, initialExternalView = 'im
       return;
     }
 
-    setExternalView(readViewCookie());
+    setExternalView(readViewFromStorage());
   }, [archiveContext]);
 
   useEffect(() => {
@@ -73,7 +65,7 @@ export default function ArchiveViewToggle({ className, initialExternalView = 'im
 
   /**
    * Clicking a button either dispatches through the provider (if available) or updates
-   * the cookie + global event directly. Invalid values are ignored, and redundant clicks
+   * the stored preference + global event directly. Invalid values are ignored, and redundant clicks
    * short-circuit to avoid extra work.
    */
   const handleSetView = useCallback(

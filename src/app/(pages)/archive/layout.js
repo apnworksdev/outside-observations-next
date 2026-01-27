@@ -19,8 +19,8 @@ export default async function ArchiveLayout({ children }) {
     entries = [];
   }
 
-  // Cookie reading is handled client-side by ArchiveEntriesProvider
-  // This allows static generation while still reading view preference on the client
+  // View preference is read from localStorage client-side by ArchiveEntriesProvider
+  // This allows static generation while still restoring view preference on the client
   return (
     <ErrorBoundary>
       <ArchiveEntriesProvider initialEntries={entries}>

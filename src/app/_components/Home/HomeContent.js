@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
 import KlaviyoForm from '@/app/_components/LaunchCountdown/KlaviyoForm';
@@ -8,7 +8,7 @@ import FirstVisitAnimation from '@/app/_components/Home/FirstVisitAnimation';
 import ChatBox from '@/app/_components/Home/ChatBox';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { HomeErrorFallback, ChatErrorFallback } from '@/app/_components/ErrorFallbacks';
-import { markWebsiteAsVisited } from '@/app/_helpers/visitTracker';
+import { isFirstWebsiteVisit, markWebsiteAsVisited } from '@/app/_helpers/visitTracker';
 import { clearChatStorage } from '@/app/_helpers/chatStorage';
 import { trackFirstVisitAnimationSkip } from '@/app/_helpers/gtag';
 import errorStyles from '@app/_assets/error.module.css';
@@ -18,19 +18,29 @@ import homeStyles from '@app/_assets/home.module.css';
  * HomeContent - Home page content component
  *
  * Two states:
- * - First-time visitor: FirstVisitAnimation → ChatBox (cookie set on animation complete).
+ * - First-time visitor: FirstVisitAnimation → ChatBox (localStorage set on animation complete).
  * - Returning visitor: simple welcome view (no redirect to /archive).
+ *
+ * Returning visitor is resolved client-side from localStorage (server cannot read it).
  */
 export default function HomeContent({
-  isReturningVisitor = false,
   homeImage = null,
   homeImageWidth = 1200,
   homeImageHeight,
 }) {
   const [animationComplete, setAnimationComplete] = useState(false);
+  // Resolved from localStorage after hydration; null = not yet known (treat as returning to avoid flash)
+  const [resolvedReturningVisitor, setResolvedReturningVisitor] = useState(null);
+
+  useLayoutEffect(() => {
+    setResolvedReturningVisitor(!isFirstWebsiteVisit());
+  }, []);
+
+  // Default to returning when unknown so returning visitors don't see a flash of first-visit UI
+  const isReturningVisitor = resolvedReturningVisitor !== null ? resolvedReturningVisitor : true;
 
   // Clear chat history on mount to ensure clean state for first visit animation
-  // This handles cases where cookies are cleared but localStorage still has chat history
+  // This handles cases where localStorage was cleared but chat history persisted elsewhere
   useEffect(() => {
     if (!isReturningVisitor) {
       clearChatStorage();

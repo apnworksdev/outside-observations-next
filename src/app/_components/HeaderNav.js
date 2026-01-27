@@ -21,8 +21,7 @@ const SHOP_URL = 'https://outside-observations.myshopify.com/';
 export default function HeaderNav() {
   const { openRadio, closeRadio, expandRadio, isOpen: isRadioOpen, isMinimized } = useRadioIframe();
 
-  // Cookie reading is handled client-side by ArchiveViewToggle component
-  // This allows static generation while still reading view preference on the client
+  // View preference is read from localStorage client-side by ArchiveViewToggle
 
   const handleRadioClick = (e) => {
     e.preventDefault();

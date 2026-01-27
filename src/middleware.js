@@ -55,11 +55,7 @@ export function middleware(request) {
   const response = NextResponse.next()
   response.headers.set('x-page-type', pageType)
   response.headers.set('x-pathname', pathname)
-  // Home: tell the page whether this is a returning visitor (for two-state homepage)
-  if (pathname === '/') {
-    const hasVisitedCookie = request.cookies.get('has_visited_website')
-    response.headers.set('x-is-returning-visitor', hasVisitedCookie?.value === 'true' ? 'true' : 'false')
-  }
+  // Returning visitor is resolved client-side from localStorage (see HomeContent)
   return response
 }
 
