@@ -1,7 +1,9 @@
 import ArchiveNavigationContainer from '@/app/_components/Archive/Navigation/ArchiveNavigationContainer';
 import ArchiveEntriesProvider from '@/app/_components/Archive/ArchiveEntriesProvider';
+import ClosedArchiveRedirect from '@/app/_components/Archive/ClosedArchiveRedirect';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { getArchiveEntries } from '@app/_data/archive';
+import { useTimezoneRedirect } from '@/lib/closedArchiveHours';
 
 export default async function ArchiveLayout({ children }) {
   let entries = [];
@@ -21,11 +23,17 @@ export default async function ArchiveLayout({ children }) {
 
   // View preference is read from localStorage client-side by ArchiveEntriesProvider
   // This allows static generation while still restoring view preference on the client
+  const content = (
+    <>
+      {children}
+      <ArchiveNavigationContainer />
+    </>
+  );
+
   return (
     <ErrorBoundary>
       <ArchiveEntriesProvider initialEntries={entries}>
-        {children}
-        <ArchiveNavigationContainer />
+        {useTimezoneRedirect ? content : <ClosedArchiveRedirect>{content}</ClosedArchiveRedirect>}
       </ArchiveEntriesProvider>
     </ErrorBoundary>
   );

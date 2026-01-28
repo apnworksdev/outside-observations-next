@@ -60,6 +60,21 @@
   width: 100%;
 }
 
+.countdownOpenMessage {
+  margin: 0;
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  text-transform: uppercase;
+}
+
+.countdownPlaceholder {
+  margin: 0;
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
 .numberList {
   width: 100%;
   display: grid;
