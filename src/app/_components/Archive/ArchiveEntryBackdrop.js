@@ -28,13 +28,16 @@ export default function ArchiveEntryBackdrop({ children, entry }) {
     event.stopPropagation();
   };
 
+  // Wrapper div avoids Next.js scroll restoration warning for position:fixed (InnerScrollAndFocusHandler)
   return (
-    <div 
-      className={styles.archiveEntryBackdrop} 
-      onClick={handleBackdropClick} 
-      role="presentation"
-    >
-      <div className={styles.archiveEntryBackdropContent} onClick={handleContentClick}>{children}</div>
+    <div>
+      <div
+        className={styles.archiveEntryBackdrop}
+        onClick={handleBackdropClick}
+        role="presentation"
+      >
+        <div className={styles.archiveEntryBackdropContent} onClick={handleContentClick}>{children}</div>
+      </div>
     </div>
   );
 }
