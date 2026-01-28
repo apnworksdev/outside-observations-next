@@ -151,15 +151,13 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function ArchiveEntryPage({ params, searchParams }) {
+export default async function ArchiveEntryPage({ params }) {
   let resolvedParams;
-  let resolvedSearchParams = {};
   let entry;
 
   try {
     resolvedParams = await params;
-    resolvedSearchParams = searchParams != null ? await searchParams : {};
-    
+
     if (!resolvedParams?.slug) {
       console.error('ArchiveEntryPage: Missing slug parameter');
       notFound();
@@ -189,18 +187,6 @@ export default async function ArchiveEntryPage({ params, searchParams }) {
   }
 
   const entryType = entry?.mediaType || 'image';
-
-  // Parse ?image=N for visual essays: scroll to that image on load
-  const raw = resolvedSearchParams?.image;
-  const imageParam = Array.isArray(raw) ? raw[0] : raw;
-  const imageIndex =
-    imageParam != null && imageParam !== ''
-      ? parseInt(String(imageParam), 10)
-      : null;
-  const initialImageIndex =
-    Number.isFinite(imageIndex) && imageIndex >= 0 ? imageIndex : null;
-
-  // Get the slug for visit tracking
   const entrySlug = resolvedParams.slug;
 
   return (
@@ -209,7 +195,7 @@ export default async function ArchiveEntryPage({ params, searchParams }) {
       <Suspense
         fallback={
           <div className={styles.archiveEntryContentWrapper} data-entry-type={entryType}>
-            <ArchiveEntryArticle entry={entry} initialImageIndex={initialImageIndex} />
+            <ArchiveEntryArticle entry={entry} />
           </div>
         }
       >
@@ -218,7 +204,7 @@ export default async function ArchiveEntryPage({ params, searchParams }) {
             Close
           </button>
           <div className={styles.archiveEntryContentWrapper} data-entry-type={entryType}>
-            <ArchiveEntryArticle entry={entry} initialImageIndex={initialImageIndex} />
+            <ArchiveEntryArticle entry={entry} />
           </div>
           <aside className={styles.archiveEntryAside}>
             <ArchiveEntryMetadata entry={entry} />

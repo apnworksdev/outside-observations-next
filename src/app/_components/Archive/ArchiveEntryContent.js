@@ -1,6 +1,5 @@
 import SanityImage from '@/sanity/components/SanityImage';
 import ArchiveEntryVideo from './ArchiveEntryVideo';
-import ScrollToVisualEssayImage from './ScrollToVisualEssayImage';
 import { ProtectedMediaWrapper } from './ProtectedMediaWrapper';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
@@ -32,7 +31,7 @@ function renderTextMarkup(blocks) {
     .filter(Boolean);
 }
 
-export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
+export function ArchiveEntryArticle({ entry, headingId }) {
   // Validation: Check if required fields are missing (development only)
   if (process.env.NODE_ENV !== 'production') {
     const hasArtName = entry?.metadata?.artName || entry?.artName;
@@ -114,16 +113,6 @@ export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
             </div>
           );
         })}
-        {/* <ScrollToVisualEssayImage
-          imageIndex={
-            initialImageIndex != null &&
-            initialImageIndex >= 0 &&
-            initialImageIndex < validImageCount
-              ? initialImageIndex
-              : null
-          }
-          entrySlug={entry.metadata?.slug?.current ?? entry.slug?.current ?? ''}
-        /> */}
       </article>
     );
   }
