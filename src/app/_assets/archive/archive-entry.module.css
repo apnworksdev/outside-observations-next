@@ -102,10 +102,8 @@
 .archiveEntryModalPoster {
   max-width: 100%;
   max-height: calc(80vh - 50px);
-  width: auto;
-  height: auto;
   line-height: 0;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .archiveEntryContentWrapper[data-entry-type="video"] .archiveEntryModalContentWrapper,
@@ -238,11 +236,13 @@
 }
 
 .archiveEntryVisualImageWrapper.landscape {
-  width: calc(var(--column-width) * 4 + var(--column-gap) * 3);
+  width: max-content;
+  max-width: calc(var(--column-width) * 4 + var(--column-gap) * 3);
 }
 
 .archiveEntryVisualImageWrapper.portrait {
-  width: calc(var(--column-width) * 3 + var(--column-gap) * 2);
+  width: max-content;
+  max-width: calc(var(--column-width) * 3 + var(--column-gap) * 2);
 }
 
 @media (max-width: 1280px) {

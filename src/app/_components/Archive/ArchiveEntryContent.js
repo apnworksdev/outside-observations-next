@@ -67,13 +67,13 @@ export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
         {validImages.map((image, index) => {
           if (!image?.image) return null;
           
-          const imageWidth = 1200;
+          const imageWidth = image.image?.dimensions?.width || 1200;
           const aspectRatio = image.image?.dimensions?.aspectRatio;
           const imageHeight = aspectRatio && aspectRatio > 0 
             ? Math.round(imageWidth / aspectRatio) 
             : imageWidth;
           const layout = aspectRatio && aspectRatio > 1 ? 'landscape' : 'portrait';
-          
+
           return (
             <div
               key={image._id || index}
@@ -128,12 +128,12 @@ export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
     );
   }
 
-  const posterWidth = 1200;
+  const posterWidth = entry?.poster?.dimensions?.width || 1200;
   const posterHeight = entry?.poster?.dimensions?.aspectRatio ? Math.round(posterWidth / entry.poster.dimensions.aspectRatio) : posterWidth;
   const layout = entry?.poster?.dimensions?.aspectRatio > 1 ? 'landscape' : 'portrait';
   const isVideo = entry.mediaType === 'video';
 
-  // Regular rendering for non-visual-essay entries
+  // Regular rendering for non-visual-essay entries (width from server so header has stable width before image loads)
   return (
     <article className={`${styles.archiveEntryModalContent} ${styles[layout]}`}>
       <div className={styles.archiveEntryModalContentWrapper}>
@@ -163,6 +163,8 @@ export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
                   width={posterWidth}
                   height={posterHeight}
                   className={styles.archiveEntryModalPoster}
+                  placeholder={entry.poster?.lqip ? 'blur' : undefined}
+                  blurDataURL={entry.poster?.lqip || undefined}
                   priority
                 />
               </ProtectedMediaWrapper>
