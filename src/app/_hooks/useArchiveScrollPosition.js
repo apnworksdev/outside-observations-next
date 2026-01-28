@@ -10,20 +10,27 @@ export const ARCHIVE_SCROLL_VIEW_KEY = 'archive_scroll_view';
 const scrollElementCache = { list: null, images: null };
 
 /**
- * Gets the scroll element for a given view (with caching)
+ * Gets the scroll element for a given view (with caching).
+ * Returns null if the cached element is detached (e.g. after navigating away)
+ * so we never read stale scroll values and overwrite sessionStorage with 0.
  * @param {string} view - The current view ('list' or 'images')
  * @returns {HTMLElement|null} The scroll element or null
  */
 function getScrollElement(view) {
   if (view === 'list') {
+    if (scrollElementCache.list && !scrollElementCache.list.isConnected) {
+      scrollElementCache.list = null;
+    }
     if (!scrollElementCache.list) {
       scrollElementCache.list = document.querySelector('scroll-container');
     }
     return scrollElementCache.list;
   } else {
+    if (scrollElementCache.images && !scrollElementCache.images.isConnected) {
+      scrollElementCache.images = null;
+    }
     if (!scrollElementCache.images) {
       scrollElementCache.images = document.querySelector('mask-scroll');
-      // Fallback: try container if not found
       if (!scrollElementCache.images) {
         const container = document.querySelector('[data-view="images"]');
         if (container) {
@@ -70,16 +77,24 @@ export function saveArchiveScrollPosition(view) {
       // Calculate percentage: 0 = top, 1 = bottom
       scrollPercentage = maxScroll > 0 ? scrollPosition / maxScroll : 0;
     } else if (view === 'images') {
-      // Last resort: use window scroll if mask-scroll not found
-      const scrollPosition = window.scrollY || window.pageYOffset || 0;
-      scrollHeight = document.documentElement.scrollHeight;
-      clientHeight = window.innerHeight;
-      maxScroll = scrollHeight - clientHeight;
-      scrollPercentage = maxScroll > 0 ? scrollPosition / maxScroll : 0;
+      // Last resort: use window scroll only if we're likely on the archive (mask-scroll not found but container exists)
+      const container = document.querySelector('[data-view="images"]');
+      if (container) {
+        const scrollPosition = window.scrollY || window.pageYOffset || 0;
+        scrollHeight = document.documentElement.scrollHeight;
+        clientHeight = window.innerHeight;
+        maxScroll = scrollHeight - clientHeight;
+        scrollPercentage = maxScroll > 0 ? scrollPosition / maxScroll : 0;
+      }
     }
 
-    sessionStorage.setItem(ARCHIVE_SCROLL_PERCENTAGE_KEY, String(scrollPercentage));
-    sessionStorage.setItem(ARCHIVE_SCROLL_VIEW_KEY, view);
+    // Only write when we had a valid scroll context; otherwise we would overwrite
+    // a good saved position with 0 when e.g. navigating away (detached nodes) or before restore.
+    const hadValidContext = scrollElement !== null || (view === 'images' && document.querySelector('[data-view="images"]'));
+    if (hadValidContext) {
+      sessionStorage.setItem(ARCHIVE_SCROLL_PERCENTAGE_KEY, String(scrollPercentage));
+      sessionStorage.setItem(ARCHIVE_SCROLL_VIEW_KEY, view);
+    }
   } catch (error) {
     // Silently fail if sessionStorage is unavailable
   }
@@ -227,10 +242,13 @@ export function useArchiveScrollRestore(view) {
       }
     }
 
-    // Reset restore flag when leaving archive page
+    // Reset restore flag and clear scroll element cache when leaving archive page.
+    // Clearing the cache prevents stale (detached) refs from being used when we
+    // return, which would otherwise cause saveArchiveScrollPosition to write 0.
     if (!isArchivePage) {
       hasRestoredRef.current = false;
       previousViewRef.current = null;
+      clearScrollElementCache();
     }
   }, [isArchivePage, view]);
 }
