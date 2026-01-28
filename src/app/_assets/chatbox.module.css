@@ -69,6 +69,17 @@
   white-space: pre-line;
 }
 
+.chatBoxMessageText a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+
+.chatBoxMessageText a:hover {
+  opacity: 0.85;
+}
+
 .chatBoxImagesMessage {
   padding: calc(var(--gap) * 2);
   width: 50%;
@@ -266,6 +277,8 @@
 .chatBox[data-variant="archive"] .chatBoxMessage {
   border-radius: var(--border-radius);
   max-width: calc(100% - var(--padding) * 3);
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .chatBox[data-variant="archive"]  .chatBoxMessage[data-sender="bot"] {

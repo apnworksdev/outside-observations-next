@@ -11,6 +11,7 @@ import { trackChatMessageSent, trackChatPanelOpen } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/chatbox.module.css';
 import TypewriterMessage from './TypewriterMessage';
 import ExploreArchiveLink from './ExploreArchiveLink';
+import Linkify from './Linkify';
 
 export default function ChatBox({ variant = 'home' }) {
   const [inputValue, setInputValue] = useState('');
@@ -493,9 +494,9 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
                       // For first message during first visit, render text directly (FirstVisitAnimation controls it)
                       // Skip animation for loaded messages - show text immediately
                       isFirstMessage && !message.isLoaded ? (
-                        message.text
+                        <Linkify>{message.text}</Linkify>
                       ) : message.isLoaded ? (
-                        message.text
+                        <Linkify>{message.text}</Linkify>
                       ) : (
                         <TypewriterMessage
                           text={message.text}
@@ -529,7 +530,7 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
                         />
                       )
                     ) : (
-                      message.text
+                      <Linkify>{message.text}</Linkify>
                     )}
                   </p>
                 </div>

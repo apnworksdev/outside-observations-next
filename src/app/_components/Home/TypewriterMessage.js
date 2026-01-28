@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import useTypewriter from '@app/_hooks/useTypewriter';
+import Linkify from './Linkify';
 
 const DEFAULT_LOADING_FRAMES = ['.', '..', '...', ''];
 
@@ -83,6 +84,6 @@ export default function TypewriterMessage({
     return null;
   }
 
-  return <>{typewriterText}</>;
+  return <Linkify>{typewriterText}</Linkify>;
 }
 
