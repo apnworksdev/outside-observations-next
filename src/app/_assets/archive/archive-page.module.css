@@ -21,6 +21,10 @@
   overflow: auto;
 }
 
+.containerContent:global(.overflowInitial) {
+  overflow: initial;
+}
+
 .containerContent[data-scroll-state='not-needed'] {
   overflow: visible;
 }
@@ -410,7 +414,6 @@
     padding-bottom: calc(var(--close-archive-button-size) + var(--padding));
     max-height: calc(100dvh - var(--gap) - var(--archive-container-top-margin));
   }
-
 
   .itemColumnFileName, .itemColumnType, .itemColumnTags, .itemColumnMoodTags {
     display: none;
