@@ -16,11 +16,11 @@ const MOOD_TAGS = [
   },
   {
     parent: 'Enigmatic',
-    children: ['Contemplate', 'Nostalgic', 'Dream', 'Surreal'],
+    children: ['Contemplative', 'Nostalgic', 'Dream-like', 'Surreal'],
   },
   {
     parent: 'Inquiry',
-    children: ['Focused', 'Analyze'],
+    children: ['Focused', 'Analytical'],
   },
   {
     parent: 'Melancholy',
@@ -28,7 +28,7 @@ const MOOD_TAGS = [
   },
   {
     parent: 'Processing',
-    children: ['Artificial', 'Transform'],
+    children: ['Artificial', 'Transformative'],
   },
   {
     parent: 'Strength',
