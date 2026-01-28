@@ -311,13 +311,20 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
       setIsLoading(true);
 
       try {
+        // Build full conversation as a single query string so the API gets full context (same shape: query + maxItems)
+        const historyParts = messages
+          .filter((m) => m.text && String(m.text).trim())
+          .map((m) => `${m.sender === 'user' ? 'User' : 'Assistant'}: ${m.text}`);
+        const fullConversation = [...historyParts, `User: ${userMessage}`].join('\n\n');
+
         const response = await fetch('/api/vector-store/query', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            query: userMessage,
+            query: fullConversation,
+            maxItems: 50,
           }),
         });
 
