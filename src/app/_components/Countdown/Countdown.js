@@ -2,12 +2,32 @@
 
 import { useEffect, useRef } from 'react';
 import styles from '@app/_assets/archive/closed.module.css';
+import { isInClosedHours as isInClosedHoursLib, getNextTargetHourInZone } from '@/lib/closedArchiveHours';
 
 const MS_PER_SECOND = 1000;
 const MS_PER_MINUTE = MS_PER_SECOND * 60;
 const MS_PER_HOUR = MS_PER_MINUTE * 60;
 
-export default function Countdown() {
+/** Local-time check when no timeZone is provided. */
+function isInClosedHoursLocal(startHour, endHour) {
+  const hour = new Date().getHours();
+  return hour >= startHour && hour < endHour;
+}
+
+/** Next occurrence of targetHour (0–23) in local time, as a Date for countdown. */
+function getNextTargetHourLocal(targetHour) {
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(targetHour, 0, 0, 0);
+  if (target <= now) target.setDate(target.getDate() + 1);
+  return target;
+}
+
+/**
+ * @param {Object} [props.closedHours] - When set, countdown only runs during closed window and counts to open time.
+ *   e.g. { startHour: 3, endHour: 6, timeZone?: 'UTC' } - timeZone uses lib config when set (matches middleware).
+ */
+export default function Countdown({ closedHours }) {
   const hoursListRef = useRef(null);
   const minutesListRef = useRef(null);
   const secondsListRef = useRef(null);
@@ -15,29 +35,32 @@ export default function Countdown() {
   const minutesElementsRef = useRef({});
   const secondsElementsRef = useRef({});
   const currentActiveRef = useRef({ hours: null, minutes: null, seconds: null });
+  const staticZeroSetRef = useRef(false);
 
   useEffect(() => {
-    const getNextTwelveOClock = () => {
-      const now = new Date();
+    const startHour = closedHours?.startHour ?? 3;
+    const endHour = closedHours?.endHour ?? 6;
+    const timeZone = closedHours?.timeZone;
 
-      // Helper to get next occurrence of a specific hour
+    const isClosed = timeZone
+      ? () => isInClosedHoursLib(timeZone)
+      : () => isInClosedHoursLocal(startHour, endHour);
+
+    const getTargetTime = () => {
+      if (closedHours) {
+        return timeZone
+          ? getNextTargetHourInZone(timeZone, endHour)
+          : getNextTargetHourLocal(endHour);
+      }
+      const now = new Date();
       const getNextHour = (hour) => {
         const target = new Date(now);
         target.setHours(hour, 0, 0, 0);
-
-        // If we've passed this hour today, move to tomorrow
-        if (target <= now) {
-          target.setDate(target.getDate() + 1);
-        }
-
+        if (target <= now) target.setDate(target.getDate() + 1);
         return target;
       };
-
-      // Get next noon (12:00 PM) and midnight (12:00 AM / 00:00:00)
       const nextNoon = getNextHour(12);
       const nextMidnight = getNextHour(0);
-
-      // Return whichever comes first
       return nextNoon < nextMidnight ? nextNoon : nextMidnight;
     };
 
@@ -50,8 +73,29 @@ export default function Countdown() {
       }
     };
 
+    const setStaticZero = () => {
+      updateActiveClass(hoursElementsRef, currentActiveRef.current.hours, 0);
+      currentActiveRef.current.hours = 0;
+      updateActiveClass(minutesElementsRef, currentActiveRef.current.minutes, 0);
+      currentActiveRef.current.minutes = 0;
+      updateActiveClass(secondsElementsRef, currentActiveRef.current.seconds, 0);
+      currentActiveRef.current.seconds = 0;
+    };
+
     const calculateTimeLeft = () => {
-      const targetTime = getNextTwelveOClock();
+      if (closedHours) {
+        const closed = isClosed();
+        if (!closed) {
+          if (!staticZeroSetRef.current) {
+            setStaticZero();
+            staticZeroSetRef.current = true;
+          }
+          return;
+        }
+        staticZeroSetRef.current = false;
+      }
+
+      const targetTime = getTargetTime();
       const now = new Date();
       const difference = Math.max(0, targetTime - now);
 
@@ -59,12 +103,10 @@ export default function Countdown() {
       const minutes = Math.floor((difference % MS_PER_HOUR) / MS_PER_MINUTE);
       const seconds = Math.floor((difference % MS_PER_MINUTE) / MS_PER_SECOND);
 
-      // Map hours (0-11) to display (1-12): 0 -> 12, 1-11 -> 1-11
-      const displayHour = hours === 0 ? 12 : hours;
-      const displayMinute = minutes > 0 ? minutes : null;
-      const displaySecond = seconds > 0 ? seconds : null;
+      const displayHour = hours;
+      const displayMinute = minutes;
+      const displaySecond = seconds;
 
-      // Update active classes directly without re-rendering
       if (currentActiveRef.current.hours !== displayHour) {
         updateActiveClass(hoursElementsRef, currentActiveRef.current.hours, displayHour);
         currentActiveRef.current.hours = displayHour;
@@ -79,20 +121,16 @@ export default function Countdown() {
       }
     };
 
-    // Calculate immediately
     calculateTimeLeft();
-
-    // Update every second
     const interval = setInterval(calculateTimeLeft, MS_PER_SECOND);
-
     return () => clearInterval(interval);
-  }, []);
+  }, [closedHours]);
 
   const formatNumber = (num) => num.toString().padStart(2, '0');
 
-  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
-  const minutes = Array.from({ length: 59 }, (_, i) => i + 1);
-  const seconds = Array.from({ length: 59 }, (_, i) => i + 1);
+  const hours = Array.from({ length: 13 }, (_, i) => i);
+  const minutes = Array.from({ length: 60 }, (_, i) => i);
+  const seconds = Array.from({ length: 60 }, (_, i) => i);
 
   return (
     <div className={styles.countdown}>

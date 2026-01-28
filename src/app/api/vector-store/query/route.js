@@ -53,7 +53,7 @@ export async function POST(request) {
     let requestBody;
     try {
       requestBody = await request.json();
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: 'Invalid request body. Expected JSON.' },
         { status: 400 }
@@ -76,7 +76,7 @@ export async function POST(request) {
         'X-API-Key': apiKey,
       },
       body: JSON.stringify({
-        query,
+        query: query.trim(),
         maxItems,
       }),
       cache: 'no-store',

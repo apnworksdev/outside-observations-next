@@ -3,6 +3,7 @@ export function resolvePageType(pathname) {
   if (!pathname || pathname === '/') return 'home';
   if (pathname.startsWith('/archive/entry')) return 'archive-entry';
   if (pathname.startsWith('/archive/unexpected-connections')) return 'unexpected-connections';
+  if (pathname.startsWith('/archive/closed')) return 'archive-closed';
   if (pathname.startsWith('/archive')) return 'archive';
   if (pathname.startsWith('/lab')) return 'lab';
   if (pathname.startsWith('/radio')) return 'radio';

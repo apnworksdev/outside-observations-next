@@ -231,6 +231,12 @@ export default function ArchiveListContent() {
   const scrollElementRef = useRef(null);
 
   // Save scroll position on scroll events (optimized with cached element and change detection)
+  // When returning from an entry we must not save before restore runs, so skip saves for a short window.
+  const hadSavedPositionOnMountRef = useRef(
+    typeof window !== 'undefined' &&
+    sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY) !== null &&
+    sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null
+  );
   useEffect(() => {
     if (!view) return;
 
@@ -238,9 +244,9 @@ export default function ArchiveListContent() {
     let rafId = null;
     let lastSavedPosition = 0;
     let lastSavedPercentage = 0;
+    const allowSaveAfter = hadSavedPositionOnMountRef.current ? Date.now() + 600 : 0;
 
     const handleScroll = () => {
-      // Use requestAnimationFrame for better performance
       if (rafId) {
         cancelAnimationFrame(rafId);
       }
@@ -249,33 +255,31 @@ export default function ArchiveListContent() {
         const scrollElement = scrollElementRef.current;
         if (!scrollElement) return;
 
-        // Get current scroll position
         const scrollPosition = scrollElement.scrollTop;
         const scrollHeight = scrollElement.scrollHeight;
         const clientHeight = scrollElement.clientHeight;
         const maxScroll = scrollHeight - clientHeight;
         const scrollPercentage = maxScroll > 0 ? scrollPosition / maxScroll : 0;
 
-        // Only update if position changed significantly (avoid unnecessary saves)
-        const positionDiff = Math.abs(scrollPosition - lastSavedPosition);
-        const percentageDiff = Math.abs(scrollPercentage - lastSavedPercentage);
-        
-        // Update ref immediately (for view change detection)
         lastScrollPositionRef.current = {
           view,
           position: scrollPosition,
           percentage: scrollPercentage
         };
 
-        // Only save to sessionStorage if position changed meaningfully (threshold: 5px or 0.1%)
+        // Don't save until after restore has had time to run (prevents overwriting with 0)
+        if (allowSaveAfter > 0 && Date.now() < allowSaveAfter) return;
+
+        const positionDiff = Math.abs(scrollPosition - lastSavedPosition);
+        const percentageDiff = Math.abs(scrollPercentage - lastSavedPercentage);
+
         if (positionDiff > 5 || percentageDiff > 0.001) {
-          // Debounce sessionStorage writes
           clearTimeout(scrollTimeout);
           scrollTimeout = setTimeout(() => {
             lastSavedPosition = scrollPosition;
             lastSavedPercentage = scrollPercentage;
             saveArchiveScrollPosition(view);
-          }, 150); // Slightly longer debounce for sessionStorage writes
+          }, 150);
         }
       });
     };

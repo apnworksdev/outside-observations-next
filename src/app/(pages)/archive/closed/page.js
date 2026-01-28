@@ -1,9 +1,9 @@
-import Countdown from '@/app/_components/Countdown/Countdown';
+import ClosedArchiveCountdownSection from '@/app/_components/Archive/ClosedArchiveCountdownSection';
 import ArchiveClosedViewTracker from '@/app/_components/Archive/ArchiveClosedViewTracker';
-import NoRightClickWrapper from '@/app/_components/NoRightClickWrapper';
 import styles from '@app/_assets/archive/closed.module.css';
 import { getSiteSettings } from '@/app/_data/archive';
-import Image from 'next/image';
+import { getClosedHoursLabel } from '@/lib/closedArchiveHours';
+import BlurredImage from '@/app/_components/LaunchCountdown/BlurredImage';
 import { urlFor } from '@/sanity/lib/image';
 
 // Enable ISR - revalidate every 60 seconds
@@ -14,7 +14,7 @@ export async function generateMetadata() {
   const canonicalUrl = `${baseUrl}/archive/closed`;
   const title = 'Archive closed | Outside Observation';
   const description =
-    'The archive is resting. Access hours 09:00–17:00. Outside Observation.';
+    `The archive is resting. Closed ${getClosedHoursLabel()}. Outside Observation.`;
 
   let ogImageUrl = `${baseUrl}/share-image.png`;
   try {
@@ -53,12 +53,13 @@ export default async function ClosedPage() {
     ? urlFor(closedImage).width(800).url()
     : '/share-image.png';
 
+  // Outer wrapper avoids Next.js scroll restoration warning for position:fixed (InnerScrollAndFocusHandler)
   return (
-    <div className={styles.container}>
-      <ArchiveClosedViewTracker />
-      <div className={styles.closedArchiveImageContainer}>
-        <NoRightClickWrapper>
-          <Image
+    <div>
+      <div className={styles.container}>
+        <ArchiveClosedViewTracker />
+        <div className={styles.closedArchiveImageContainer}>
+          <BlurredImage
             src={imageSrc}
             alt="Closed Archive"
             width={800}
@@ -67,18 +68,15 @@ export default async function ClosedPage() {
             priority
             draggable={false}
           />
-        </NoRightClickWrapper>
-      </div>
-      <div className={styles.content}>
-        <div className={styles.topContent}>
-          <h1 className={styles.title}>The archive will open in:</h1>
-          <Countdown />
         </div>
-        <div className={styles.bottomContent}>
-          <p className={styles.description}>The archive is resting for the night.</p>
-          <br />
-          <p className={styles.description}>Access hours</p>
-          <p className={styles.description}>09:00-17:00 (GMT-7)</p>
+        <div className={styles.content}>
+          <ClosedArchiveCountdownSection />
+          <div className={styles.bottomContent}>
+            <p className={styles.description}>The archive is resting for the night.</p>
+            <br />
+            <p className={styles.description}>Closed hours</p>
+            <p className={styles.description}>{getClosedHoursLabel()}</p>
+          </div>
         </div>
       </div>
     </div>

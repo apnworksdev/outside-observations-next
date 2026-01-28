@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server'
 import { resolvePageType } from '@/lib/resolvePageType'
+import { useTimezoneRedirect, isInClosedHours } from '@/lib/closedArchiveHours'
 
 export function middleware(request) {
   const pathname = request.nextUrl.pathname
+
+  // Closed archive: redirect by open/closed window (only when useTimezoneRedirect)
+  if (useTimezoneRedirect && pathname.startsWith('/archive')) {
+    const closed = isInClosedHours()
+    if (pathname === '/archive/closed') {
+      if (!closed) return NextResponse.redirect(new URL('/archive', request.url))
+    } else if (closed) {
+      return NextResponse.redirect(new URL('/archive/closed', request.url))
+    }
+  }
 
   // Redirect /studio to Archive entries list
   if (pathname === '/studio' || pathname === '/studio/structure') {
