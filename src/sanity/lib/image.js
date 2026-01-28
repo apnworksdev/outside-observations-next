@@ -12,8 +12,12 @@ export const urlFor = (source) => {
 // Get base image URL without query parameters for Next.js Image Optimization
 // Next.js Image will handle resizing, so we don't need Sanity's width parameter
 export const urlForImage = (source) => {
-  if (!source) return null
-  return builder.image(source).url()
+  if (!source?.asset?._ref) return null
+  try {
+    return builder.image(source).url()
+  } catch {
+    return null
+  }
 }
 
 // Custom loader for Next.js Image component that uses Sanity's image optimization

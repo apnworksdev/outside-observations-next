@@ -16,7 +16,7 @@ import {
   trackOutboundClick,
 } from '@/app/_helpers/gtag';
 
-const SHOP_URL = 'https://outside-observations.myshopify.com/';
+const SHOP_URL = 'https://shop.outsideobservations.com/';
 
 export default function HeaderNav() {
   const { openRadio, closeRadio, expandRadio, isOpen: isRadioOpen, isMinimized } = useRadioIframe();

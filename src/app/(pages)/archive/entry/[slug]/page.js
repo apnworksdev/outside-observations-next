@@ -87,7 +87,7 @@ export async function generateMetadata({ params }) {
   const poster = entry.poster;
   const firstVisualImage = entry.visualEssayImages?.[0]?.image;
   const imageSource = poster || firstVisualImage;
-  if (imageSource) {
+  if (imageSource?.asset?._ref) {
     try {
       ogImageUrl = urlFor(imageSource).width(1200).height(630).fit('max').url();
     } catch {

@@ -116,7 +116,7 @@ export default function ArchiveEntryVideo({ video, poster, alt, contentWarning =
 
   const videoUrl = video?.asset?.url;
   const videoMimeType = video?.asset?.mimeType || 'video/mp4';
-  const posterUrl = poster ? urlForImage(poster) : null;
+  const posterUrl = poster?.asset?._ref ? urlForImage(poster) : null;
 
   // Shared play/pause toggle function (must be before any early returns)
   const handleTogglePlayPause = useCallback(() => {
