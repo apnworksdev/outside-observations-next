@@ -121,7 +121,7 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
             fallbackClassName={styles.archiveEntryImage}
             width={POSTER_WIDTH}
             height={posterHeight}
-            maxWidth={POSTER_WIDTH}
+            // maxWidth={POSTER_WIDTH}
             priority={isPriority}
             preload={isPriority ? "metadata" : "none"}
             muted

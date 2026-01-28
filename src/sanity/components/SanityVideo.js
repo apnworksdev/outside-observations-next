@@ -216,11 +216,11 @@ export default function SanityVideo({
         loop={loop}
         width={width}
         height={height}
-        style={{
-          maxWidth: maxWidth ? `${maxWidth}px` : width ? `${width}px` : undefined,
-          height: 'auto',
-          objectFit: 'contain',
-        }}
+        // style={{
+        //   maxWidth: maxWidth ? `${maxWidth}px` : width ? `${width}px` : undefined,
+        //   height: 'auto',
+        //   objectFit: 'contain',
+        // }}
         aria-label={alt || 'Video'}
         onLoadedMetadata={() => onLoad?.()}
         onPlay={onPlay}

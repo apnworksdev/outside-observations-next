@@ -91,22 +91,47 @@ export function ArchiveEntryArticle({ entry, headingId }) {
                       </p>
                     )}
                   </div>
-                  <div className={styles.archiveEntryModalPosterContainer}>
-                    <ProtectedMediaWrapper
-                      contentWarning={entry.metadata?.contentWarning}
-                      className={styles.archiveEntryModalPosterInner}
+                  <div className={styles.archiveEntryModalPosterOuter}>
+                    <div
+                      className={`${styles.archiveEntryModalPosterContainer} ${styles.archiveEntryModalPosterContainerImage} ${layout === 'portrait' ? styles.archiveEntryModalPosterContainerPortrait : styles.archiveEntryModalPosterContainerLandscape} ${aspectRatio ? styles.archiveEntryModalPosterContainerWithAspect : ''}`}
+                      style={aspectRatio ? { paddingTop: `${(imageHeight / imageWidth) * 100}%` } : undefined}
                     >
-                      <SanityImage
-                        image={image.image}
-                        alt={image.metadata?.artName || image.metadata?.fileName || 'Visual essay image'}
-                        width={imageWidth}
-                        height={imageHeight}
-                        className={styles.archiveEntryModalPoster}
-                        placeholder={image?.image?.lqip ? 'blur' : undefined}
-                        blurDataURL={image?.image?.lqip || undefined}
-                        priority
-                      />
-                    </ProtectedMediaWrapper>
+                      {aspectRatio ? (
+                        <div className={styles.archiveEntryModalPosterAspectBox}>
+                          <ProtectedMediaWrapper
+                            contentWarning={entry.metadata?.contentWarning}
+                            className={styles.archiveEntryModalPosterInner}
+                          >
+                            <SanityImage
+                              image={image.image}
+                              alt={image.metadata?.artName || image.metadata?.fileName || 'Visual essay image'}
+                              width={imageWidth}
+                              height={imageHeight}
+                              className={styles.archiveEntryModalPoster}
+                              placeholder={image?.image?.lqip ? 'blur' : undefined}
+                              blurDataURL={image?.image?.lqip || undefined}
+                              priority
+                            />
+                          </ProtectedMediaWrapper>
+                        </div>
+                      ) : (
+                        <ProtectedMediaWrapper
+                          contentWarning={entry.metadata?.contentWarning}
+                          className={styles.archiveEntryModalPosterInner}
+                        >
+                          <SanityImage
+                            image={image.image}
+                            alt={image.metadata?.artName || image.metadata?.fileName || 'Visual essay image'}
+                            width={imageWidth}
+                            height={imageHeight}
+                            className={styles.archiveEntryModalPoster}
+                            placeholder={image?.image?.lqip ? 'blur' : undefined}
+                            blurDataURL={image?.image?.lqip || undefined}
+                            priority
+                          />
+                        </ProtectedMediaWrapper>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -132,8 +157,53 @@ export function ArchiveEntryArticle({ entry, headingId }) {
               {entry.metadata?.artName || entry.artName}
             </h1>
           </div>
-          <div className={styles.archiveEntryModalPosterContainer}>
-            {isVideo && entry.video ? (
+          {!isVideo ? (
+            <div className={styles.archiveEntryModalPosterOuter}>
+              <div
+                className={`${styles.archiveEntryModalPosterContainer} ${styles.archiveEntryModalPosterContainerImage} ${layout === 'portrait' ? styles.archiveEntryModalPosterContainerPortrait : styles.archiveEntryModalPosterContainerLandscape} ${entry.poster?.dimensions?.aspectRatio ? styles.archiveEntryModalPosterContainerWithAspect : ''}`}
+                style={entry.poster?.dimensions?.aspectRatio ? { paddingTop: `${(posterHeight / posterWidth) * 100}%` } : undefined}
+              >
+                {entry.poster?.dimensions?.aspectRatio ? (
+                  <div className={styles.archiveEntryModalPosterAspectBox}>
+                    <ProtectedMediaWrapper
+                      contentWarning={entry.metadata?.contentWarning}
+                      className={styles.archiveEntryModalPosterInner}
+                    >
+                      <SanityImage
+                        image={entry.poster}
+                        alt={entry.metadata?.artName || entry.artName}
+                        width={posterWidth}
+                        height={posterHeight}
+                        className={styles.archiveEntryModalPoster}
+                        placeholder={entry.poster?.lqip ? 'blur' : undefined}
+                        blurDataURL={entry.poster?.lqip || undefined}
+                        priority
+                      />
+                    </ProtectedMediaWrapper>
+                  </div>
+                ) : (
+                  <ProtectedMediaWrapper
+                    contentWarning={entry.metadata?.contentWarning}
+                    className={styles.archiveEntryModalPosterInner}
+                  >
+                    <SanityImage
+                      image={entry.poster}
+                      alt={entry.metadata?.artName || entry.artName}
+                      width={posterWidth}
+                      height={posterHeight}
+                      className={styles.archiveEntryModalPoster}
+                      placeholder={entry.poster?.lqip ? 'blur' : undefined}
+                      blurDataURL={entry.poster?.lqip || undefined}
+                      priority
+                    />
+                  </ProtectedMediaWrapper>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div
+              className={`${styles.archiveEntryModalPosterContainer} ${layout === 'portrait' ? styles.archiveEntryModalPosterContainerPortrait : styles.archiveEntryModalPosterContainerLandscape}`}
+            >
               <ArchiveEntryVideo
                 video={entry.video}
                 poster={entry.poster}
@@ -141,24 +211,8 @@ export function ArchiveEntryArticle({ entry, headingId }) {
                 contentWarning={entry.metadata?.contentWarning}
                 entrySlug={entry.metadata?.slug?.current ?? entry.slug?.current ?? ''}
               />
-            ) : (
-              <ProtectedMediaWrapper
-                contentWarning={entry.metadata?.contentWarning}
-                className={styles.archiveEntryModalPosterInner}
-              >
-                <SanityImage
-                  image={entry.poster}
-                  alt={entry.metadata?.artName || entry.artName}
-                  width={posterWidth}
-                  height={posterHeight}
-                  className={styles.archiveEntryModalPoster}
-                  placeholder={entry.poster?.lqip ? 'blur' : undefined}
-                  blurDataURL={entry.poster?.lqip || undefined}
-                  priority
-                />
-              </ProtectedMediaWrapper>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </article>
