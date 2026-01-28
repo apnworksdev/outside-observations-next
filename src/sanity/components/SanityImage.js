@@ -86,7 +86,10 @@ export default function SanityImage({
       quality={quality}
       onLoad={onLoad}
       onError={handleError}
+      onContextMenu={(e) => e.preventDefault()}
       {...props}
+      draggable={false}
+      suppressHydrationWarning
     />
   );
 }

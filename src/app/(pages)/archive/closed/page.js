@@ -1,5 +1,6 @@
 import Countdown from '@/app/_components/Countdown/Countdown';
 import ArchiveClosedViewTracker from '@/app/_components/Archive/ArchiveClosedViewTracker';
+import NoRightClickWrapper from '@/app/_components/NoRightClickWrapper';
 import styles from '@app/_assets/archive/closed.module.css';
 import { getSiteSettings } from '@/app/_data/archive';
 import Image from 'next/image';
@@ -56,14 +57,17 @@ export default async function ClosedPage() {
     <div className={styles.container}>
       <ArchiveClosedViewTracker />
       <div className={styles.closedArchiveImageContainer}>
-        <Image
-          src={imageSrc}
-          alt="Closed Archive"
-          width={800}
-          height={800}
-          className={styles.closedArchiveImage}
-          priority
-        />
+        <NoRightClickWrapper>
+          <Image
+            src={imageSrc}
+            alt="Closed Archive"
+            width={800}
+            height={800}
+            className={styles.closedArchiveImage}
+            priority
+            draggable={false}
+          />
+        </NoRightClickWrapper>
       </div>
       <div className={styles.content}>
         <div className={styles.topContent}>

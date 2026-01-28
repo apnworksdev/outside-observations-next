@@ -1,5 +1,18 @@
 /* Global body styles moved to globals.css to fix CSS module syntax error */
 
+.archiveEntryCloseButton {
+  position: fixed;
+  top: var(--padding);
+  left: var(--padding);
+  height: 23px;
+  padding: 0 var(--padding);
+  background-color: var(--bg-color);
+  display: flex;
+  align-items: center;
+  z-index: 1001;
+  pointer-events: none;
+}
+
 .archiveEntryBackdrop {
   position: fixed;
   display: flex;
@@ -177,6 +190,26 @@
   height: 100%;
   background-color: var(--fg-color);
   will-change: width;
+}
+
+/* .archiveEntryVideoContainer,
+.archiveEntryVideo,
+.archiveEntryModalPosterContainer {
+  max-height: calc(80vh - 50px);
+  object-fit: cover;
+  box-sizing: border-box;
+} */
+
+.archiveEntryVideoContainer {
+  padding-bottom: 0 !important;
+}
+
+.archiveEntryVideo {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  max-height: calc(80vh - 50px);
 }
 
 /* ------------------------------------------------------------ */

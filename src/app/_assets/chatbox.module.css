@@ -47,10 +47,11 @@
   min-width: var(--dots-min-width);
   width: fit-content;
   height: min-content;
-  padding-top: 4px;
+  padding-top: 6px;
   padding-right: var(--padding);
-  padding-bottom: 5px;
+  padding-bottom: 7px;
   padding-left: var(--padding);
+  min-height: 25px;
 }
 
 .chatBoxMessage[data-sender="bot"] {
@@ -67,6 +68,7 @@
 
 .chatBoxMessageText {
   white-space: pre-line;
+  line-height: 1.2;
 }
 
 .chatBoxImagesMessage {
@@ -346,5 +348,9 @@
   .chatBox[data-variant="archive"] .chatBoxFormContainer {
     padding-top: 6px;
     padding-bottom: 7px;
+  }
+
+  .chatBoxImage {
+    height: 15vw;
   }
 }

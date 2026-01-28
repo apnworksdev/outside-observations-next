@@ -141,6 +141,7 @@ img,
 video {
   width: inherit;
   line-height: 0;
+  user-select: none;
 }
 
 .media {

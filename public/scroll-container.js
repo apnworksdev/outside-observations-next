@@ -4,6 +4,7 @@ class ScrollContainer extends HTMLElement {
     super();
     this.handleImageHover = this.handleImageHover.bind(this);
     this.handleImageLeave = this.handleImageLeave.bind(this);
+    this.updateOverflowClass = this.updateOverflowClass.bind(this);
   }
   
   connectedCallback() {
@@ -26,6 +27,29 @@ class ScrollContainer extends HTMLElement {
     this.observeChildren();
     // Also set up listeners immediately for existing children
     this.setupListeners();
+    // Toggle overflowInitial class based on height vs 50vh
+    this.observeHeight();
+  }
+
+  observeHeight() {
+    this.updateOverflowClass();
+
+    this.resizeObserver = new ResizeObserver(() => {
+      this.updateOverflowClass();
+    });
+    this.resizeObserver.observe(this);
+
+    window.addEventListener('resize', this.updateOverflowClass);
+  }
+
+  updateOverflowClass() {
+    const threshold = window.innerHeight * 0.5;
+    const height = this.getBoundingClientRect().height;
+    if (height < threshold) {
+      this.classList.add('overflowInitial');
+    } else {
+      this.classList.remove('overflowInitial');
+    }
   }
 
   observeChildren() {
@@ -59,7 +83,11 @@ class ScrollContainer extends HTMLElement {
     if (this.observer) {
       this.observer.disconnect();
     }
-    
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+    window.removeEventListener('resize', this.updateOverflowClass);
+
     const itemContainers = this.querySelectorAll('[class*="itemContainer"]');
     itemContainers.forEach(itemContainer => {
       itemContainer.removeEventListener('mouseenter', this.handleImageHover);
@@ -79,12 +107,8 @@ class ScrollContainer extends HTMLElement {
       const itemContainerRect = itemContainer.getBoundingClientRect();
       const itemContainerCenter = itemContainerRect.top + itemContainerRect.height / 2;
 
-      // Get the scroll container's parent (the .container div)
-      const scrollContainerParent = this.parentElement;
-      if (!scrollContainerParent) return;
-      
-      const scrollContainerParentRect = scrollContainerParent.getBoundingClientRect();
-      const viewportCenter = scrollContainerParentRect.top + scrollContainerParentRect.height / 2;
+      // Use window viewport center (vertical center of the visible window)
+      const viewportCenter = window.innerHeight / 2;
       
       // Position poster above or below based on container position
       if (itemContainerCenter < viewportCenter) {
