@@ -299,6 +299,7 @@
   position: relative;
   display: flex;
   width: 100%;
+  overflow: hidden;
 }
 
 .container[data-view="images"] .archiveEntryImage {
