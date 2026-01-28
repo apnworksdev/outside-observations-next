@@ -109,7 +109,7 @@
 .homeContentText {
   pointer-events: auto;
   background-color: var(--gray-color);
-  color: var(--bg-color);
+  color: #fff;
   padding-top: 6px;
   padding-right: var(--padding);
   padding-bottom: 7px;
@@ -126,7 +126,7 @@
   flex: 1;
   background-color: var(--gray-color);
   color: var(--bg-color);
-  padding: var(--padding) 0;
+  padding: 5px 0 5px;
 }
 
 .homeImageContainer {

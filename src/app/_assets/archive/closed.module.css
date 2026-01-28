@@ -94,6 +94,7 @@
   padding: 0 var(--padding);
   text-transform: none;
   padding-bottom: 2px;
+  color: #fff;
 }
 
 .emailInput::placeholder {

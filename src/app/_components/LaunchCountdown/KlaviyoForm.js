@@ -73,7 +73,7 @@ export default function KlaviyoForm() {
             className={styles.emailInput}
             type="email"
             name="email"
-            placeholder={isSubmitting ? 'Subscribing...' : 'Sign up to stay updated'}
+            placeholder={isSubmitting ? 'Subscribing...' : 'Enter email'}
             required
             disabled={isSubmitting}
             autoComplete="off"
