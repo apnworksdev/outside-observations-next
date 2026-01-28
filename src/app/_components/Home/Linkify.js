@@ -1,8 +1,38 @@
 'use client';
 
+const OUR_ORIGINS = [
+  'https://outsideobservations.com',
+  'https://www.outsideobservations.com',
+  ...(typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SITE_URL
+    ? [process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')]
+    : []),
+].filter(Boolean);
+
+function isOurSiteUrl(href) {
+  try {
+    const url = new URL(href);
+    const origin = url.origin.replace(/\/$/, '');
+    return OUR_ORIGINS.some((o) => origin === o);
+  } catch {
+    return false;
+  }
+}
+
+function toRelativeHref(href) {
+  try {
+    const url = new URL(href);
+    const path = url.pathname || '/';
+    const search = url.search || '';
+    return path + search;
+  } catch {
+    return href;
+  }
+}
+
 /**
  * Renders text with http(s) URLs and email addresses as clickable links.
- * - URLs open in a new tab (target="_blank" rel="noopener noreferrer")
+ * - URLs to our site (outsideobservations.com): relative href, same tab
+ * - Other URLs: open in a new tab (target="_blank" rel="noopener noreferrer")
  * - Emails become mailto: links
  */
 export default function Linkify({ children, className }) {
@@ -18,12 +48,14 @@ export default function Linkify({ children, className }) {
   while ((m = urlRegex.exec(text)) !== null) {
     const raw = m[0];
     const trimmed = raw.replace(/[.,;:)!?]+$/, '');
+    const isOurs = isOurSiteUrl(trimmed);
     matches.push({
       start: m.index,
       end: m.index + raw.length,
       type: 'url',
       display: raw,
-      href: trimmed,
+      href: isOurs ? toRelativeHref(trimmed) : trimmed,
+      external: !isOurs,
     });
   }
   emailRegex.lastIndex = 0;
@@ -61,7 +93,7 @@ export default function Linkify({ children, className }) {
       type: 'link',
       value: match.display,
       href: match.href,
-      external: match.type === 'url',
+      external: match.type === 'url' && match.external !== false,
     });
     lastEnd = match.end;
   }
