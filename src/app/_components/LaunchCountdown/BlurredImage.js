@@ -25,6 +25,8 @@ export default function BlurredImage({ src, alt, width, height, priority, fetchP
       priority={priority}
       fetchPriority={fetchPriority}
       quality={quality}
+      onContextMenu={(e) => e.preventDefault()}
+      draggable={false}
     />
   );
 }

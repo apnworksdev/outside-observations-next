@@ -86,6 +86,8 @@ export default function SanityImage({
       quality={quality}
       onLoad={onLoad}
       onError={handleError}
+      onContextMenu={(e) => e.preventDefault()}
+      draggable={false}
       {...props}
     />
   );
