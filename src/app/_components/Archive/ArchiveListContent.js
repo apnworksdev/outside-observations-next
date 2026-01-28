@@ -182,6 +182,7 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
       {shouldRenderLink ? (
         <Link
           href={href}
+          scroll={false}
           {...linkProps}
           {...prefetchHandlers}
           onMouseDown={handleMouseDown}

@@ -69,7 +69,6 @@ export async function POST(request) {
       );
     }
 
-    // The external API only accepts query and maxItems (no minSimilarity)
     const response = await fetch(vectorStoreQueryUrl, {
       method: 'POST',
       headers: {

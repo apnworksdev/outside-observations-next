@@ -148,8 +148,9 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
   const shouldRenderLink = hasSlug && !isLinkDisabled;
 
   return shouldRenderLink ? (
-    <Link 
-      href={href} 
+    <Link
+      href={href}
+      scroll={false}
       {...containerProps}
       {...prefetchHandlers}
       onMouseDown={handleMouseDown}

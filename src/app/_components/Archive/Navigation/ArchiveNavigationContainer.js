@@ -208,11 +208,13 @@ export default function ArchiveNavigationContainer() {
     }
   }, [notifications, isNavigationOpen]);
 
+  // Wrapper div avoids Next.js scroll restoration warning for position:fixed (InnerScrollAndFocusHandler)
   return (
-    <div
-      className={styles.archiveNavigationContainer}
-      data-reminder-open={isReminderOpen ? 'true' : undefined}
-    >
+    <div>
+      <div
+        className={styles.archiveNavigationContainer}
+        data-reminder-open={isReminderOpen ? 'true' : undefined}
+      >
       <div
         className={styles.archiveNavigationPanel}
         id={panelId ?? undefined}
@@ -273,6 +275,7 @@ export default function ArchiveNavigationContainer() {
           isNavigationHovered={isNavigationHovered}
         />
       </ErrorBoundary>
+      </div>
     </div>
   );
 }

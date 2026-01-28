@@ -621,6 +621,28 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     [clearSearch, pathname, router]
   );
 
+  /**
+   * Set mood tag selection to an exact array (used by mood panel for parent = all children,
+   * and child click when parent was selected = only that child).
+   */
+  const setMoodTags = useCallback(
+    (nextMoodTags) => {
+      if (pathname !== '/archive') {
+        router.push('/archive');
+        return;
+      }
+      const tags = Array.isArray(nextMoodTags) ? nextMoodTags : [];
+      setSelectedMoodTags(tags);
+      writeToSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, tags);
+      selectedMoodTagsRef.current = tags;
+      clearSearch(true);
+      if (pathname === '/archive' && typeof window !== 'undefined') {
+        dispatchFilterChangeEvent(tags.length > 0);
+      }
+    },
+    [clearSearch, pathname, router]
+  );
+
   const clearMoodTag = useCallback(() => {
     const cleared = [];
     setSelectedMoodTags(cleared);
@@ -713,10 +735,11 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       setSorting: setSortingWithStorage,
       selectedMoodTags,
       setMoodTag,
+      setMoodTags,
       clearMoodTag,
       clearAllFilters,
     }),
-    [clearAllFilters, clearSearch, clearMoodTag, entries, setSearchFromPayload, searchStatus, selectedMoodTags, setMoodTag, setSortingWithStorage, setView, sortedEntries, sorting, view]
+    [clearAllFilters, clearSearch, clearMoodTag, entries, setSearchFromPayload, searchStatus, selectedMoodTags, setMoodTag, setMoodTags, setSortingWithStorage, setView, sortedEntries, sorting, view]
   );
 
   return <ArchiveEntriesContext.Provider value={value}>{children}</ArchiveEntriesContext.Provider>;

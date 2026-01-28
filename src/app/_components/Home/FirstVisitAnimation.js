@@ -2,15 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
-import CircleAnimation from '@/app/_components/Home/CircleAnimation';
 import { trackFirstVisitAnimationComplete } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/home.module.css';
 
 /**
  * FirstVisitAnimation - Complex animation sequence for first-time visitors
- * 
- * Orchestrates a multi-stage animation:
- * - Circle animations with staggered timing
+ *
+ * Orchestrates a multi-stage animation (same timing as previous circle-based sequence):
  * - Text reveals ("Create for each other", "Invest in each other", long text)
  * - Lines grid animation
  * - Typewriter effect for first message
@@ -37,7 +35,7 @@ export default function FirstVisitAnimation({ onComplete, children }) {
     setIsClient(true);
   }, []);
 
-  // Create timeline immediately so CircleAnimation can use it
+  // Create shared timeline for the animation sequence
   useEffect(() => {
     if (!isClient) return;
 
@@ -61,7 +59,7 @@ export default function FirstVisitAnimation({ onComplete, children }) {
     };
   }, [isClient]);
 
-  // Handle circle timing callback and set up animations
+  // Handle timing callback and set up animations (same timing as previous circle-based sequence)
   const handleCircleTimingReady = useCallback((timing) => {
     // Prevent multiple setups if callback is called multiple times
     if (animationsSetupRef.current) {
@@ -326,17 +324,23 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
     }, null, contentElementsStartTime);
   }, []);
 
+  // Trigger animation setup with same timing as before (no circles rendered)
+  useEffect(() => {
+    if (!isClient || !timelineRef.current) return;
+    const startTime = 1.0;
+    const stagger = 0.5;
+    const initialDelay = 0;
+    const circleTimes = Array.from({ length: 8 }, (_, i) => startTime + initialDelay + i * stagger);
+    handleCircleTimingReady({
+      startTime: startTime + initialDelay,
+      stagger,
+      circleTimes,
+      getCircleTime: (index) => circleTimes[index],
+    });
+  }, [isClient, handleCircleTimingReady]);
+
   return (
     <>
-      {/* Circle animation using shared timeline */}
-      {isClient && timelineRef.current && (
-        <CircleAnimation 
-          timeline={timelineRef.current}
-          startTime={1.0}
-          stagger={0.5}
-          onTimingReady={handleCircleTimingReady}
-        />
-      )}
       <div className={`${styles.firstVisitText} ${styles.firstVisitTextCreate}`} ref={createTextRef}>
         <p>Create for each other</p>
       </div>
