@@ -177,6 +177,10 @@
   .archiveNavigation[data-state='open'] .archiveNavigationButton:hover {
     --scale-factor: 1.8;
   }
+  /* Counter-scale the label so it doesn't grow with the button hover */
+  .archiveNavigation[data-state='open'] .archiveNavigationButton:hover .archiveNavigationButtonLabel {
+    transform: translate(-50%, -50%) scale(calc(1 / var(--scale-factor)));
+  }
 }
 
 /* ------------------------------------------------------------ */
@@ -215,6 +219,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  transition: transform var(--transition-time) var(--transition-effect);
   color: var(--bg-color);
   text-align: center;
   opacity: 1;

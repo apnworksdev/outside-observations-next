@@ -43,7 +43,16 @@ export async function POST(request) {
 
     const comparisonApiUrl = buildApiUrl(COMPARISON_API_PATH);
 
-    const body = await request.json();
+    let body;
+    try {
+      const text = await request.text();
+      body = text ? JSON.parse(text) : null;
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid or empty JSON body. Both item1 and item2 are required.' },
+        { status: 400 }
+      );
+    }
     const { item1, item2 } = body ?? {};
 
     if (!item1 || !item2) {
