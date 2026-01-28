@@ -344,7 +344,7 @@
 
 @media (max-width: 768px) {
   .chatBox[data-variant="archive"] .chatBoxFormContainer {
-    padding-top: 4px;
-    padding-bottom: 5px;
+    padding-top: 6px;
+    padding-bottom: 7px;
   }
 }

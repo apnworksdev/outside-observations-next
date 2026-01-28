@@ -570,28 +570,28 @@
 /* ------------------------------------------------------------ */
 
 @media (max-width: 768px) {
-  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavigation[data-state="open"],
-  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavigation[data-state="open"] {
+  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavWrapper .archiveNavigation[data-state="open"],
+  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavWrapper .archiveNavigation[data-state="open"] {
     height: var(--close-archive-button-size);
     width: var(--close-archive-button-size);
   }
   
-  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavigation[data-state="open"] .archiveNavigationButton,
-  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavigation[data-state="open"] .archiveNavigationButton {
+  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavWrapper .archiveNavigation[data-state="open"] .archiveNavigationButton,
+  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavWrapper .archiveNavigation[data-state="open"] .archiveNavigationButton {
     width: 12px;
     height: 12px;
     --star-radius: 170%;
     pointer-events: none;
   }
 
-  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavigation[data-state="open"] .archiveNavigationLabel[data-visibility="visible"],
-  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavigation[data-state="open"] .archiveNavigationLabel[data-visibility="visible"] {
+  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavWrapper .archiveNavigation[data-state="open"] .archiveNavigationLabel[data-visibility="visible"],
+  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavWrapper .archiveNavigation[data-state="open"] .archiveNavigationLabel[data-visibility="visible"] {
     opacity: 0 !important;
     visibility: hidden !important;
   }
 
-  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavigation[data-state="open"] .archiveNavigationButtonLabel,
-  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavigation[data-state="open"] .archiveNavigationButtonLabel {
+  .archiveNavigationPanel[data-panel-type="chat"] + .archiveNavWrapper .archiveNavigation[data-state="open"] .archiveNavigationButtonLabel,
+  .archiveNavigationPanel[data-panel-type="mood"] + .archiveNavWrapper .archiveNavigation[data-state="open"] .archiveNavigationButtonLabel {
     opacity: 0 !important;
     visibility: hidden !important;
   }
