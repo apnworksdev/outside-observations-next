@@ -1,5 +1,18 @@
 /* Global body styles moved to globals.css to fix CSS module syntax error */
 
+.archiveEntryCloseButton {
+  position: fixed;
+  top: var(--padding);
+  left: var(--padding);
+  height: 23px;
+  padding: 0 var(--padding);
+  background-color: var(--bg-color);
+  display: flex;
+  align-items: center;
+  z-index: 1001;
+  pointer-events: none;
+}
+
 .archiveEntryBackdrop {
   position: fixed;
   display: flex;

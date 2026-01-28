@@ -214,6 +214,9 @@ export default async function ArchiveEntryPage({ params, searchParams }) {
         }
       >
         <ArchiveEntryBackdrop entry={entry}>
+          <button className={styles.archiveEntryCloseButton}>
+            Close
+          </button>
           <div className={styles.archiveEntryContentWrapper} data-entry-type={entryType}>
             <ArchiveEntryArticle entry={entry} initialImageIndex={initialImageIndex} />
           </div>
