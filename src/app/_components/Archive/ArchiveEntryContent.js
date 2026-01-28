@@ -114,7 +114,7 @@ export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
             </div>
           );
         })}
-        <ScrollToVisualEssayImage
+        {/* <ScrollToVisualEssayImage
           imageIndex={
             initialImageIndex != null &&
             initialImageIndex >= 0 &&
@@ -123,7 +123,7 @@ export function ArchiveEntryArticle({ entry, headingId, initialImageIndex }) {
               : null
           }
           entrySlug={entry.metadata?.slug?.current ?? entry.slug?.current ?? ''}
-        />
+        /> */}
       </article>
     );
   }
