@@ -51,6 +51,7 @@
   padding-right: var(--padding);
   padding-bottom: 7px;
   padding-left: var(--padding);
+  min-height: 25px;
 }
 
 .chatBoxMessage[data-sender="bot"] {
