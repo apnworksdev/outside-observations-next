@@ -156,8 +156,8 @@
   color: var(--bg-color);
   padding-right: var(--padding);
   padding-left: var(--padding);
-  padding-top: 4px;
-  padding-bottom: 5px;
+  padding-top: 6px;
+  padding-bottom: 7px;
   pointer-events: auto;
   max-width: 300px;
   max-height: 100px;
@@ -419,6 +419,9 @@
     width: 60px;
     padding-right: var(--padding);
     padding-left: var(--padding);
+
+    width: 70px;
+    padding-left: calc(var(--padding) * 2)!important;
   }
   
   :global(body[data-page="archive-entry"]) .navBubble {
