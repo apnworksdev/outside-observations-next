@@ -179,6 +179,26 @@
   will-change: width;
 }
 
+/* .archiveEntryVideoContainer,
+.archiveEntryVideo,
+.archiveEntryModalPosterContainer {
+  max-height: calc(80vh - 50px);
+  object-fit: cover;
+  box-sizing: border-box;
+} */
+
+.archiveEntryVideoContainer {
+  padding-bottom: 0 !important;
+}
+
+.archiveEntryVideo {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  max-height: calc(80vh - 50px);
+}
+
 /* ------------------------------------------------------------ */
 
 /*                      Visual Essay styles                     */
