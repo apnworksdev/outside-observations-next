@@ -4,6 +4,17 @@
   pointer-events: none;
 }
 
+:global(body[data-page="home"][data-home-visitor="returning"]) .header {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+:global(body[data-page="home"][data-home-visitor="returning"]) .header .navTitleContainer,
+:global(body[data-page="home"][data-home-visitor="returning"]) .header .navNavigation {
+  opacity: 0;
+  pointer-events: none;
+}
+
 :global(body[data-page="home"][data-home-visitor="first"].home-animation-complete) .header {
   opacity: 1;
   transition-delay: var(--transition-time);
@@ -326,6 +337,10 @@
 }
 
 @media screen and (max-width: 768px) {
+  /* Newsletter popup: on mobile only visible on homepage */
+  .newsletterPopupWrapper[data-visible-on-mobile="false"] {
+    display: none;
+  }
 
   .header {
     padding: var(--responsive-padding);
@@ -457,4 +472,104 @@
   100% {
     opacity: 1;
   }
+}
+
+/* ------------------------------------------------------------ */
+
+/*                              HOME                            */
+
+/* ------------------------------------------------------------ */
+
+.newsletterPopupWrapper {
+  position: fixed;
+  top: var(--padding);
+  right: var(--padding);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  z-index: 2;
+}
+
+.newsletterPopupWrapper[data-open="true"] {
+  width: calc(var(--column-width) * 2 + var(--column-gap));
+  min-width: 250px;
+  max-width: 350px;
+}
+
+.newsletterPopupWrapper > * {
+  pointer-events: auto;
+}
+
+.newsletterPopupOpenContent {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.newsletterPopupCloseButton {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--white-color);
+}
+
+.newsletterPopupCloseButton:hover {
+  color: var(--dark-gray-color);
+}
+
+.newsletterPopupCloseButton::before,
+.newsletterPopupCloseButton::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 1px;
+  background-color: currentColor;
+  transform-origin: center;
+}
+
+.newsletterPopupCloseButton::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.newsletterPopupCloseButton::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.newsletterPopupContentText {
+  pointer-events: auto;
+  background-color: var(--gray-color);
+  color: #fff;
+  padding-top: 6px;
+  padding-right: var(--padding);
+  padding-bottom: 7px;
+  padding-left: var(--padding);
+}
+
+.newsletterPopupActions {
+  pointer-events: auto;
+  display: flex;
+  gap: var(--gap);
+}
+
+.newsletterPopupKlaviyoFormContainer {
+  flex: 1;
+  background-color: var(--gray-color);
+  color: var(--bg-color);
+  padding: 5px 0 5px;
+}
+
+:global(body[data-page="unexpected-connections"]) .newsletterPopupContentText,
+:global(body[data-page="unexpected-connections"]) .newsletterPopupKlaviyoFormContainer {
+  background-color: var(--fg-color-75);
 }

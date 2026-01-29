@@ -86,49 +86,6 @@
   text-align: left;
 }
 
-/* ------------------------------------------------------------ */
-
-/*                              HOME                            */
-
-/* ------------------------------------------------------------ */
-
-.homeContainer {
-  position: fixed;
-  top: var(--padding);
-  right: var(--padding);
-  width: calc(var(--column-width) * 2 + var(--column-gap));
-  min-width: 250px;
-  max-width: 350px;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-  z-index: 2;
-}
-
-.homeContentText {
-  pointer-events: auto;
-  background-color: var(--gray-color);
-  color: #fff;
-  padding-top: 6px;
-  padding-right: var(--padding);
-  padding-bottom: 7px;
-  padding-left: var(--padding);
-}
-
-.homeActions {
-  pointer-events: auto;
-  display: flex;
-  gap: var(--gap);
-}
-
-.homeKlaviyoFormContainer {
-  flex: 1;
-  background-color: var(--gray-color);
-  color: var(--bg-color);
-  padding: 5px 0 5px;
-}
-
 .homeImageContainer {
   position: fixed;
   top: 0;

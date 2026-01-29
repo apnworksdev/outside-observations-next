@@ -3,7 +3,6 @@
 import { useState, useEffect, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
-import KlaviyoForm from '@/app/_components/LaunchCountdown/KlaviyoForm';
 import FirstVisitAnimation from '@/app/_components/Home/FirstVisitAnimation';
 import ChatBox from '@/app/_components/Home/ChatBox';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
@@ -23,18 +22,11 @@ import homeStyles from '@app/_assets/home.module.css';
  *
  * Returning visitor is resolved client-side from localStorage (server cannot read it).
  */
-const DEFAULT_HOME_TITLE = 'Sign up to stay updated.';
-const DEFAULT_HOME_DESCRIPTION = "Look at anything carefully enough, even a speck of dust, and you'll find something you missed.";
-
 export default function HomeContent({
   homeImage = null,
   homeImageWidth = 1200,
   homeImageHeight,
-  homeTitle,
-  homeDescription,
 }) {
-  const title = homeTitle?.trim() || DEFAULT_HOME_TITLE;
-  const description = homeDescription?.trim() || DEFAULT_HOME_DESCRIPTION;
   const [animationComplete, setAnimationComplete] = useState(false);
   // Resolved from localStorage after hydration; null = not yet known (treat as returning to avoid flash)
   const [resolvedReturningVisitor, setResolvedReturningVisitor] = useState(null);
@@ -81,23 +73,12 @@ export default function HomeContent({
     return () => document.body.classList.remove('home-animation-complete');
   }, [animationComplete, isReturningVisitor]);
 
-  // Returning visitor: show dedicated homepage state (no animation, no redirect)
+  // Returning visitor: show dedicated homepage state (no animation, no redirect).
+  // Newsletter is shown globally via HeaderNav/NewsletterPopup.
   if (isReturningVisitor) {
     return (
       <ErrorBoundary fallback={HomeErrorFallback}>
         <>
-        <div className={homeStyles.homeContainer}>
-          <div className={homeStyles.homeContentText}>
-            <h1 className={homeStyles.homeContentTextTitle}>{title}</h1>
-            <br/>
-            <p className={homeStyles.homeContentTextDescription}>{description}</p>
-          </div>
-          <div className={homeStyles.homeActions}>
-            <div className={homeStyles.homeKlaviyoFormContainer}>
-              <KlaviyoForm />
-            </div>
-          </div>
-        </div>
         {homeImage?.asset?._ref && (
           <Link href="/archive">
             <div className={homeStyles.homeImageContainer}>

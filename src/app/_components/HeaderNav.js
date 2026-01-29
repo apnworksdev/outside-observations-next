@@ -7,6 +7,7 @@ import ArchiveViewToggle from '@/app/_components/Archive/ArchiveViewToggle';
 import NavItem from '@/app/_components/NavItem';
 import MobileMenuButton from '@/app/_components/MobileMenuButton';
 import HelpNav from '@/app/_components/HelpNav';
+import NewsletterPopup from '@/app/_components/NewsletterPopup';
 import { useRadioIframe } from '@/app/_components/RadioIframeProvider';
 import {
   trackNavClick,
@@ -18,7 +19,7 @@ import {
 
 const SHOP_URL = 'https://shop.outsideobservations.com/';
 
-export default function HeaderNav() {
+export default function HeaderNav({ newsletterTitle, newsletterDescription }) {
   const { openRadio, closeRadio, expandRadio, isOpen: isRadioOpen, isMinimized } = useRadioIframe();
 
   // View preference is read from localStorage client-side by ArchiveViewToggle
@@ -33,6 +34,7 @@ export default function HeaderNav() {
 
   return (
     <header id="main-header" className={styles.header}>
+      <NewsletterPopup title={newsletterTitle} description={newsletterDescription} />
       <div className={styles.navTitleContainer}>
         <div className={styles.navTitle}>
           <Link

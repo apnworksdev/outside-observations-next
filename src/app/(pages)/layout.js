@@ -3,6 +3,7 @@ import '@app/_assets/globals.css';
 import styles from '@app/_assets/main.module.css';
 import Script from 'next/script';
 import HeaderNav from '@app/_components/HeaderNav';
+import { getSiteSettings } from '@/app/_data/archive';
 import BodyPageTypeUpdater from '@/app/_helpers/BodyPageTypeUpdater';
 import BodyHydrationGuard from '@/app/_helpers/BodyHydrationGuard';
 import VisitorTracker from '@/app/_helpers/VisitorTracker';
@@ -39,7 +40,11 @@ export const viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const siteSettings = await getSiteSettings();
+  const newsletterTitle = siteSettings?.newsletter?.title ?? undefined;
+  const newsletterDescription = siteSettings?.newsletter?.description ?? undefined;
+
   // Page type is set client-side by BodyPageTypeUpdater component
   // This allows static generation while still setting the correct data-page attribute
   return (
@@ -95,7 +100,10 @@ export default function RootLayout({ children }) {
                 <ErrorBoundary>
                   <PageTransition>
                     <div data-hide-on-studio="true" data-first-visit-animate="header">
-                      <HeaderNav />
+                      <HeaderNav
+                        newsletterTitle={newsletterTitle}
+                        newsletterDescription={newsletterDescription}
+                      />
                     </div>
                     <div className={styles.linesGrid} data-first-visit-animate="lines" id="lines-grid" data-hide-on-studio="true">
                       {Array.from({ length: 5 }).map((_, index) => (
