@@ -136,6 +136,7 @@ export default function UnexpectedConnectionsContent({
               <SanityVideo
                 video={entry.video}
                 poster={entry.poster}
+                vimeoUrl={entry.vimeoUrl}
                 alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
                 width={mediaWidth}
                 height={calculatedHeight}

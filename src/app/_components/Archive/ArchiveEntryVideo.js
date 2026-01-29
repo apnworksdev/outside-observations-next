@@ -6,6 +6,7 @@ import SanityImage from '@/sanity/components/SanityImage';
 import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
 import { MediaProtector } from '@/app/_components/MediaProtector';
 import { trackVideoPlay, trackVideoPause, trackVideoComplete, trackVideoFullscreen } from '@/app/_helpers/gtag';
+import { isVimeoDirectFileUrl } from '@/helpers/vimeoUtils';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
 // Format time as MM:SS (always 2 digits for minutes and seconds)
@@ -107,16 +108,24 @@ DurationDisplay.displayName = 'DurationDisplay';
  * ArchiveEntryVideo - Simple video player for archive entry pages
  * Click to play/pause. entrySlug is used for GA4 (which video was played/paused/completed).
  */
-export default function ArchiveEntryVideo({ video, poster, alt, contentWarning = false, entrySlug = '' }) {
+export default function ArchiveEntryVideo({ video, poster, vimeoUrl, alt, contentWarning = false, entrySlug = '' }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFull, setIsFull] = useState(false);
   const [hasError, setHasError] = useState(false);
   const { hasConsent } = useContentWarningConsent();
 
-  const videoUrl = video?.asset?.url;
-  const videoMimeType = video?.asset?.mimeType || 'video/mp4';
+  // Vimeo direct file URL → use as video source. Otherwise use Sanity video.
+  const isDirectFile = vimeoUrl && isVimeoDirectFileUrl(vimeoUrl);
+  const videoUrl = isDirectFile ? vimeoUrl : video?.asset?.url;
+  const videoMimeType = isDirectFile ? 'video/mp4' : (video?.asset?.mimeType || 'video/mp4');
   const posterUrl = poster?.asset?._ref ? urlForImage(poster) : null;
+
+  // Calculate aspect ratio from poster (used for both Vimeo and native video)
+  const posterAspectRatio = poster?.dimensions?.aspectRatio;
+  const aspectRatioPadding = posterAspectRatio
+    ? `${(1 / posterAspectRatio) * 100}%`
+    : '100%';
 
   // Shared play/pause toggle function (must be before any early returns)
   const handleTogglePlayPause = useCallback(() => {
@@ -158,12 +167,6 @@ export default function ArchiveEntryVideo({ video, poster, alt, contentWarning =
       videoElement.classList.remove(styles.archiveEntryVideoFull);
     }
   }, [isFull]);
-
-  // Calculate aspect ratio padding from poster dimensions
-  const posterAspectRatio = poster?.dimensions?.aspectRatio;
-  const aspectRatioPadding = posterAspectRatio 
-    ? `${(1 / posterAspectRatio) * 100}%`
-    : '100%';
 
   // Validate video URL
   if (!videoUrl) {

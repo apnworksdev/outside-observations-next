@@ -42,6 +42,7 @@ export const ARCHIVE_ENTRIES_LIST_QUERY = defineQuery(`*[_type == "archiveEntry"
       mimeType
     }
   },
+  vimeoUrl,
   poster{
     ...,
     asset,
@@ -112,6 +113,7 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
       mimeType
     }
   },
+  vimeoUrl,
   poster{
     ...,
     asset,
@@ -177,6 +179,7 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && (sl
       mimeType
     }
   },
+  vimeoUrl,
   poster{
     ...,
     asset,
@@ -325,6 +328,7 @@ export const ARCHIVE_ENTRIES_BY_IDS_FOR_UNEXPECTED_QUERY = defineQuery(
       "dimensions": asset->metadata.dimensions
     },
     video { asset->{ url, mimeType } },
+    vimeoUrl,
     aiMoodTags[]->{ _id, name },
     aiDescription,
     tags[]->{ _id, name }

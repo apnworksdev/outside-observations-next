@@ -207,6 +207,7 @@ export function ArchiveEntryArticle({ entry, headingId }) {
               <ArchiveEntryVideo
                 video={entry.video}
                 poster={entry.poster}
+                vimeoUrl={entry.vimeoUrl}
                 alt={entry.metadata?.artName || entry.artName}
                 contentWarning={entry.metadata?.contentWarning}
                 entrySlug={entry.metadata?.slug?.current ?? entry.slug?.current ?? ''}

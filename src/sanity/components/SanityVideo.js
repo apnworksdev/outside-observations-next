@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { urlForImage } from '@/sanity/lib/image';
 import SanityImage from '@/sanity/components/SanityImage';
+import { isVimeoDirectFileUrl } from '@/helpers/vimeoUtils';
 
 /**
  * SanityVideo - A simple video component for Sanity-hosted videos
@@ -14,6 +15,7 @@ import SanityImage from '@/sanity/components/SanityImage';
 export default function SanityVideo({
   video,
   poster,
+  vimeoUrl,
   alt,
   width,
   height,
@@ -41,9 +43,9 @@ export default function SanityVideo({
   const [hasError, setHasError] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  // Get video URL from Sanity file asset
-  const videoUrl = video?.asset?.url;
-  const videoMimeType = video?.asset?.mimeType || 'video/mp4';
+  // Video URL: Vimeo direct file (when vimeoUrl is set and is a direct file) or Sanity file asset. Non-direct vimeoUrl is ignored.
+  const videoUrl = (vimeoUrl && isVimeoDirectFileUrl(vimeoUrl)) ? vimeoUrl : video?.asset?.url;
+  const videoMimeType = (vimeoUrl && isVimeoDirectFileUrl(vimeoUrl)) ? 'video/mp4' : (video?.asset?.mimeType || 'video/mp4');
   
   // Get poster URL from Sanity image
   const posterUrl = poster ? urlForImage(poster) : null;

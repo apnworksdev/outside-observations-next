@@ -45,6 +45,13 @@ export const archiveEntry = defineType({
       },
     }),
     defineField({
+      name: 'vimeoUrl',
+      title: 'Vimeo link',
+      type: 'string',
+      description: 'Optional Vimeo video URL. When set, the frontend will use this instead of the uploaded video file.',
+      hidden: ({parent}) => parent?.mediaType !== 'video',
+    }),
+    defineField({
       name: 'poster',
       title: 'Poster',
       type: 'image',

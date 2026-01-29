@@ -116,6 +116,7 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
           <SanityVideo
             video={entry.video}
             poster={entry.poster}
+            vimeoUrl={entry.vimeoUrl}
             alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
             className={styles.archiveEntryVideo}
             fallbackClassName={styles.archiveEntryImage}
