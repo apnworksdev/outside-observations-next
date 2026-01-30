@@ -82,9 +82,9 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
               contentWarning={entry.metadata?.contentWarning}
             >
               <SanityVideo
+                vimeoUrl={entry.vimeoUrl}
                 video={entry.video}
                 poster={entry.poster}
-                vimeoUrl={entry.vimeoUrl}
                 alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
                 className={styles.archiveEntryVideo}
                 fallbackClassName={styles.archiveEntryImage}
