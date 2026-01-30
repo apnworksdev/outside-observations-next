@@ -13,14 +13,6 @@ import TypewriterMessage from './TypewriterMessage';
 import ExploreArchiveLink from './ExploreArchiveLink';
 import Linkify from './Linkify';
 
-// Store messages as plain text (URLs → [link]); linkify only when rendering. Keeps storage/API payloads simple.
-// Exclude trailing ) ] } from the URL match so we don't break "(https://...)" into "([link] " (unbalanced parens).
-const STRIP_URL_REGEX = /https?:\/\/[^\s)\]\}]+/gi;
-function toPlainText(str) {
-  if (str == null || typeof str !== 'string') return '';
-  return str.replace(STRIP_URL_REGEX, '[link]').trim();
-}
-
 export default function ChatBox({ variant = 'home' }) {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -107,9 +99,9 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
         
         // Use site settings message if available and not empty, otherwise use default
         const firstMessageText = (chatFirstMessage && chatFirstMessage.trim())
-          ? chatFirstMessage
+          ? chatFirstMessage.trim()
           : DEFAULT_FIRST_MESSAGE;
-        updateFirstMessage(toPlainText(firstMessageText));
+        updateFirstMessage(firstMessageText);
       } catch (error) {
         console.error('Failed to fetch chat first message from site settings:', error);
         // Use default message on error
@@ -287,13 +279,11 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
 
       trackChatMessageSent(userMessage, variant);
 
-      // Store as plain text (no URLs) so saved/API payload stays simple; linkify only when rendering
-      const userMessagePlain = toPlainText(userMessage);
       setMessages((prevMessages) => [
         ...prevMessages,
         {
           id: messageIdRef.current++,
-          text: userMessagePlain,
+          text: userMessage,
           sender: 'user',
           isLoading: false
         }
@@ -319,21 +309,21 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
       setIsLoading(true);
 
       try {
-        // Build full conversation: plain text only, exclude image-only and error messages (don't resend "bot: Validation error")
+        // Build full conversation: exclude image-only and error messages (don't resend "bot: Validation error")
         const historyParts = messages
           .filter(
             (m) =>
               !m.isImageMessage &&
               !m.isError &&
               m.text != null &&
-              toPlainText(m.text).length > 0
+              String(m.text).trim().length > 0
           )
           .map((m) => {
-            const text = toPlainText(m.text);
+            const text = String(m.text).trim();
             const prefix = m.sender === 'user' ? 'user:' : 'bot:';
             return `${prefix} ${text}`;
           });
-        const currentLine = `user: ${userMessagePlain}`;
+        const currentLine = `user: ${userMessage}`;
         let fullConversation = [...historyParts, currentLine].join('\n\n');
 
         const MAX_QUERY_LENGTH = 9500; // upstream API limit: "query" length must be <= 1000 characters
@@ -457,7 +447,7 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
           if (newMessages[lastIndex]?.sender === 'bot' && newMessages[lastIndex]?.isLoading) {
             newMessages[lastIndex] = {
               ...newMessages[lastIndex],
-              text: toPlainText(botResponse),
+              text: typeof botResponse === 'string' ? botResponse.trim() : String(botResponse || '').trim(),
               isLoading: false,
               // Only include imageEntries and itemIds for 'home' variant
               imageEntries: variant === 'home' && matchedEntries.length > 0 ? matchedEntries : null,
@@ -495,7 +485,7 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
           if (newMessages[lastIndex]?.sender === 'bot' && newMessages[lastIndex]?.isLoading) {
             newMessages[lastIndex] = {
               ...newMessages[lastIndex],
-              text: toPlainText(errorMessage),
+              text: typeof errorMessage === 'string' ? errorMessage.trim() : String(errorMessage || '').trim(),
               isLoading: false,
               isError: true, // Mark as error for styling
             };
