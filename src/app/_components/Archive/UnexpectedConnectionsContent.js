@@ -132,11 +132,11 @@ export default function UnexpectedConnectionsContent({
           const itemKey = entry?._id ?? `item-${index}`;
 
           const media =
-            entry.mediaType === 'video' && entry.video?.asset?.url ? (
+            entry.mediaType === 'video' && (entry.video?.asset?.url || entry.vimeoUrl || entry.videoExcerptUrl) ? (
               <SanityVideo
-                vimeoUrl={entry.vimeoUrl}
                 video={entry.video}
                 poster={entry.poster}
+                vimeoUrl={entry.videoExcerptUrl || entry.vimeoUrl}
                 alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
                 width={mediaWidth}
                 height={calculatedHeight}
