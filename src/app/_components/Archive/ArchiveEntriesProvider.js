@@ -87,9 +87,10 @@ function hasMedia(entry) {
     return images.some(img => img?.image?.asset?._ref);
   }
   
-  // Video: needs both video asset (with url) and poster
+  // Video: needs poster and either video asset, vimeoUrl, or videoExcerptUrl
   if (mediaType === 'video') {
-    return entry.video?.asset?.url && entry.poster?.asset?._ref;
+    const hasVideoSource = entry.video?.asset?.url || entry.vimeoUrl || entry.videoExcerptUrl;
+    return hasVideoSource && entry.poster?.asset?._ref;
   }
   
   // Image (default): needs poster

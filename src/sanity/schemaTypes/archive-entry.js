@@ -52,6 +52,12 @@ export const archiveEntry = defineType({
       hidden: ({parent}) => parent?.mediaType !== 'video',
     }),
     defineField({
+      name: 'videoExcerptUrl',
+      title: 'Video excerpt URL',
+      type: 'string',
+      description: 'Optional external video excerpt URL (e.g. Vimeo). When set, this is shown in the archive and Unexpected Connections instead of the main video. Leave empty to use the main video or poster.',
+    }),
+    defineField({
       name: 'poster',
       title: 'Poster',
       type: 'image',

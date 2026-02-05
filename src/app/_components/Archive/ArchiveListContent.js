@@ -109,14 +109,14 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
             if (typeof idx === 'number') setCurrentImageIndex(idx);
           }}
         />
-      ) : isVideo && entry.video ? (
+      ) : isVideo && (entry.video?.asset?.url || entry.vimeoUrl || entry.videoExcerptUrl) ? (
         <ProtectedMediaWrapper
           contentWarning={entry.metadata?.contentWarning}
         >
           <SanityVideo
             video={entry.video}
             poster={entry.poster}
-            vimeoUrl={entry.vimeoUrl}
+            vimeoUrl={entry.videoExcerptUrl || entry.vimeoUrl}
             alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
             className={styles.archiveEntryVideo}
             fallbackClassName={styles.archiveEntryImage}
