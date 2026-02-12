@@ -4,8 +4,9 @@ import {defineQuery} from 'next-sanity'
  * Optimized query for archive list - only fetches data needed for list display
  * Much lighter than ARCHIVE_ENTRIES_QUERY (excludes aiDescription, full visual essay images)
  */
-export const ARCHIVE_ENTRIES_LIST_QUERY = defineQuery(`*[_type == "archiveEntry"] | order(coalesce(metadata.year, year) desc) {
+export const ARCHIVE_ENTRIES_LIST_QUERY = defineQuery(`*[_type == "archiveEntry"] | order(_updatedAt desc) {
   _id,
+  _updatedAt,
   metadata {
     year,
     slug {
@@ -76,7 +77,7 @@ export const ARCHIVE_ENTRIES_LIST_QUERY = defineQuery(`*[_type == "archiveEntry"
  * Full query for archive entries - includes all data (used for individual entry pages)
  * Keep this for backward compatibility and for pages that need full data
  */
-export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | order(coalesce(metadata.year, year) desc) {
+export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | order(_updatedAt desc) {
   _id,
   metadata {
     year,
