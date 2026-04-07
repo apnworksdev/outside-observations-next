@@ -3,7 +3,7 @@
 import { unstable_cache } from 'next/cache';
 
 import { client } from '@/sanity/lib/client';
-import { ARCHIVE_ENTRIES_LIST_QUERY, ARCHIVE_ENTRIES_QUERY, SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
+import { ARCHIVE_PAGE_ENTRIES_QUERY, ARCHIVE_ENTRIES_QUERY, SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
 
 /**
  * Fetches archive entries for list view (optimized - lighter payload)
@@ -11,7 +11,7 @@ import { ARCHIVE_ENTRIES_LIST_QUERY, ARCHIVE_ENTRIES_QUERY, SITE_SETTINGS_QUERY 
  */
 const fetchArchiveEntries = async () => {
   try {
-    const entries = await client.fetch(ARCHIVE_ENTRIES_LIST_QUERY);
+    const entries = await client.fetch(ARCHIVE_PAGE_ENTRIES_QUERY);
     
     // Validate response is an array
     if (!Array.isArray(entries)) {
@@ -48,17 +48,36 @@ const fetchFullArchiveEntries = async () => {
   }
 };
 
-export const getArchiveEntries = unstable_cache(
+const getArchiveEntriesCached = unstable_cache(
   fetchArchiveEntries,
-  ['archive-entries-list'],
+  ['archive-entries-page-v2'],
   { revalidate: 60 }
 );
 
-export const getFullArchiveEntries = unstable_cache(
-  fetchFullArchiveEntries,
-  ['archive-entries-full'],
-  { revalidate: 60 }
-);
+/**
+ * Archive page entries with safe cache fallback.
+ * If payload grows beyond Next data-cache limits, fall back to uncached fetch
+ * rather than throwing and breaking the page.
+ */
+export async function getArchiveEntries() {
+  try {
+    return await getArchiveEntriesCached();
+  } catch (error) {
+    const message = error?.message || '';
+    const isCacheSizeError =
+      message.includes('items over 2MB can not be cached') ||
+      message.includes('Failed to set Next.js data cache');
+
+    if (isCacheSizeError) {
+      console.warn('Archive entries exceeded Next cache size; using uncached fallback.');
+      return fetchArchiveEntries();
+    }
+
+    throw error;
+  }
+}
+
+export const getFullArchiveEntries = fetchFullArchiveEntries;
 
 /**
  * Fetches site settings with error handling

@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 export const ARCHIVE_SCROLL_PERCENTAGE_KEY = 'archive_scroll_percentage';
 export const ARCHIVE_SCROLL_VIEW_KEY = 'archive_scroll_view';
+export const ARCHIVE_SCROLL_RESTORE_PENDING_KEY = 'archive_scroll_restore_pending';
 
 // Cache scroll element references to avoid repeated DOM queries
 const scrollElementCache = { list: null, images: null };
@@ -168,6 +169,41 @@ export function restoreArchiveScrollPosition(currentView, onRestore) {
 }
 
 /**
+ * Ensures archive starts at top when no restore should happen.
+ * This avoids stale custom-element scroll state showing users a mid-list position.
+ */
+export function resetArchiveScrollToTop(currentView, onDone) {
+  if (typeof window === 'undefined') return;
+
+  let retryCount = 0;
+  const MAX_RETRIES = 60; // 3 seconds total at 50ms intervals
+
+  const applyTop = () => {
+    let scrollElement = null;
+    if (currentView === 'list') {
+      scrollElement = document.querySelector('scroll-container');
+    } else {
+      scrollElement = document.querySelector('mask-scroll');
+    }
+
+    if (scrollElement) {
+      scrollElement.scrollTop = 0;
+      if (onDone) onDone();
+      return;
+    }
+
+    if (retryCount < MAX_RETRIES) {
+      retryCount++;
+      setTimeout(applyTop, 50);
+    } else if (onDone) {
+      onDone();
+    }
+  };
+
+  requestAnimationFrame(applyTop);
+}
+
+/**
  * Clears the saved scroll position
  */
 export function clearArchiveScrollPosition() {
@@ -176,8 +212,51 @@ export function clearArchiveScrollPosition() {
   try {
     sessionStorage.removeItem(ARCHIVE_SCROLL_PERCENTAGE_KEY);
     sessionStorage.removeItem(ARCHIVE_SCROLL_VIEW_KEY);
+    sessionStorage.removeItem(ARCHIVE_SCROLL_RESTORE_PENDING_KEY);
   } catch (error) {
     // Silently fail if sessionStorage is unavailable
+  }
+}
+
+/**
+ * Marks that the next archive page load should restore saved scroll.
+ * This is set right before navigating from archive list to an archive entry.
+ */
+export function markArchiveScrollRestorePending(event) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    // Only mark pending restore for same-tab navigations.
+    // Ignore modified/multi-tab interactions (Cmd/Ctrl click, middle click, etc).
+    if (event && typeof event === 'object') {
+      const hasModifier = !!(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
+      if (hasModifier) return;
+
+      if (typeof event.button === 'number' && event.button !== 0) {
+        return;
+      }
+
+      const target = event.currentTarget?.getAttribute?.('target');
+      if (target && target !== '_self') {
+        return;
+      }
+    }
+
+    sessionStorage.setItem(ARCHIVE_SCROLL_RESTORE_PENDING_KEY, '1');
+  } catch (error) {
+    // Silently fail if sessionStorage is unavailable
+  }
+}
+
+/**
+ * Returns whether the next archive mount should attempt restoring saved scroll.
+ */
+export function isArchiveScrollRestorePending() {
+  if (typeof window === 'undefined') return false;
+  try {
+    return sessionStorage.getItem(ARCHIVE_SCROLL_RESTORE_PENDING_KEY) === '1';
+  } catch {
+    return false;
   }
 }
 
@@ -185,70 +264,71 @@ export function clearArchiveScrollPosition() {
  * Hook to restore scroll position when returning to archive page, changing views, or on page refresh
  * @param {string} view - The current archive view ('list' or 'images')
  */
-export function useArchiveScrollRestore(view) {
+export function useArchiveScrollRestore(view, onRestoreSettled) {
   const pathname = usePathname();
-  const hasRestoredRef = useRef(false);
-  const previousViewRef = useRef(view);
   const isArchivePage = pathname === '/archive';
+  const retryTimeoutRef = useRef(null);
+  const initialActionTimeoutRef = useRef(null);
+  const hasSettledRef = useRef(false);
+  const hasAppliedInitialActionRef = useRef(false);
+
+  const settleRestore = useCallback(() => {
+    if (hasSettledRef.current) return;
+    hasSettledRef.current = true;
+    if (typeof onRestoreSettled === 'function') {
+      onRestoreSettled();
+    }
+  }, [onRestoreSettled]);
 
   useEffect(() => {
-    // Only restore on archive page
-    if (isArchivePage && view) {
-      // Check if there's a saved position in sessionStorage
-      const hasSavedPosition = typeof window !== 'undefined' && 
+    // Reset state when leaving archive page.
+    if (!isArchivePage) {
+      hasAppliedInitialActionRef.current = false;
+      clearScrollElementCache();
+      hasSettledRef.current = false;
+      if (initialActionTimeoutRef.current) {
+        clearTimeout(initialActionTimeoutRef.current);
+        initialActionTimeoutRef.current = null;
+      }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
+      return;
+    }
+
+    if (!view || hasAppliedInitialActionRef.current || typeof window === 'undefined') {
+      return;
+    }
+
+    // Let initial view hydration settle first (images/list can switch once on mount).
+    // This prevents running both restore and reset on successive early renders.
+    initialActionTimeoutRef.current = setTimeout(() => {
+      if (hasAppliedInitialActionRef.current) return;
+
+      const hasSavedPosition =
         sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY) !== null &&
         sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null;
+      const shouldRestore =
+        sessionStorage.getItem(ARCHIVE_SCROLL_RESTORE_PENDING_KEY) === '1';
 
-      // Check if view changed (for view switching)
-      const viewChanged = previousViewRef.current !== view;
-      
-      // Reset restore flag if view changed (allow restoration on view change)
-      if (viewChanged) {
-        hasRestoredRef.current = false;
-        previousViewRef.current = view;
+      hasAppliedInitialActionRef.current = true;
+
+      if (hasSavedPosition && shouldRestore) {
+        restoreArchiveScrollPosition(view, settleRestore);
+      } else {
+        resetArchiveScrollToTop(view, settleRestore);
       }
 
-      // Restore if we haven't restored yet for this view AND there's a saved position
-      if (!hasRestoredRef.current && hasSavedPosition) {
-        // Wait for custom elements to be ready (scroll-container and mask-scroll)
-        let retryCount = 0;
-        const MAX_RETRIES = 20; // Max 20 retries (20 * 50ms = 1 second total)
-        
-        const checkAndRestore = () => {
-          const hasListContainer = view === 'list' ? document.querySelector('scroll-container') : true;
-          const hasImagesContainer = view === 'images' ? document.querySelector('mask-scroll') : true;
-          
-          if (hasListContainer && hasImagesContainer) {
-            restoreArchiveScrollPosition(view, () => {
-              hasRestoredRef.current = true;
-            });
-          } else if (retryCount < MAX_RETRIES) {
-            // Retry after a short delay if custom elements aren't ready yet
-            retryCount++;
-            setTimeout(checkAndRestore, 50);
-          } else {
-            // Max retries reached, mark as restored to prevent infinite loops
-            hasRestoredRef.current = true;
-          }
-        };
+      // Consume pending marker once decision is applied.
+      sessionStorage.removeItem(ARCHIVE_SCROLL_RESTORE_PENDING_KEY);
+    }, 120);
 
-        // Start checking after a short initial delay
-        const timeoutId = setTimeout(checkAndRestore, 100);
-
-        return () => clearTimeout(timeoutId);
-      } else if (!hasSavedPosition) {
-        // No saved position, mark as "restored" so we don't keep trying
-        hasRestoredRef.current = true;
+    return () => {
+      if (initialActionTimeoutRef.current) {
+        clearTimeout(initialActionTimeoutRef.current);
+        initialActionTimeoutRef.current = null;
       }
-    }
-
-    // Reset restore flag and clear scroll element cache when leaving archive page.
-    // Clearing the cache prevents stale (detached) refs from being used when we
-    // return, which would otherwise cause saveArchiveScrollPosition to write 0.
-    if (!isArchivePage) {
-      hasRestoredRef.current = false;
-      previousViewRef.current = null;
-      clearScrollElementCache();
-    }
-  }, [isArchivePage, view]);
+    };
+  }, [isArchivePage, view, settleRestore]);
 }

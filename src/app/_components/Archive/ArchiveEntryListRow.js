@@ -10,7 +10,7 @@ import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
 import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
 import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
 import { useArchiveEntries } from './ArchiveEntriesProvider';
-import { saveArchiveScrollPosition } from '@/app/_hooks/useArchiveScrollPosition';
+import { saveArchiveScrollPosition, markArchiveScrollRestorePending } from '@/app/_hooks/useArchiveScrollPosition';
 import { trackArchiveEntryClickFromEntry } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
@@ -41,15 +41,41 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
 
   // Handle mouse down to save scroll position before navigation
   // Using onMouseDown instead of onClick so it runs before Next.js navigation
-  const handleMouseDown = () => {
+  const prepareNavigationRestore = (event) => {
     if (view) {
       try {
         saveArchiveScrollPosition(view);
+        markArchiveScrollRestorePending(event);
       } catch {
         // Ignore storage errors
       }
     }
+  };
+
+  const handleMouseDown = (event) => {
+    prepareNavigationRestore(event);
     trackArchiveEntryClickFromEntry(entry, view ?? 'list', searchStatus ?? {});
+  };
+
+  const handleClick = (event) => {
+    prepareNavigationRestore(event);
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      prepareNavigationRestore(event);
+    }
+  };
+
+  const handlePointerDown = (event) => {
+    if (event.pointerType === 'touch' || event.pointerType === 'pen') {
+      prepareNavigationRestore(event);
+    }
+  };
+
+  const handleAuxClick = (event) => {
+    // Ensure non-primary clicks never set pending restore.
+    markArchiveScrollRestorePending(event);
   };
 
   const content = (
@@ -155,6 +181,10 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
       {...containerProps}
       {...prefetchHandlers}
       onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      onPointerDown={handlePointerDown}
+      onAuxClick={handleAuxClick}
     >
       {content}
     </Link>

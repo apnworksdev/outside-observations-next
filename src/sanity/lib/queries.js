@@ -74,6 +74,59 @@ export const ARCHIVE_ENTRIES_LIST_QUERY = defineQuery(`*[_type == "archiveEntry"
 }`)
 
 /**
+ * Archive page query focused on list/grid rendering needs.
+ * Intentionally trims heavyweight fields so payload can stay below Next cache limits.
+ */
+export const ARCHIVE_PAGE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | order(_updatedAt desc) {
+  _id,
+  metadata {
+    year,
+    slug { current },
+    artName,
+    source,
+    contentWarning,
+    tags[]->{ name }
+  },
+  year,
+  slug { current },
+  artName,
+  source,
+  mediaType,
+  video{
+    asset->{
+      url,
+      mimeType
+    }
+  },
+  vimeoUrl,
+  videoExcerptUrl,
+  poster{
+    asset,
+    crop,
+    hotspot,
+    'lqip': asset->metadata.lqip,
+    'dimensions': asset->metadata.dimensions
+  },
+  aiMoodTags[]->{ name },
+  visualEssayImages[]->{
+    _id,
+    image{
+      asset,
+      crop,
+      hotspot,
+      'lqip': asset->metadata.lqip,
+      'dimensions': asset->metadata.dimensions
+    },
+    metadata {
+      artName,
+      fileName,
+      year { value },
+      source
+    }
+  }
+}`)
+
+/**
  * Full query for archive entries - includes all data (used for individual entry pages)
  * Keep this for backward compatibility and for pages that need full data
  */

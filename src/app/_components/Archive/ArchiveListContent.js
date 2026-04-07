@@ -16,7 +16,7 @@ import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper
 import { useArchiveEntries, useArchiveSortController } from './ArchiveEntriesProvider';
 import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
 import { trackArchiveEntryClickFromEntry, trackArchiveLoaded, trackArchiveSort } from '@/app/_helpers/gtag';
-import { saveArchiveScrollPosition, useArchiveScrollRestore, restoreArchiveScrollPosition, clearScrollElementCache, ARCHIVE_SCROLL_PERCENTAGE_KEY, ARCHIVE_SCROLL_VIEW_KEY } from '@/app/_hooks/useArchiveScrollPosition';
+import { saveArchiveScrollPosition, markArchiveScrollRestorePending, useArchiveScrollRestore, clearScrollElementCache, ARCHIVE_SCROLL_PERCENTAGE_KEY, ARCHIVE_SCROLL_VIEW_KEY, ARCHIVE_SCROLL_RESTORE_PENDING_KEY, isArchiveScrollRestorePending } from '@/app/_hooks/useArchiveScrollPosition';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveListErrorFallback } from '@/app/_components/ErrorFallbacks';
 
@@ -68,15 +68,41 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
 
   // Handle mouse down to save scroll position before navigation
   // Using onMouseDown instead of onClick so it runs before Next.js navigation
-  const handleMouseDown = () => {
+  const prepareNavigationRestore = (event) => {
     if (view) {
       try {
         saveArchiveScrollPosition(view);
+        markArchiveScrollRestorePending(event);
       } catch {
         // Ignore storage errors
       }
     }
+  };
+
+  const handleMouseDown = (event) => {
+    prepareNavigationRestore(event);
     trackArchiveEntryClickFromEntry(entry, view ?? 'images', searchStatus ?? {});
+  };
+
+  const handleClick = (event) => {
+    prepareNavigationRestore(event);
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      prepareNavigationRestore(event);
+    }
+  };
+
+  const handlePointerDown = (event) => {
+    if (event.pointerType === 'touch' || event.pointerType === 'pen') {
+      prepareNavigationRestore(event);
+    }
+  };
+
+  const handleAuxClick = (event) => {
+    // Ensure non-primary clicks never set pending restore.
+    markArchiveScrollRestorePending(event);
   };
 
   // For visual essays, overlay uses the currently displayed image's metadata
@@ -187,6 +213,10 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
           {...linkProps}
           {...prefetchHandlers}
           onMouseDown={handleMouseDown}
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          onPointerDown={handlePointerDown}
+          onAuxClick={handleAuxClick}
         >
           {content}
         </Link>
@@ -201,6 +231,17 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
 
 export default function ArchiveListContent() {
   const { view, visibleEntries, searchStatus } = useArchiveEntries();
+  const [hideUntilRestoreSettles, setHideUntilRestoreSettles] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const hasSavedPosition =
+        sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY) !== null &&
+        sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null;
+      return hasSavedPosition && isArchiveScrollRestorePending();
+    } catch {
+      return false;
+    }
+  });
   const yearSort = useArchiveSortController('year', {
     label: 'Year',
     ariaMessages: {
@@ -213,8 +254,24 @@ export default function ArchiveListContent() {
   const sourceSort = useArchiveSortController('source', { label: 'Source/Author' });
   const typeSort = useArchiveSortController('mediaType', { label: 'Type' });
 
-  // Restore scroll position when returning to archive or changing views
-  useArchiveScrollRestore(view);
+  // Restore scroll position when returning to archive or changing views.
+  // Keep content hidden briefly while restore settles to avoid visible jump.
+  useArchiveScrollRestore(view, () => {
+    setHideUntilRestoreSettles(false);
+  });
+
+  useEffect(() => {
+    if (!hideUntilRestoreSettles) return;
+    const timeoutId = setTimeout(() => {
+      setHideUntilRestoreSettles(false);
+      try {
+        sessionStorage.removeItem(ARCHIVE_SCROLL_RESTORE_PENDING_KEY);
+      } catch {
+        // Ignore storage errors
+      }
+    }, 3500);
+    return () => clearTimeout(timeoutId);
+  }, [hideUntilRestoreSettles]);
 
   // GA4: which view was used when landing on archive (list vs images usage)
   const archiveLoadedSentRef = useRef(false);
@@ -594,7 +651,10 @@ export default function ArchiveListContent() {
           </div>
         )}
         <div ref={contentRef}>
-          <div ref={viewContentRef}>
+          <div
+            ref={viewContentRef}
+            style={hideUntilRestoreSettles ? { visibility: 'hidden' } : undefined}
+          >
             {hasEntries ? (
               view === 'images' ? (
                 <MaskScrollWrapper className={`${styles.containerContent} isAtTop`}>
