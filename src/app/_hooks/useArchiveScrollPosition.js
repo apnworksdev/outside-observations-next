@@ -179,15 +179,22 @@ export function resetArchiveScrollToTop(currentView, onDone) {
   const MAX_RETRIES = 60; // 3 seconds total at 50ms intervals
 
   const applyTop = () => {
-    let scrollElement = null;
-    if (currentView === 'list') {
-      scrollElement = document.querySelector('scroll-container');
-    } else {
-      scrollElement = document.querySelector('mask-scroll');
-    }
+    const preferredElement =
+      currentView === 'list'
+        ? document.querySelector('scroll-container')
+        : document.querySelector('mask-scroll');
+    const listElement = document.querySelector('scroll-container');
+    const imagesElement = document.querySelector('mask-scroll');
 
-    if (scrollElement) {
-      scrollElement.scrollTop = 0;
+    // Always reset window scroll too, so browser history restoration cannot keep
+    // a stale middle position when we explicitly want "top".
+    window.scrollTo(0, 0);
+
+    if (preferredElement) preferredElement.scrollTop = 0;
+    if (listElement) listElement.scrollTop = 0;
+    if (imagesElement) imagesElement.scrollTop = 0;
+
+    if (preferredElement || listElement || imagesElement) {
       if (onDone) onDone();
       return;
     }
@@ -309,18 +316,21 @@ export function useArchiveScrollRestore(view, onRestoreSettled) {
       const hasSavedPosition =
         sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY) !== null &&
         sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null;
-      const shouldRestore =
-        sessionStorage.getItem(ARCHIVE_SCROLL_RESTORE_PENDING_KEY) === '1';
 
       hasAppliedInitialActionRef.current = true;
 
-      if (hasSavedPosition && shouldRestore) {
+      // Deterministic rule:
+      // - saved scroll in sessionStorage => restore
+      // - no saved scroll => force top
+      if (hasSavedPosition) {
         restoreArchiveScrollPosition(view, settleRestore);
       } else {
+        sessionStorage.removeItem(ARCHIVE_SCROLL_PERCENTAGE_KEY);
+        sessionStorage.removeItem(ARCHIVE_SCROLL_VIEW_KEY);
         resetArchiveScrollToTop(view, settleRestore);
       }
 
-      // Consume pending marker once decision is applied.
+      // Clear pending marker since it is no longer part of restore decision.
       sessionStorage.removeItem(ARCHIVE_SCROLL_RESTORE_PENDING_KEY);
     }, 120);
 

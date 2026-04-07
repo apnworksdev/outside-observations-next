@@ -16,7 +16,7 @@ import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper
 import { useArchiveEntries, useArchiveSortController } from './ArchiveEntriesProvider';
 import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
 import { trackArchiveEntryClickFromEntry, trackArchiveLoaded, trackArchiveSort } from '@/app/_helpers/gtag';
-import { saveArchiveScrollPosition, markArchiveScrollRestorePending, useArchiveScrollRestore, clearScrollElementCache, ARCHIVE_SCROLL_PERCENTAGE_KEY, ARCHIVE_SCROLL_VIEW_KEY, ARCHIVE_SCROLL_RESTORE_PENDING_KEY, isArchiveScrollRestorePending } from '@/app/_hooks/useArchiveScrollPosition';
+import { saveArchiveScrollPosition, markArchiveScrollRestorePending, useArchiveScrollRestore, clearScrollElementCache, ARCHIVE_SCROLL_PERCENTAGE_KEY, ARCHIVE_SCROLL_VIEW_KEY, ARCHIVE_SCROLL_RESTORE_PENDING_KEY } from '@/app/_hooks/useArchiveScrollPosition';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveListErrorFallback } from '@/app/_components/ErrorFallbacks';
 
@@ -231,17 +231,9 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
 
 export default function ArchiveListContent() {
   const { view, visibleEntries, searchStatus } = useArchiveEntries();
-  const [hideUntilRestoreSettles, setHideUntilRestoreSettles] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      const hasSavedPosition =
-        sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY) !== null &&
-        sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null;
-      return hasSavedPosition && isArchiveScrollRestorePending();
-    } catch {
-      return false;
-    }
-  });
+  // Keep SSR and first client render identical to avoid hydration mismatch.
+  // Then decide after mount if we need to hide briefly for scroll restore.
+  const [hideUntilRestoreSettles, setHideUntilRestoreSettles] = useState(false);
   const yearSort = useArchiveSortController('year', {
     label: 'Year',
     ariaMessages: {
@@ -259,6 +251,20 @@ export default function ArchiveListContent() {
   useArchiveScrollRestore(view, () => {
     setHideUntilRestoreSettles(false);
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const hasSavedPosition =
+        sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY) !== null &&
+        sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null;
+      if (hasSavedPosition) {
+        setHideUntilRestoreSettles(true);
+      }
+    } catch {
+      // Ignore storage access errors
+    }
+  }, []);
 
   useEffect(() => {
     if (!hideUntilRestoreSettles) return;
