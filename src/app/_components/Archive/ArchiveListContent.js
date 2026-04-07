@@ -16,11 +16,22 @@ import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper
 import { useArchiveEntries, useArchiveSortController } from './ArchiveEntriesProvider';
 import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
 import { trackArchiveEntryClickFromEntry, trackArchiveLoaded, trackArchiveSort } from '@/app/_helpers/gtag';
-import { saveArchiveScrollPosition, markArchiveScrollRestorePending, useArchiveScrollRestore, clearScrollElementCache, ARCHIVE_SCROLL_PERCENTAGE_KEY, ARCHIVE_SCROLL_VIEW_KEY, ARCHIVE_SCROLL_RESTORE_PENDING_KEY } from '@/app/_hooks/useArchiveScrollPosition';
+import {
+  saveArchiveScrollPosition,
+  useArchiveScrollRestore,
+  getArchiveScrollElement,
+  syncArchiveScrollTopFromSession,
+  enforceArchiveScrollTopWhenNoSession,
+  ARCHIVE_SCROLL_PERCENTAGE_KEY,
+  ARCHIVE_SCROLL_VIEW_KEY,
+} from '@/app/_hooks/useArchiveScrollPosition';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveListErrorFallback } from '@/app/_components/ErrorFallbacks';
 
 import styles from '@app/_assets/archive/archive-page.module.css';
+
+/** Stable style object — SSR + client both start hidden until scroll lock runs (no hydration mismatch). */
+const OFFSCREEN_SCROLL_LOCK_STYLE = { visibility: 'hidden' };
 
 function setGlobalArchiveListHeight(value) {
   if (typeof document === 'undefined') {
@@ -68,11 +79,10 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
 
   // Handle mouse down to save scroll position before navigation
   // Using onMouseDown instead of onClick so it runs before Next.js navigation
-  const prepareNavigationRestore = (event) => {
+  const prepareNavigationRestore = () => {
     if (view) {
       try {
         saveArchiveScrollPosition(view);
-        markArchiveScrollRestorePending(event);
       } catch {
         // Ignore storage errors
       }
@@ -80,29 +90,24 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
   };
 
   const handleMouseDown = (event) => {
-    prepareNavigationRestore(event);
+    prepareNavigationRestore();
     trackArchiveEntryClickFromEntry(entry, view ?? 'images', searchStatus ?? {});
   };
 
-  const handleClick = (event) => {
-    prepareNavigationRestore(event);
+  const handleClick = () => {
+    prepareNavigationRestore();
   };
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
-      prepareNavigationRestore(event);
+      prepareNavigationRestore();
     }
   };
 
   const handlePointerDown = (event) => {
     if (event.pointerType === 'touch' || event.pointerType === 'pen') {
-      prepareNavigationRestore(event);
+      prepareNavigationRestore();
     }
-  };
-
-  const handleAuxClick = (event) => {
-    // Ensure non-primary clicks never set pending restore.
-    markArchiveScrollRestorePending(event);
   };
 
   // For visual essays, overlay uses the currently displayed image's metadata
@@ -216,7 +221,6 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
           onClick={handleClick}
           onKeyDown={handleKeyDown}
           onPointerDown={handlePointerDown}
-          onAuxClick={handleAuxClick}
         >
           {content}
         </Link>
@@ -231,9 +235,8 @@ function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
 
 export default function ArchiveListContent() {
   const { view, visibleEntries, searchStatus } = useArchiveEntries();
-  // Keep SSR and first client render identical to avoid hydration mismatch.
-  // Then decide after mount if we need to hide briefly for scroll restore.
-  const [hideUntilRestoreSettles, setHideUntilRestoreSettles] = useState(false);
+  // Hidden until useLayoutEffect + rAF applies top or saved scroll — avoids any visible "middle" frame.
+  const [archiveContentVisible, setArchiveContentVisible] = useState(false);
   const yearSort = useArchiveSortController('year', {
     label: 'Year',
     ariaMessages: {
@@ -246,38 +249,7 @@ export default function ArchiveListContent() {
   const sourceSort = useArchiveSortController('source', { label: 'Source/Author' });
   const typeSort = useArchiveSortController('mediaType', { label: 'Type' });
 
-  // Restore scroll position when returning to archive or changing views.
-  // Keep content hidden briefly while restore settles to avoid visible jump.
-  useArchiveScrollRestore(view, () => {
-    setHideUntilRestoreSettles(false);
-  });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const hasSavedPosition =
-        sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY) !== null &&
-        sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null;
-      if (hasSavedPosition) {
-        setHideUntilRestoreSettles(true);
-      }
-    } catch {
-      // Ignore storage access errors
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!hideUntilRestoreSettles) return;
-    const timeoutId = setTimeout(() => {
-      setHideUntilRestoreSettles(false);
-      try {
-        sessionStorage.removeItem(ARCHIVE_SCROLL_RESTORE_PENDING_KEY);
-      } catch {
-        // Ignore storage errors
-      }
-    }, 3500);
-    return () => clearTimeout(timeoutId);
-  }, [hideUntilRestoreSettles]);
+  useArchiveScrollRestore(view, setArchiveContentVisible);
 
   // GA4: which view was used when landing on archive (list vs images usage)
   const archiveLoadedSentRef = useRef(false);
@@ -295,12 +267,6 @@ export default function ArchiveListContent() {
   const scrollElementRef = useRef(null);
 
   // Save scroll position on scroll events (optimized with cached element and change detection)
-  // When returning from an entry we must not save before restore runs, so skip saves for a short window.
-  const hadSavedPositionOnMountRef = useRef(
-    typeof window !== 'undefined' &&
-    sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY) !== null &&
-    sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null
-  );
   useEffect(() => {
     if (!view) return;
 
@@ -308,7 +274,6 @@ export default function ArchiveListContent() {
     let rafId = null;
     let lastSavedPosition = 0;
     let lastSavedPercentage = 0;
-    const allowSaveAfter = hadSavedPositionOnMountRef.current ? Date.now() + 600 : 0;
 
     const handleScroll = () => {
       if (rafId) {
@@ -331,9 +296,6 @@ export default function ArchiveListContent() {
           percentage: scrollPercentage
         };
 
-        // Don't save until after restore has had time to run (prevents overwriting with 0)
-        if (allowSaveAfter > 0 && Date.now() < allowSaveAfter) return;
-
         const positionDiff = Math.abs(scrollPosition - lastSavedPosition);
         const percentageDiff = Math.abs(scrollPercentage - lastSavedPercentage);
 
@@ -349,19 +311,7 @@ export default function ArchiveListContent() {
     };
 
     const setupScrollListener = () => {
-      // Cache the scroll element reference (query once)
-      if (view === 'list') {
-        scrollElementRef.current = document.querySelector('scroll-container');
-      } else {
-        scrollElementRef.current = document.querySelector('mask-scroll');
-        // Fallback if not found
-        if (!scrollElementRef.current) {
-          const container = document.querySelector('[data-view="images"]');
-          if (container) {
-            scrollElementRef.current = container.querySelector('mask-scroll');
-          }
-        }
-      }
+      scrollElementRef.current = getArchiveScrollElement(view);
 
       if (scrollElementRef.current) {
         scrollElementRef.current.addEventListener('scroll', handleScroll, { passive: true });
@@ -404,9 +354,6 @@ export default function ArchiveListContent() {
   const previousViewForSaveRef = useRef(view);
   useEffect(() => {
     if (previousViewForSaveRef.current && previousViewForSaveRef.current !== view) {
-      // Clear cache when view changes (elements might have changed)
-      clearScrollElementCache();
-      
       // Use the last known position from the ref (saved during scroll)
       const lastPosition = lastScrollPositionRef.current;
       if (lastPosition.view === previousViewForSaveRef.current) {
@@ -541,6 +488,70 @@ export default function ArchiveListContent() {
   );
 
   /**
+   * Restore hook already applies saved %. Do not sync immediately here — unstable scrollHeight
+   * causes pct×maxScroll to jump (visible flicker). One double-rAF pass + debounced ResizeObserver only.
+   */
+  useEffect(() => {
+    if (!archiveContentVisible || !view) {
+      return undefined;
+    }
+
+    const run = () => {
+      try {
+        if (
+          sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY) !== null &&
+          sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null
+        ) {
+          syncArchiveScrollTopFromSession(view);
+        } else {
+          enforceArchiveScrollTopWhenNoSession(view);
+        }
+      } catch {
+        enforceArchiveScrollTopWhenNoSession(view);
+      }
+    };
+
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = requestAnimationFrame(() => {
+      raf1 = 0;
+      raf2 = requestAnimationFrame(run);
+    });
+
+    const RESYNC_DEBOUNCE_MS = 120;
+    let ro = null;
+    let debounceId = null;
+    const el = getArchiveScrollElement(view);
+    if (el && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => {
+        if (debounceId !== null) {
+          clearTimeout(debounceId);
+        }
+        debounceId = window.setTimeout(() => {
+          debounceId = null;
+          run();
+        }, RESYNC_DEBOUNCE_MS);
+      });
+      ro.observe(el);
+    }
+
+    return () => {
+      if (raf1) {
+        cancelAnimationFrame(raf1);
+      }
+      if (raf2) {
+        cancelAnimationFrame(raf2);
+      }
+      if (debounceId !== null) {
+        clearTimeout(debounceId);
+      }
+      if (ro) {
+        ro.disconnect();
+      }
+    };
+  }, [archiveContentVisible, view, isScrollNeeded, visibleEntriesSignature]);
+
+  /**
    * The archive layout relies on CSS custom properties that mirror the rendered height.
    * To avoid layout shifts we:
    *   - Measure the list container via rAF and keep the measurement debounced.
@@ -659,7 +670,7 @@ export default function ArchiveListContent() {
         <div ref={contentRef}>
           <div
             ref={viewContentRef}
-            style={hideUntilRestoreSettles ? { visibility: 'hidden' } : undefined}
+            style={archiveContentVisible ? undefined : OFFSCREEN_SCROLL_LOCK_STYLE}
           >
             {hasEntries ? (
               view === 'images' ? (

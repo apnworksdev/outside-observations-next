@@ -19,6 +19,8 @@
   flex: none;
   max-height: calc(100dvh - var(--archive-container-bottom-margin) - var(--archive-container-top-margin));
   overflow: auto;
+  /* Prevent the browser from auto-adjusting scrollTop when content height changes (images, overflow toggles). */
+  overflow-anchor: none;
 }
 
 .containerContent:global(.overflowInitial) {

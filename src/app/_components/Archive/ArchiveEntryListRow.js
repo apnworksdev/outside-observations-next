@@ -10,7 +10,7 @@ import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
 import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
 import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
 import { useArchiveEntries } from './ArchiveEntriesProvider';
-import { saveArchiveScrollPosition, markArchiveScrollRestorePending } from '@/app/_hooks/useArchiveScrollPosition';
+import { saveArchiveScrollPosition } from '@/app/_hooks/useArchiveScrollPosition';
 import { trackArchiveEntryClickFromEntry } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
@@ -41,11 +41,10 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
 
   // Handle mouse down to save scroll position before navigation
   // Using onMouseDown instead of onClick so it runs before Next.js navigation
-  const prepareNavigationRestore = (event) => {
+  const prepareNavigationRestore = () => {
     if (view) {
       try {
         saveArchiveScrollPosition(view);
-        markArchiveScrollRestorePending(event);
       } catch {
         // Ignore storage errors
       }
@@ -53,29 +52,24 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
   };
 
   const handleMouseDown = (event) => {
-    prepareNavigationRestore(event);
+    prepareNavigationRestore();
     trackArchiveEntryClickFromEntry(entry, view ?? 'list', searchStatus ?? {});
   };
 
-  const handleClick = (event) => {
-    prepareNavigationRestore(event);
+  const handleClick = () => {
+    prepareNavigationRestore();
   };
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
-      prepareNavigationRestore(event);
+      prepareNavigationRestore();
     }
   };
 
   const handlePointerDown = (event) => {
     if (event.pointerType === 'touch' || event.pointerType === 'pen') {
-      prepareNavigationRestore(event);
+      prepareNavigationRestore();
     }
-  };
-
-  const handleAuxClick = (event) => {
-    // Ensure non-primary clicks never set pending restore.
-    markArchiveScrollRestorePending(event);
   };
 
   const content = (
@@ -184,7 +178,6 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       onPointerDown={handlePointerDown}
-      onAuxClick={handleAuxClick}
     >
       {content}
     </Link>
