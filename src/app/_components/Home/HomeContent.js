@@ -7,7 +7,7 @@ import FirstVisitAnimation from '@/app/_components/Home/FirstVisitAnimation';
 import ChatBox from '@/app/_components/Home/ChatBox';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { HomeErrorFallback, ChatErrorFallback } from '@/app/_components/ErrorFallbacks';
-import { isFirstWebsiteVisit, markWebsiteAsVisited } from '@/app/_helpers/visitTracker';
+import { isFirstWebsiteVisit, markWebsiteAsVisited } from '@/app/_helpers/websiteVisitState';
 import { clearChatStorage } from '@/app/_helpers/chatStorage';
 import { trackFirstVisitAnimationSkip } from '@/app/_helpers/gtag';
 import errorStyles from '@app/_assets/error.module.css';

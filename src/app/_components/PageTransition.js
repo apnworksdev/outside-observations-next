@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { gsap } from 'gsap';
-import { isFirstWebsiteVisit } from '@/app/_helpers/visitTracker';
+import { isFirstWebsiteVisit } from '@/app/_helpers/websiteVisitState';
 
 /**
  * PageTransition - Handles page transitions and initial load animations

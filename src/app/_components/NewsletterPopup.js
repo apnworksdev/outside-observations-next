@@ -3,7 +3,7 @@
 import { useState, useLayoutEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import KlaviyoForm from '@/app/_components/LaunchCountdown/KlaviyoForm';
-import { isFirstWebsiteVisit } from '@/app/_helpers/visitTracker';
+import { isFirstWebsiteVisit } from '@/app/_helpers/websiteVisitState';
 import styles from '@app/_assets/nav.module.css';
 
 const DEFAULT_TITLE = 'Sign up to stay updated.';
