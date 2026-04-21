@@ -4,7 +4,7 @@ import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
 import { usePrefetchOnHover } from '@/app/_hooks/shared/usePrefetchOnHover';
 import { trackChatExploreArchiveClick } from '@/app/_helpers/analytics/gtag';
-import styles from '@app/_assets/chat/chatbox.module.css';
+import styles from '@app/_assets/chat/chat-box.module.css';
 
 /**
  * ExploreArchiveLink Component

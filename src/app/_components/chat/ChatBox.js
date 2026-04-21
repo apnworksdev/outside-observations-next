@@ -6,7 +6,7 @@ import { useArchiveSearchState } from '@/app/_components/Archive/providers/Archi
 import { useArchiveEntriesSafe } from '@/app/_components/Archive/providers/ArchiveEntriesProvider';
 import { useChatStorage } from '@/app/_hooks/chat/useChatStorage';
 import { trackChatMessageSent, trackChatPanelOpen } from '@/app/_helpers/analytics/gtag';
-import styles from '@app/_assets/chat/chatbox.module.css';
+import styles from '@app/_assets/chat/chat-box.module.css';
 import TypewriterMessage from './TypewriterMessage';
 import ExploreArchiveLink from './ExploreArchiveLink';
 import Linkify from './Linkify';
