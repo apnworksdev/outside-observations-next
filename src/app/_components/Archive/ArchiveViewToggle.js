@@ -4,19 +4,21 @@ import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 import {
+  useArchiveEntriesSafe,
+} from '@/app/_components/Archive/ArchiveEntriesProvider';
+import {
   VIEW_CHANGE_EVENT,
   readArchiveViewFromStorage,
   ARCHIVE_FILTERS_CLEAR_EVENT,
   ARCHIVE_FILTERS_CHANGE_EVENT,
   setArchiveViewPreference,
-  useArchiveEntriesSafe,
   SESSION_STORAGE_KEYS,
   readFromSessionStorage,
-} from '@/app/_components/Archive/ArchiveEntriesProvider';
+} from '@/app/_components/Archive/archiveStorage';
 import { trackArchiveViewSwitch, trackArchiveFiltersClear } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/nav.module.css';
 
-function readViewFromStorage() {
+function readStoredArchiveView() {
   if (typeof window === 'undefined') {
     return 'images';
   }
@@ -40,7 +42,7 @@ export default function ArchiveViewToggle({ className, initialExternalView = 'im
       return;
     }
 
-    setExternalView(readViewFromStorage());
+    setExternalView(readStoredArchiveView());
   }, [archiveContext]);
 
   useEffect(() => {

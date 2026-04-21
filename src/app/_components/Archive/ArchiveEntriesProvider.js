@@ -2,76 +2,22 @@
 
 import { createContext, useContext, useMemo, useRef, useState, useCallback, useEffect, useLayoutEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { getLocalStorage, setLocalStorage } from '@/app/_helpers/localStorage';
 import { useArchiveSearchState } from './ArchiveSearchStateProvider';
+import {
+  VIEW_CHANGE_EVENT,
+  ARCHIVE_FILTERS_CLEAR_EVENT,
+  ARCHIVE_FILTERS_CHANGE_EVENT,
+  SESSION_STORAGE_KEYS,
+  isValidArchiveView,
+  readArchiveViewFromStorage,
+  writeArchiveViewToStorage,
+  setArchiveViewPreference,
+  dispatchArchiveFiltersChangeEvent,
+  readFromSessionStorage,
+  writeToSessionStorage,
+} from './archiveStorage';
 
 const ArchiveEntriesContext = createContext(null);
-
-export const VIEW_STORAGE_KEY = 'outside-observations-archive-view';
-export const VIEW_CHANGE_EVENT = 'outside-observations:archive-view-change';
-export const ARCHIVE_FILTERS_CLEAR_EVENT = 'outside-observations:archive-filters-clear';
-export const ARCHIVE_FILTERS_CHANGE_EVENT = 'outside-observations:archive-filters-change';
-
-// Session storage keys for archive filter state
-export const SESSION_STORAGE_KEYS = {
-  MOOD_TAGS: 'outside-observations-archive-mood-tags',
-  SORTING: 'outside-observations-archive-sorting',
-  SEARCH_RESULTS: 'outside-observations-archive-search-results',
-  SEARCH_STATUS: 'outside-observations-archive-search-status',
-};
-
-function isValidView(value) {
-  return value === 'images' || value === 'list';
-}
-
-function readViewFromStorage() {
-  if (typeof window === 'undefined') {
-    return 'images';
-  }
-
-  const value = getLocalStorage(VIEW_STORAGE_KEY);
-  if (!value) {
-    return 'images';
-  }
-
-  return isValidView(value) ? value : 'images';
-}
-
-export function readArchiveViewFromStorage() {
-  return readViewFromStorage();
-}
-
-function writeViewToStorage(view) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  setLocalStorage(VIEW_STORAGE_KEY, view);
-}
-
-export function setArchiveViewPreference(view) {
-  if (!isValidView(view)) {
-    return;
-  }
-
-  writeViewToStorage(view);
-
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(VIEW_CHANGE_EVENT, { detail: { view } }));
-  }
-}
-
-/**
- * Dispatch filter change event to notify components outside the provider
- * about filter state changes (search, mood tags, etc.)
- */
-function dispatchFilterChangeEvent(hasActiveFilters) {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(ARCHIVE_FILTERS_CHANGE_EVENT, { 
-      detail: { hasActiveFilters } 
-    }));
-  }
-}
 
 
 function hasMedia(entry) {
@@ -174,54 +120,6 @@ function getInitialSorting() {
   return { column: null, direction: null };
 }
 
-// Session storage helpers
-export function readFromSessionStorage(key, defaultValue) {
-  if (typeof window === 'undefined') {
-    return defaultValue;
-  }
-
-  try {
-    const item = sessionStorage.getItem(key);
-    if (item === null) {
-      return defaultValue;
-    }
-    return JSON.parse(item);
-  } catch (error) {
-    console.warn(`Failed to read from sessionStorage key "${key}":`, error);
-    return defaultValue;
-  }
-}
-
-export function writeToSessionStorage(key, value) {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  try {
-    if (value === null || value === undefined) {
-      sessionStorage.removeItem(key);
-    } else {
-      sessionStorage.setItem(key, JSON.stringify(value));
-    }
-  } catch (error) {
-    console.warn(`Failed to write to sessionStorage key "${key}":`, error);
-  }
-}
-
-function clearSessionStorage() {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  Object.values(SESSION_STORAGE_KEYS).forEach((key) => {
-    try {
-      sessionStorage.removeItem(key);
-    } catch (error) {
-      console.warn(`Failed to clear sessionStorage key "${key}":`, error);
-    }
-  });
-}
-
 function compareSortValues(valueA, valueB, isAscending) {
   const bothNumbers =
     typeof valueA === 'number' &&
@@ -261,7 +159,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   const [view, setViewState] = useState(() => {
     // Only use initialView prop if provided (for server-side passing)
     // Otherwise always default to 'images' to ensure server/client match
-    return isValidView(initialView) ? initialView : 'images';
+    return isValidArchiveView(initialView) ? initialView : 'images';
   });
   // Initialize state with default values (same on server and client to prevent hydration mismatch)
   const [searchResults, setSearchResultsState] = useState({ active: false, ids: [], orderedIds: [] });
@@ -296,7 +194,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
    */
   const setView = useCallback((nextView) => {
     setViewState((prev) => {
-      if (!isValidView(nextView) || prev === nextView) {
+      if (!isValidArchiveView(nextView) || prev === nextView) {
         return prev;
       }
 
@@ -319,8 +217,8 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     }
 
     setViewState((prev) => {
-      const storedView = readViewFromStorage();
-      if (isValidView(storedView) && storedView !== prev) {
+      const storedView = readArchiveViewFromStorage();
+      if (isValidArchiveView(storedView) && storedView !== prev) {
         return storedView;
       }
       return prev;
@@ -328,7 +226,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
 
     const handleExternalViewChange = (event) => {
       const nextView = event?.detail?.view;
-      if (!isValidView(nextView)) {
+      if (!isValidArchiveView(nextView)) {
         return;
       }
 
@@ -337,7 +235,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
           return prev;
         }
 
-        writeViewToStorage(nextView);
+        writeArchiveViewToStorage(nextView);
         return nextView;
       });
     };
@@ -523,7 +421,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     // Dispatch event immediately with new state
     if (pathname === '/archive' && typeof window !== 'undefined') {
       const hasActiveFilters = payload.statusState?.query !== null;
-      dispatchFilterChangeEvent(hasActiveFilters);
+      dispatchArchiveFiltersChangeEvent(hasActiveFilters);
     }
   }, [setSortingWithStorage, pathname]);
 
@@ -587,7 +485,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     // Dispatch event immediately using ref for synchronous access
     if (!skipEventDispatch && pathname === '/archive' && typeof window !== 'undefined') {
       const hasActiveFilters = selectedMoodTagsRef.current.length > 0;
-      dispatchFilterChangeEvent(hasActiveFilters);
+      dispatchArchiveFiltersChangeEvent(hasActiveFilters);
     }
   }, [setSortingWithStorage, pathname]);
 
@@ -616,7 +514,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       // Dispatch event immediately with final state (mood tags updated, search cleared)
       if (pathname === '/archive' && typeof window !== 'undefined') {
         const hasActiveFilters = nextMoodTags.length > 0;
-        dispatchFilterChangeEvent(hasActiveFilters);
+        dispatchArchiveFiltersChangeEvent(hasActiveFilters);
       }
     },
     [clearSearch, pathname, router]
@@ -638,7 +536,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       selectedMoodTagsRef.current = tags;
       clearSearch(true);
       if (pathname === '/archive' && typeof window !== 'undefined') {
-        dispatchFilterChangeEvent(tags.length > 0);
+        dispatchArchiveFiltersChangeEvent(tags.length > 0);
       }
     },
     [clearSearch, pathname, router]
@@ -653,7 +551,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     // Dispatch event immediately using ref for synchronous access
     if (pathname === '/archive' && typeof window !== 'undefined') {
       const hasActiveFilters = searchQueryRef.current !== null;
-      dispatchFilterChangeEvent(hasActiveFilters);
+      dispatchArchiveFiltersChangeEvent(hasActiveFilters);
     }
   }, [pathname]);
 
@@ -679,7 +577,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       searchStatus?.query !== null || 
       selectedMoodTags?.length > 0;
     
-    dispatchFilterChangeEvent(hasActiveFilters);
+    dispatchArchiveFiltersChangeEvent(hasActiveFilters);
   }, [pathname, searchStatus?.query, selectedMoodTags?.length]);
 
   /**
