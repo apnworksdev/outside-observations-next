@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getRedis, getRedisConfig } from './redis';
+import { getRedis } from './redis';
 import { getActiveVisitorCount, handleVisitorRegisterOrHeartbeat } from './service';
+import { logVisitorsError } from './http';
 
 /**
  * POST /api/visitors
@@ -81,23 +82,12 @@ export async function POST(request) {
         );
     }
   } catch (error) {
-    const errorMessage = error.message || 'Unknown error';
-    const isConfigError = errorMessage.includes('not configured') || errorMessage.includes('initialize Redis');
-    
-    // Log error for debugging (always log in production to help diagnose issues)
-    const { hasRedisUrl, hasRedisToken } = getRedisConfig();
-    console.error('[Visitors API] Error:', {
-      message: errorMessage,
-      isConfigError,
-      hasRedisUrl,
-      hasRedisToken,
-      stack: error.stack,
-    });
-    
+    const { message, isConfigError } = logVisitorsError('Visitors API', error);
+
     return NextResponse.json(
       { 
         error: isConfigError ? 'Visitor tracking is not configured' : 'Failed to process visitor tracking request',
-        details: errorMessage, // Always include details for debugging
+        details: message, // Always include details for debugging
       },
       { status: 500 }
     );
@@ -118,23 +108,12 @@ export async function GET() {
 
     return NextResponse.json({ count });
   } catch (error) {
-    const errorMessage = error.message || 'Unknown error';
-    const isConfigError = errorMessage.includes('not configured') || errorMessage.includes('initialize Redis');
-    
-    // Log error for debugging
-    const { hasRedisUrl, hasRedisToken } = getRedisConfig();
-    console.error('[Visitors API GET] Error:', {
-      message: errorMessage,
-      isConfigError,
-      hasRedisUrl,
-      hasRedisToken,
-      stack: error.stack,
-    });
-    
+    const { message, isConfigError } = logVisitorsError('Visitors API GET', error);
+
     return NextResponse.json(
       { 
         error: isConfigError ? 'Visitor tracking is not configured' : 'Failed to get visitor count',
-        details: errorMessage, // Always include details for debugging
+        details: message, // Always include details for debugging
       },
       { status: 500 }
     );

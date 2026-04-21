@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getRedis, getRedisConfig, getRedisMissingDetails } from '../redis';
+import { getRedis, getRedisConfig } from '../redis';
 import { getRecentVisitorEvents } from '../service';
+import { logVisitorsError, visitorsConfigErrorResponse } from '../http';
 
 /**
  * GET /api/visitors/events
@@ -15,18 +16,7 @@ export async function GET() {
     const { hasRedisUrl, hasRedisToken } = getRedisConfig();
     
     if (!hasRedisUrl || !hasRedisToken) {
-      console.error('[Visitors Events API] Missing Redis configuration:', {
-        hasRedisUrl,
-        hasRedisToken,
-        envVars: Object.keys(process.env).filter(k => k.includes('UPSTASH') || k.includes('REDIS')),
-      });
-      return NextResponse.json(
-        { 
-          error: 'Visitor tracking is not configured',
-          details: getRedisMissingDetails(),
-        },
-        { status: 500 }
-      );
+      return visitorsConfigErrorResponse('Visitors Events API');
     }
 
     const redisClient = getRedis();
@@ -37,19 +27,12 @@ export async function GET() {
       events,
     });
   } catch (error) {
-    // Log error for debugging (always log to help diagnose production issues)
-    const { hasRedisUrl, hasRedisToken } = getRedisConfig();
-    console.error('[Visitors Events API] Error:', {
-      message: error.message,
-      hasRedisUrl,
-      hasRedisToken,
-      stack: error.stack,
-    });
+    const { message } = logVisitorsError('Visitors Events API', error);
     
     return NextResponse.json(
       { 
         error: 'Failed to get visitor events', 
-        details: error.message // Always include details for debugging
+        details: message // Always include details for debugging
       },
       { status: 500 }
     );
