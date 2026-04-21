@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getRedis, getRedisConfig } from './redis';
-
-// Visitor session TTL (time-to-live) in seconds
-// After this time, the visitor is considered inactive
-const VISITOR_TTL = 300; // 5 minutes
+import { getActiveVisitorCount, handleVisitorRegisterOrHeartbeat } from './service';
 
 /**
  * POST /api/visitors
@@ -60,85 +57,18 @@ export async function POST(request) {
 
     switch (action) {
       case 'register':
-      case 'heartbeat': {
-        // Use sorted set (ZSET) to track visitors with last activity timestamp as score
-        // This allows efficient counting and automatic cleanup of expired visitors
-        const cutoffTime = now - (VISITOR_TTL * 1000); // 5 minutes ago in milliseconds
-        
-        // Check if visitor exists (only for new visitor detection)
-        // OPTIMIZATION: Only check on register, not on heartbeat
-        let isNewVisitor = false;
-        if (action === 'register') {
-          const lastActivity = await redisClient.zscore('visitor:active', sessionId);
-          isNewVisitor = (lastActivity === null || lastActivity === undefined);
-        }
-        
-        // Update visitor's last activity timestamp in sorted set
-        // OPTIMIZATION: Removed redundant set() operation - ZSET is sufficient
-        await redisClient.zadd('visitor:active', { score: now, member: sessionId });
-        
-        // Clean up expired visitors (older than 5 minutes) - efficient O(log N + M)
-        // OPTIMIZATION: Reduced cleanup frequency to 5% (was 10%) to save writes
-        const shouldCleanup = Math.random() < 0.05; // 5% chance
-        if (shouldCleanup) {
-          await redisClient.zremrangebyscore('visitor:active', 0, cutoffTime);
-        }
-        
-        // OPTIMIZATION: Only get count if explicitly requested (saves Redis calls)
-        let count = undefined;
-        if (includeCount) {
-          // Get count of active visitors (those with activity in last 5 minutes)
-          // ZCOUNT is O(log N) - much faster than keys() which is O(N)
-          const rawCount = await redisClient.zcount('visitor:active', cutoffTime, now);
-          // Ensure count is a number (zcount should return a number, but be safe)
-          count = typeof rawCount === 'number' ? rawCount : 0;
-        }
-
-        // If it's a new visitor, create a notification event using sorted set
-        if (isNewVisitor) {
-          // Need count for the event, so fetch it if not already fetched
-          if (count === undefined) {
-            const rawCount = await redisClient.zcount('visitor:active', cutoffTime, now);
-            // Ensure count is a number
-            count = typeof rawCount === 'number' ? rawCount : 0;
-          }
-          
-          // OPTIMIZATION: Batch event creation and cleanup in parallel
-          const eventCutoffTime = now - 60000;
-          await Promise.all([
-            redisClient.zadd(
-              'visitor:events',
-              {
-                score: now,
-                member: JSON.stringify({
-                  type: 'visitor_joined',
-                  count,
-                  timestamp: now,
-                }),
-              }
-            ),
-            // Clean up old events (older than 60 seconds)
-            redisClient.zremrangebyscore('visitor:events', 0, eventCutoffTime),
-          ]);
-        }
-        
-        return NextResponse.json({
-          success: true,
-          ...(count !== undefined && { count }), // Only include count if fetched
-          action,
-          isNewVisitor,
-        });
-      }
+      case 'heartbeat':
+        return NextResponse.json(
+          await handleVisitorRegisterOrHeartbeat(redisClient, {
+            sessionId,
+            action,
+            includeCount,
+          })
+        );
 
       case 'count': {
-        // Get count of active visitors (those with activity in last 5 minutes)
-        const now = Date.now();
-        const cutoffTime = now - (VISITOR_TTL * 1000);
-        const count = await redisClient.zcount('visitor:active', cutoffTime, now);
-        
-        // Ensure count is a number (zcount should return a number, but be safe)
-        const validCount = typeof count === 'number' ? count : 0;
-        
+        const validCount = await getActiveVisitorCount(redisClient, now);
+
         return NextResponse.json({
           count: validCount,
         });
@@ -184,14 +114,8 @@ export async function GET() {
     // Get Redis client (will throw if not configured)
     const redisClient = getRedis();
 
-    // Get count of active visitors (those with activity in last 5 minutes)
-    const now = Date.now();
-    const cutoffTime = now - (VISITOR_TTL * 1000);
-    const rawCount = await redisClient.zcount('visitor:active', cutoffTime, now);
-    
-    // Ensure count is a number (zcount should return a number, but be safe)
-    const count = typeof rawCount === 'number' ? rawCount : 0;
-    
+    const count = await getActiveVisitorCount(redisClient);
+
     return NextResponse.json({ count });
   } catch (error) {
     const errorMessage = error.message || 'Unknown error';
