@@ -1,147 +1,28 @@
 'use client';
 
-import { createContext, useContext, useMemo, useRef, useState, useCallback, useEffect, useLayoutEffect } from 'react';
+import { createContext, useContext, useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useArchiveSearchState } from './ArchiveSearchStateProvider';
 import {
-  VIEW_CHANGE_EVENT,
-  ARCHIVE_FILTERS_CLEAR_EVENT,
   ARCHIVE_FILTERS_CHANGE_EVENT,
-  SESSION_STORAGE_KEYS,
   isValidArchiveView,
-  readArchiveViewFromStorage,
-  writeArchiveViewToStorage,
   setArchiveViewPreference,
   dispatchArchiveFiltersChangeEvent,
-  readFromSessionStorage,
   writeToSessionStorage,
-} from './archiveStorage';
+} from './state/archiveStorage';
+import {
+  getInitialArchiveSorting,
+  getFilteredArchiveEntries,
+  getSortedArchiveEntries,
+} from './state/archiveEntryFilters';
+import {
+  useArchiveViewSync,
+  useRestoreArchiveState,
+  useSyncArchiveFilterRefs,
+  useArchiveFilterActions,
+} from './state/archiveEntriesProviderHooks';
 
 const ArchiveEntriesContext = createContext(null);
-
-
-function hasMedia(entry) {
-  if (!entry) return false;
-  
-  const mediaType = entry.mediaType;
-  
-  // Visual essay: needs at least one valid image in visualEssayImages
-  if (mediaType === 'visualEssay') {
-    const images = entry.visualEssayImages;
-    // Ensure images is an array before calling .some()
-    if (!Array.isArray(images)) return false;
-    return images.some(img => img?.image?.asset?._ref);
-  }
-  
-  // Video: needs poster and either video asset, vimeoUrl, or videoExcerptUrl
-  if (mediaType === 'video') {
-    const hasVideoSource = entry.video?.asset?.url || entry.vimeoUrl || entry.videoExcerptUrl;
-    return hasVideoSource && entry.poster?.asset?._ref;
-  }
-  
-  // Image (default): needs poster
-  return entry.poster?.asset?._ref;
-}
-
-function normaliseYearValue(entry) {
-  let year = entry?.metadata?.year ?? entry?.year;
-
-  // Handle year as object with {value, isEstimate} structure
-  if (typeof year === 'object' && year !== null && year?.value !== undefined) {
-    year = year.value;
-  }
-
-  // Handle null/undefined
-  if (year === null || year === undefined) {
-    return null;
-  }
-
-  // Handle number directly
-  if (typeof year === 'number' && Number.isFinite(year)) {
-    return year;
-  }
-
-  // Handle string - extract first numeric value
-  if (typeof year === 'string') {
-    const trimmed = year.trim();
-    if (!trimmed) {
-      return null;
-    }
-    
-    // Try parsing the whole string first (e.g., "2024")
-    const parsed = parseInt(trimmed, 10);
-    if (!Number.isNaN(parsed)) {
-      return parsed;
-    }
-    
-    // Extract first 4-digit number from string (handles cases like "c. 2024", "2024-2025", etc.)
-    const yearMatch = trimmed.match(/\b(19|20)\d{2}\b/);
-    if (yearMatch) {
-      const extracted = parseInt(yearMatch[0], 10);
-      if (!Number.isNaN(extracted)) {
-        return extracted;
-      }
-    }
-  }
-
-  return null;
-}
-
-function normaliseStringValue(entry, key) {
-  // For metadata fields, try metadata first, then fallback to top-level
-  let value;
-  if (key === 'artName' || key === 'fileName' || key === 'source') {
-    value = entry?.metadata?.[key] || entry?.[key];
-  } else {
-    // For other fields like mediaType, use top-level only
-    value = entry?.[key];
-  }
-
-  if (typeof value === 'string') {
-    return value.trim().toLocaleLowerCase();
-  }
-
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value.toString();
-  }
-
-  return value ?? '';
-}
-
-const SORT_ACCESSORS = {
-  year: (entry) => normaliseYearValue(entry),
-  artName: (entry) => normaliseStringValue(entry, 'artName'),
-  fileName: (entry) => normaliseStringValue(entry, 'fileName'),
-  source: (entry) => normaliseStringValue(entry, 'source'),
-  mediaType: (entry) => normaliseStringValue(entry, 'mediaType'),
-};
-
-function getInitialSorting() {
-  return { column: null, direction: null };
-}
-
-function compareSortValues(valueA, valueB, isAscending) {
-  const bothNumbers =
-    typeof valueA === 'number' &&
-    typeof valueB === 'number' &&
-    Number.isFinite(valueA) &&
-    Number.isFinite(valueB);
-
-  if (bothNumbers) {
-    return isAscending ? valueA - valueB : valueB - valueA;
-  }
-
-  const stringA = typeof valueA === 'string' ? valueA : valueA === null || valueA === undefined ? '' : String(valueA);
-  const stringB = typeof valueB === 'string' ? valueB : valueB === null || valueB === undefined ? '' : String(valueB);
-
-  const comparison = stringA.localeCompare(stringB, undefined, { sensitivity: 'base', numeric: true });
-
-  if (comparison === 0) {
-    return 0;
-  }
-
-  return isAscending ? comparison : -comparison;
-}
 
 export default function ArchiveEntriesProvider({ initialEntries = [], initialView = null, children }) {
   /**
@@ -164,16 +45,15 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   // Initialize state with default values (same on server and client to prevent hydration mismatch)
   const [searchResults, setSearchResultsState] = useState({ active: false, ids: [], orderedIds: [] });
   const [searchStatus, setSearchStatus] = useState({ status: 'idle', query: null, summary: null, error: null });
-  const [sorting, setSorting] = useState(() => getInitialSorting());
+  const [sorting, setSorting] = useState(() => getInitialArchiveSorting());
   const [selectedMoodTags, setSelectedMoodTags] = useState([]);
-  const requestIdRef = useRef(0);
   const pendingSearchPayloadRef = useRef(null);
   const previousPathRef = useRef(null);
-  // Ref to track current mood tags for synchronous access in callbacks
   const selectedMoodTagsRef = useRef([]);
   const searchQueryRef = useRef(null);
   const router = useRouter();
   const pathname = usePathname();
+  const requestIdRef = useRef(0);
   
   // Get search state from global provider (set by ChatBox or other components)
   const { consumeSearchPayload, setSearchPayload: setGlobalSearchPayload, searchPayload: globalSearchPayload } = useArchiveSearchState();
@@ -203,93 +83,19 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     });
   }, []);
 
-  /**
-   * On mount we synchronise the initial view with any value stored in localStorage.
-   * We use useLayoutEffect to update synchronously before paint,
-   * preventing any visual flash when the correct view is restored.
-   * We also subscribe to the global `VIEW_CHANGE_EVENT` so that other surfaces
-   * (like the header toggle rendered outside this provider) can change the current view
-   * and keep the archive in lockstep.
-   */
-  useLayoutEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
+  useArchiveViewSync({ setViewState });
 
-    setViewState((prev) => {
-      const storedView = readArchiveViewFromStorage();
-      if (isValidArchiveView(storedView) && storedView !== prev) {
-        return storedView;
-      }
-      return prev;
-    });
+  useRestoreArchiveState({
+    pathname,
+    setSearchResultsState,
+    setSearchStatus,
+    setSorting,
+    setSelectedMoodTags,
+    searchQueryRef,
+    selectedMoodTagsRef,
+  });
 
-    const handleExternalViewChange = (event) => {
-      const nextView = event?.detail?.view;
-      if (!isValidArchiveView(nextView)) {
-        return;
-      }
-
-      setViewState((prev) => {
-        if (prev === nextView) {
-          return prev;
-        }
-
-        writeArchiveViewToStorage(nextView);
-        return nextView;
-      });
-    };
-
-    window.addEventListener(VIEW_CHANGE_EVENT, handleExternalViewChange);
-    return () => {
-      window.removeEventListener(VIEW_CHANGE_EVENT, handleExternalViewChange);
-    };
-  }, []);
-
-  /**
-   * Restore filter state from session storage after mount (client-side only)
-   * This happens after hydration to prevent hydration mismatches
-   */
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    // Only restore if we're on the archive page
-    if (pathname !== '/archive') {
-      return;
-    }
-
-    // Restore state from session storage
-    const storedSearchResults = readFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_RESULTS, null);
-    const storedSearchStatus = readFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_STATUS, null);
-    const storedSorting = readFromSessionStorage(SESSION_STORAGE_KEYS.SORTING, null);
-    const storedMoodTags = readFromSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, null);
-
-    if (storedSearchResults !== null) {
-      setSearchResultsState(storedSearchResults);
-    }
-    if (storedSearchStatus !== null) {
-      setSearchStatus(storedSearchStatus);
-      searchQueryRef.current = storedSearchStatus?.query ?? null; // Update ref
-    }
-    if (storedSorting !== null) {
-      setSorting(storedSorting);
-    }
-    if (storedMoodTags !== null) {
-      setSelectedMoodTags(storedMoodTags);
-      selectedMoodTagsRef.current = storedMoodTags; // Update ref
-    }
-  }, [pathname]);
-
-  // Keep refs in sync with state for synchronous access in callbacks
-  useEffect(() => {
-    searchQueryRef.current = searchStatus?.query ?? null;
-  }, [searchStatus?.query]);
-
-  useEffect(() => {
-    selectedMoodTagsRef.current = selectedMoodTags;
-  }, [selectedMoodTags]);
+  useSyncArchiveFilterRefs({ searchStatus, selectedMoodTags, searchQueryRef, selectedMoodTagsRef });
 
   /**
    * Derive the list of visible entries. When there is no active search we return all
@@ -297,271 +103,38 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
    * the order consistent with the ranking provided by the vector store.
    * Also filters by selected mood tag if one is active.
    */
-  const filtered = useMemo(() => {
-    // Filter out entries without media
-    let result = entries.filter(hasMedia);
-
-    // Apply search filtering if active
-    if (searchResults?.active) {
-      const allowedIds = new Set(searchResults.ids);
-
-      if (allowedIds.size === 0) {
-        return [];
-      }
-
-      const rankList = searchResults.orderedIds ?? [];
-      const rankMap = new Map();
-
-      for (let index = 0; index < rankList.length; index += 1) {
-        const id = rankList[index];
-        if (!rankMap.has(id)) {
-          rankMap.set(id, index);
-        }
-      }
-
-      const getRankForEntry = (entry) => {
-        if (!entry) {
-          return Number.POSITIVE_INFINITY;
-        }
-
-        if (rankMap.has(entry._id)) {
-          return rankMap.get(entry._id);
-        }
-
-        return Number.POSITIVE_INFINITY;
-      };
-
-      result = entries
-        .filter((entry) => allowedIds.has(entry._id))
-        .sort((a, b) => getRankForEntry(a) - getRankForEntry(b));
-    }
-
-    // Apply mood tag filtering if tags are selected (OR logic - entry needs at least one)
-    if (selectedMoodTags && selectedMoodTags.length > 0) {
-      result = result.filter((entry) => {
-        const moodTags = entry.aiMoodTags || [];
-        return selectedMoodTags.some((selectedTag) =>
-          moodTags.some((tag) => tag?.name === selectedTag)
-        );
-      });
-    }
-
-    return result;
-  }, [entries, searchResults, selectedMoodTags]);
-
-  const sortedEntries = useMemo(() => {
-    const column = sorting?.column;
-    const direction = sorting?.direction;
-
-    if (!column || !direction) {
-      return filtered;
-    }
-
-    const accessor = SORT_ACCESSORS[column];
-
-    if (typeof accessor !== 'function') {
-      return filtered;
-    }
-
-    const isAscending = direction === 'asc';
-    const withMeta = filtered.map((entry, index) => ({
-      entry,
-      index,
-      value: accessor(entry),
-    }));
-
-    withMeta.sort((a, b) => {
-      const valueA = a.value;
-      const valueB = b.value;
-
-      if (valueA === valueB) {
-        return a.index - b.index;
-      }
-
-      if (valueA === null || valueA === undefined) {
-        return isAscending ? 1 : -1;
-      }
-
-      if (valueB === null || valueB === undefined) {
-        return isAscending ? -1 : 1;
-      }
-
-      const comparison = compareSortValues(valueA, valueB, isAscending);
-
-      if (comparison === 0) {
-        return a.index - b.index;
-      }
-
-      return comparison;
-    });
-
-    return withMeta.map((item) => item.entry);
-  }, [filtered, sorting]);
-
-  const applySearchPayload = useCallback((payload) => {
-    if (!payload) {
-      return;
-    }
-
-    // Clear mood tag filter when applying search results
-    const clearedMoodTags = [];
-    setSelectedMoodTags(clearedMoodTags);
-    writeToSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, clearedMoodTags);
-    
-    setSearchResultsState(payload.resultsState);
-    writeToSessionStorage(SESSION_STORAGE_KEYS.SEARCH_RESULTS, payload.resultsState);
-    
-    setSearchStatus(payload.statusState);
-    writeToSessionStorage(SESSION_STORAGE_KEYS.SEARCH_STATUS, payload.statusState);
-    searchQueryRef.current = payload.statusState?.query ?? null; // Update ref
-    
-    const clearedSorting = getInitialSorting();
-    setSortingWithStorage(clearedSorting);
-    
-    // Dispatch event immediately with new state
-    if (pathname === '/archive' && typeof window !== 'undefined') {
-      const hasActiveFilters = payload.statusState?.query !== null;
-      dispatchArchiveFiltersChangeEvent(hasActiveFilters);
-    }
-  }, [setSortingWithStorage, pathname]);
-
-  // Method to set search from existing payload (e.g., from chat with already-fetched image IDs)
-  // Uses global search state provider for consistency
-  const setSearchFromPayload = useCallback((payload) => {
-    if (!payload) {
-      return;
-    }
-
-    if (pathname !== '/archive') {
-      // Use global provider and navigate (consistent with ChatBox approach)
-      setGlobalSearchPayload(payload);
-      router.push('/archive');
-    } else {
-      // Apply directly if already on archive page
-      applySearchPayload(payload);
-    }
-  }, [applySearchPayload, pathname, router, setGlobalSearchPayload]);
-
-  // Check for search payload from global search state provider (e.g., from ChatBox)
-  // This allows the ChatBox to set search state from any page, and we consume it here
-  useEffect(() => {
-    if (pathname !== '/archive') {
-      return;
-    }
-
-    // Check for pending search from ref (e.g., from navigation within archive or from chat)
-    if (pendingSearchPayloadRef.current) {
-      applySearchPayload(pendingSearchPayloadRef.current);
-      pendingSearchPayloadRef.current = null;
-    }
-
-    // Check for search payload from global provider
-    // Listen to globalSearchPayload changes and consume when available
-    if (globalSearchPayload) {
-      const payload = consumeSearchPayload();
-      if (payload) {
-        applySearchPayload(payload);
-      }
-    }
-  }, [pathname, applySearchPayload, consumeSearchPayload, globalSearchPayload]);
-
-  const clearSearch = useCallback((skipEventDispatch = false) => {
-    requestIdRef.current += 1;
-    const clearedSearchResults = { active: false, ids: [], orderedIds: [] };
-    const clearedSearchStatus = { status: 'idle', query: null, summary: null, error: null };
-    const clearedSorting = getInitialSorting();
-    
-    setSearchResultsState(clearedSearchResults);
-    writeToSessionStorage(SESSION_STORAGE_KEYS.SEARCH_RESULTS, clearedSearchResults);
-    
-    setSearchStatus(clearedSearchStatus);
-    writeToSessionStorage(SESSION_STORAGE_KEYS.SEARCH_STATUS, clearedSearchStatus);
-    searchQueryRef.current = null; // Update ref synchronously
-    
-    setSortingWithStorage(clearedSorting);
-    
-    pendingSearchPayloadRef.current = null;
-    
-    // Dispatch event immediately using ref for synchronous access
-    if (!skipEventDispatch && pathname === '/archive' && typeof window !== 'undefined') {
-      const hasActiveFilters = selectedMoodTagsRef.current.length > 0;
-      dispatchArchiveFiltersChangeEvent(hasActiveFilters);
-    }
-  }, [setSortingWithStorage, pathname]);
-
-  const setMoodTag = useCallback(
-    (tagName) => {
-      // Navigate to archive page if not already there
-      if (pathname !== '/archive') {
-        router.push('/archive');
-        return; // Will apply tag after navigation
-      }
-      
-      let nextMoodTags;
-      setSelectedMoodTags((prev) => {
-        // Toggle: if tag is already selected, remove it; otherwise add it
-        nextMoodTags = prev.includes(tagName)
-          ? prev.filter((tag) => tag !== tagName)
-          : [...prev, tagName];
-        // Save to session storage
-        writeToSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, nextMoodTags);
-        return nextMoodTags;
-      });
-      
-      // Clear search when filtering by mood tag (skip its event dispatch, we'll dispatch after)
-      clearSearch(true);
-      
-      // Dispatch event immediately with final state (mood tags updated, search cleared)
-      if (pathname === '/archive' && typeof window !== 'undefined') {
-        const hasActiveFilters = nextMoodTags.length > 0;
-        dispatchArchiveFiltersChangeEvent(hasActiveFilters);
-      }
-    },
-    [clearSearch, pathname, router]
+  const filtered = useMemo(
+    () => getFilteredArchiveEntries(entries, searchResults, selectedMoodTags),
+    [entries, searchResults, selectedMoodTags]
   );
 
-  /**
-   * Set mood tag selection to an exact array (used by mood panel for parent = all children,
-   * and child click when parent was selected = only that child).
-   */
-  const setMoodTags = useCallback(
-    (nextMoodTags) => {
-      if (pathname !== '/archive') {
-        router.push('/archive');
-        return;
-      }
-      const tags = Array.isArray(nextMoodTags) ? nextMoodTags : [];
-      setSelectedMoodTags(tags);
-      writeToSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, tags);
-      selectedMoodTagsRef.current = tags;
-      clearSearch(true);
-      if (pathname === '/archive' && typeof window !== 'undefined') {
-        dispatchArchiveFiltersChangeEvent(tags.length > 0);
-      }
-    },
-    [clearSearch, pathname, router]
+  const sortedEntries = useMemo(
+    () => getSortedArchiveEntries(filtered, sorting),
+    [filtered, sorting]
   );
 
-  const clearMoodTag = useCallback(() => {
-    const cleared = [];
-    setSelectedMoodTags(cleared);
-    writeToSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, cleared);
-    selectedMoodTagsRef.current = cleared; // Update ref
-    
-    // Dispatch event immediately using ref for synchronous access
-    if (pathname === '/archive' && typeof window !== 'undefined') {
-      const hasActiveFilters = searchQueryRef.current !== null;
-      dispatchArchiveFiltersChangeEvent(hasActiveFilters);
-    }
-  }, [pathname]);
-
-  /**
-   * Clear all filters (search and mood tags) - used by both context methods and event listener
-   */
-  const clearAllFilters = useCallback(() => {
-    clearSearch();
-    clearMoodTag();
-  }, [clearSearch, clearMoodTag]);
+  const {
+    setSearchFromPayload,
+    clearSearch,
+    setMoodTag,
+    setMoodTags,
+    clearMoodTag,
+    clearAllFilters,
+  } = useArchiveFilterActions({
+    pathname,
+    router,
+    setGlobalSearchPayload,
+    consumeSearchPayload,
+    globalSearchPayload,
+    pendingSearchPayloadRef,
+    requestIdRef,
+    selectedMoodTagsRef,
+    searchQueryRef,
+    setSearchResultsState,
+    setSearchStatus,
+    setSelectedMoodTags,
+    setSortingWithStorage,
+  });
 
   /**
    * Dispatch filter change events whenever filter state changes
@@ -579,25 +152,6 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     
     dispatchArchiveFiltersChangeEvent(hasActiveFilters);
   }, [pathname, searchStatus?.query, selectedMoodTags?.length]);
-
-  /**
-   * Listen for clear filters event from components outside the provider (e.g., HeaderNav)
-   * This allows ArchiveViewToggle to clear filters even when used outside ArchiveEntriesProvider
-   */
-  useEffect(() => {
-    if (typeof window === 'undefined' || pathname !== '/archive') {
-      return;
-    }
-
-    const handleClearFilters = () => {
-      clearAllFilters();
-    };
-
-    window.addEventListener(ARCHIVE_FILTERS_CLEAR_EVENT, handleClearFilters);
-    return () => {
-      window.removeEventListener(ARCHIVE_FILTERS_CLEAR_EVENT, handleClearFilters);
-    };
-  }, [pathname, clearAllFilters]);
 
   /**
    * When the user leaves the archive we keep the state in session storage
@@ -710,7 +264,7 @@ export function useArchiveSortController(column, { label: customLabel, ariaMessa
       const nextDirection = getNextSortDirection(prevDirection);
 
       return nextDirection === null
-        ? getInitialSorting()
+        ? getInitialArchiveSorting()
         : { column, direction: nextDirection };
     });
   }, [column, setSorting]);

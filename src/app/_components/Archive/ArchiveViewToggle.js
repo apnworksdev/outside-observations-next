@@ -14,7 +14,7 @@ import {
   setArchiveViewPreference,
   SESSION_STORAGE_KEYS,
   readFromSessionStorage,
-} from '@/app/_components/Archive/archiveStorage';
+} from '@/app/_components/Archive/state/archiveStorage';
 import { trackArchiveViewSwitch, trackArchiveFiltersClear } from '@/app/_helpers/gtag';
 import styles from '@app/_assets/nav.module.css';
 
