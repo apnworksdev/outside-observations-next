@@ -1,17 +1,23 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useArchiveSearchState } from '@/app/_components/Archive/providers/ArchiveSearchStateProvider';
 import { useArchiveEntriesSafe } from '@/app/_components/Archive/providers/ArchiveEntriesProvider';
 import { useChatStorage } from '@/app/_hooks/chat/useChatStorage';
-import { client } from '@/sanity/lib/client';
-import { SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
 import { trackChatMessageSent, trackChatPanelOpen } from '@/app/_helpers/analytics/gtag';
 import styles from '@app/_assets/chat/chatbox.module.css';
 import TypewriterMessage from './TypewriterMessage';
 import ExploreArchiveLink from './ExploreArchiveLink';
 import Linkify from './Linkify';
+import { useChatAutoScroll } from './useChatAutoScroll';
+import { useChatFirstMessage } from './useChatFirstMessage';
+import {
+  DEFAULT_FIRST_MESSAGE,
+  buildConversationPayload,
+  createArchiveSearchPayload,
+  resolveChatErrorMessage,
+} from './chatBoxUtils';
 
 export default function ChatBox({ variant = 'home' }) {
   const [inputValue, setInputValue] = useState('');
@@ -32,11 +38,6 @@ export default function ChatBox({ variant = 'home' }) {
   const setSearchFromPayload = archiveEntries?.setSearchFromPayload;
 
   const messageIdRef = useRef(0);
-  
-  // Default first message - used as fallback and initial state
-  const DEFAULT_FIRST_MESSAGE = `Welcome to Outside Observations®. We're glad you're here.
-
-Use the menu on the left to explore, or tell me what you're looking for and I'll point you in the right direction.`;
   
   // Initialize messages with default state (same on server and client to avoid hydration mismatch)
   const [messages, setMessages] = useState([
@@ -63,7 +64,7 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
   }, [variant]);
 
   // Helper function to update the first message (id: 0) with given text
-  const updateFirstMessage = (text) => {
+  const updateFirstMessage = useCallback((text) => {
     setMessages((currentMessages) => {
       const firstMessageIndex = currentMessages.findIndex(msg => msg.id === 0);
       
@@ -88,32 +89,9 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
         ];
       }
     });
-  };
+  }, []);
 
-  // Fetch chat first message from site settings and always set it as the first message
-  useEffect(() => {
-    const fetchChatFirstMessage = async () => {
-      try {
-        const siteSettings = await client.fetch(SITE_SETTINGS_QUERY);
-        const chatFirstMessage = siteSettings?.chatFirstMessage;
-        
-        // Use site settings message if available and not empty, otherwise use default
-        const firstMessageText = (chatFirstMessage && chatFirstMessage.trim())
-          ? chatFirstMessage.trim()
-          : DEFAULT_FIRST_MESSAGE;
-        updateFirstMessage(firstMessageText);
-      } catch (error) {
-        console.error('Failed to fetch chat first message from site settings:', error);
-        // Use default message on error
-        updateFirstMessage(DEFAULT_FIRST_MESSAGE);
-      }
-    };
-
-    // Fetch after a short delay to allow useChatStorage to load saved messages first
-    const timeoutId = setTimeout(fetchChatFirstMessage, 100);
-    
-    return () => clearTimeout(timeoutId);
-  }, [DEFAULT_FIRST_MESSAGE]); // Only run once on mount
+  useChatFirstMessage(updateFirstMessage, DEFAULT_FIRST_MESSAGE);
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
@@ -146,36 +124,7 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
 
     setNavigatingMessageId(messageId);
 
-    // Create ordered unique IDs (same logic as ArchiveEntriesProvider)
-    const orderedUniqueIds = [];
-    const seenIds = new Set();
-
-    for (let index = 0; index < itemIds.length; index += 1) {
-      const id = itemIds[index];
-      if (!seenIds.has(id)) {
-        seenIds.add(id);
-        orderedUniqueIds.push(id);
-      }
-    }
-
-    // Create payload directly from stored data (no API call!)
-    const payload = {
-      resultsState:
-        orderedUniqueIds.length > 0
-          ? { active: true, ids: orderedUniqueIds, orderedIds: orderedUniqueIds }
-          : { active: true, ids: [], orderedIds: [] },
-      statusState: {
-        status: 'success',
-        query: searchQuery,
-        summary: {
-          original: searchQuery,
-          rewritten: searchQuery,
-          matches: orderedUniqueIds.length,
-          threshold: 0.1,
-        },
-        error: null,
-      },
-    };
+    const payload = createArchiveSearchPayload(itemIds, searchQuery);
 
     // Set search payload in global provider (available from root layout)
     setSearchPayload(payload);
@@ -204,73 +153,7 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
     }
   }, [messages, router, variant]);
 
-  // Auto-scroll to bottom when messages change or during typewriter animation
-  useEffect(() => {
-    const chatBoxContent = chatBoxContentRef.current;
-    if (!chatBoxContent) return;
-
-    // Scroll immediately when messages change
-    chatBoxContent.scrollTop = chatBoxContent.scrollHeight;
-
-    let lastScrollHeight = chatBoxContent.scrollHeight;
-    let rafId = null;
-    let needsCheck = false;
-
-    const checkAndScroll = () => {
-      if (!chatBoxContent || !needsCheck) {
-        rafId = null;
-        return;
-      }
-      
-      needsCheck = false;
-      
-      // Batch all layout reads together to avoid layout thrashing
-      const currentScrollHeight = chatBoxContent.scrollHeight;
-      const currentScrollTop = chatBoxContent.scrollTop;
-      const clientHeight = chatBoxContent.clientHeight;
-      
-      // Only auto-scroll if content height changed AND user is near the bottom
-      if (currentScrollHeight !== lastScrollHeight) {
-        const isNearBottom = currentScrollTop + clientHeight >= currentScrollHeight - 100;
-        
-        if (isNearBottom) {
-          chatBoxContent.scrollTop = currentScrollHeight;
-        }
-        
-        lastScrollHeight = currentScrollHeight;
-      }
-      
-      rafId = null;
-    };
-
-    // Use MutationObserver to watch for text content changes (typewriter updates)
-    // Check for browser support (though MutationObserver is widely supported)
-    if (typeof MutationObserver === 'undefined') {
-      return;
-    }
-
-    const observer = new MutationObserver(() => {
-      // Schedule check on next animation frame (batched with browser paint)
-      if (!needsCheck && !rafId) {
-        needsCheck = true;
-        rafId = requestAnimationFrame(checkAndScroll);
-      }
-    });
-
-    // Observe changes to text content (for typewriter)
-    observer.observe(chatBoxContent, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-
-    return () => {
-      observer.disconnect();
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
-    };
-  }, [messages]);
+  useChatAutoScroll(chatBoxContentRef, messages);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -309,27 +192,7 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
       setIsLoading(true);
 
       try {
-        // Build full conversation: exclude image-only and error messages (don't resend "bot: Validation error")
-        const historyParts = messages
-          .filter(
-            (m) =>
-              !m.isImageMessage &&
-              !m.isError &&
-              m.text != null &&
-              String(m.text).trim().length > 0
-          )
-          .map((m) => {
-            const text = String(m.text).trim();
-            const prefix = m.sender === 'user' ? 'user:' : 'bot:';
-            return `${prefix} ${text}`;
-          });
-        const currentLine = `user: ${userMessage}`;
-        let fullConversation = [...historyParts, currentLine].join('\n\n');
-
-        const MAX_QUERY_LENGTH = 9500; // upstream API limit: "query" length must be <= 1000 characters
-        if (fullConversation.length > MAX_QUERY_LENGTH) {
-          fullConversation = fullConversation.slice(-MAX_QUERY_LENGTH);
-        }
+        const fullConversation = buildConversationPayload(messages, userMessage);
 
         if (!fullConversation.trim()) {
           setIsLoading(false);
@@ -371,36 +234,7 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
         if (variant === 'archive' && itemIds.length > 0) {
           if (setSearchFromPayload) {
             try {
-              // Create ordered unique IDs (same logic as ArchiveEntriesProvider)
-              const orderedUniqueIds = [];
-              const seenIds = new Set();
-
-              for (let index = 0; index < itemIds.length; index += 1) {
-                const id = itemIds[index];
-                if (!seenIds.has(id)) {
-                  seenIds.add(id);
-                  orderedUniqueIds.push(id);
-                }
-              }
-
-              // Create payload and apply search directly
-              const payload = {
-                resultsState:
-                  orderedUniqueIds.length > 0
-                    ? { active: true, ids: orderedUniqueIds, orderedIds: orderedUniqueIds }
-                    : { active: true, ids: [], orderedIds: [] },
-                statusState: {
-                  status: 'success',
-                  query: searchQuery,
-                  summary: {
-                    original: searchQuery,
-                    rewritten: searchQuery,
-                    matches: orderedUniqueIds.length,
-                    threshold: 0.1,
-                  },
-                  error: null,
-                },
-              };
+              const payload = createArchiveSearchPayload(itemIds, searchQuery);
 
               // Apply search directly to filter archive items
               setSearchFromPayload(payload);
@@ -460,23 +294,7 @@ Use the menu on the left to explore, or tell me what you're looking for and I'll
       } catch (error) {
         console.error('ChatBox: Error fetching response:', error);
         
-        // Determine user-friendly error message
-        let errorMessage = 'Sorry, I encountered an error. Please try again.';
-        
-        if (error instanceof TypeError && error.message.includes('fetch')) {
-          errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
-        } else if (error.message) {
-          // Use the error message if it's user-friendly, otherwise use default
-          const message = error.message.toLowerCase();
-          if (message.includes('network') || message.includes('fetch')) {
-            errorMessage = 'Network error. Please check your connection and try again.';
-          } else if (message.includes('timeout')) {
-            errorMessage = 'Request timed out. Please try again.';
-          } else if (message.length < 100) {
-            // Use error message if it's short (likely user-friendly)
-            errorMessage = error.message;
-          }
-        }
+        const errorMessage = resolveChatErrorMessage(error);
         
         // Replace loading message with error message
         setMessages((prevMessages) => {
