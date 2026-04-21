@@ -6,11 +6,9 @@ import ArchiveEntry from '@/app/_components/Archive/ArchiveEntryListRow';
 import ArchiveEntryMediaLink from '@/app/_components/Archive/ArchiveEntryMediaLink';
 import ArchiveListLegend from '@/app/_components/Archive/ArchiveListLegend';
 import { useArchiveListSorting } from '@/app/_components/Archive/ArchiveListSorting';
-import {
-  useArchiveListScrollPersistence,
-  useArchiveListMeasurement,
-  useArchiveListScrollResync,
-} from '@/app/_components/Archive/ArchiveListLayoutHooks';
+import { useArchiveListScrollPersistence } from '@/app/_components/Archive/hooks/useArchiveListScrollPersistence';
+import { useArchiveListMeasurement } from '@/app/_components/Archive/hooks/useArchiveListMeasurement';
+import { useArchiveListScrollResync } from '@/app/_components/Archive/hooks/useArchiveListScrollResync';
 import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
 import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper';
 import { useArchiveEntries } from './ArchiveEntriesProvider';
