@@ -1,30 +1,21 @@
 'use client';
 
-import Link from 'next/link';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { usePrefetchOnHover } from '@/app/_hooks/usePrefetchOnHover';
-import { useContentWarningConsent } from '@/app/_contexts/ContentWarningConsentContext';
-
-import SanityImage from '@/sanity/components/SanityImage';
-import SanityVideo from '@/sanity/components/SanityVideo';
-import { ProtectedMediaWrapper } from '@/app/_components/Archive/ProtectedMediaWrapper';
 import ArchiveEntry from '@/app/_components/Archive/ArchiveEntryListRow';
-import ArchiveVisualEssay from '@/app/_components/Archive/ArchiveVisualEssay';
+import ArchiveEntryMediaLink from '@/app/_components/Archive/ArchiveEntryMediaLink';
+import ArchiveListLegend from '@/app/_components/Archive/ArchiveListLegend';
+import { useArchiveListSorting } from '@/app/_components/Archive/ArchiveListSorting';
+import {
+  useArchiveListScrollPersistence,
+  useArchiveListMeasurement,
+  useArchiveListScrollResync,
+} from '@/app/_components/Archive/ArchiveListLayoutHooks';
 import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
 import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper';
-import { useArchiveEntries, useArchiveSortController } from './ArchiveEntriesProvider';
-import { useArchiveEntryVisited } from '@/app/_hooks/useArchiveEntryVisited';
-import { trackArchiveEntryClickFromEntry, trackArchiveLoaded, trackArchiveSort } from '@/app/_helpers/gtag';
-import {
-  saveArchiveScrollPosition,
-  useArchiveScrollRestore,
-  getArchiveScrollElement,
-  syncArchiveScrollTopFromSession,
-  enforceArchiveScrollTopWhenNoSession,
-  ARCHIVE_SCROLL_PERCENTAGE_KEY,
-  ARCHIVE_SCROLL_VIEW_KEY,
-} from '@/app/_hooks/useArchiveScrollPosition';
+import { useArchiveEntries } from './ArchiveEntriesProvider';
+import { trackArchiveLoaded } from '@/app/_helpers/gtag';
+import { useArchiveScrollRestore } from '@/app/_hooks/useArchiveScrollPosition';
 import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
 import { ArchiveListErrorFallback } from '@/app/_components/ErrorFallbacks';
 
@@ -33,221 +24,11 @@ import styles from '@app/_assets/archive/archive-page.module.css';
 /** Stable style object — SSR + client both start hidden until scroll lock runs (no hydration mismatch). */
 const OFFSCREEN_SCROLL_LOCK_STYLE = { visibility: 'hidden' };
 
-function setGlobalArchiveListHeight(value) {
-  if (typeof document === 'undefined') {
-    return;
-  }
-
-  if (value !== null && value !== undefined) {
-    document.documentElement.style.setProperty('--archive-list-height', `${value}px`);
-  } else {
-    document.documentElement.style.removeProperty('--archive-list-height');
-  }
-}
-
-// Reduced from 400px to 300px to save bandwidth - archive thumbnails don't need full resolution
-const POSTER_WIDTH = 300;
-
-// Component for archive entry image link with prefetching
-function ArchiveEntryImageLink({ entry, onImageLoad, index = 0 }) {
-  const slug = entry.metadata?.slug || entry.slug
-  const hasSlug = slug?.current
-  const slugValue = slug?.current || null;
-  const isVisualEssay = entry.mediaType === 'visualEssay';
-  const [currentImage, setCurrentImage] = useState(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const href = hasSlug
-    ? `/archive/entry/${slug.current}${isVisualEssay ? `?image=${currentImageIndex}` : ''}`
-    : null;
-  const prefetchHandlers = usePrefetchOnHover(href, 300);
-  // Set priority for first 4 images (above the fold)
-  const isPriority = index < 4;
-  const isVideo = entry.mediaType === 'video';
-  const posterHeight = entry?.poster?.dimensions?.aspectRatio
-    ? Math.round(POSTER_WIDTH / entry.poster.dimensions.aspectRatio)
-    : POSTER_WIDTH;
-
-  // Check if entry has been visited (hydration-safe)
-  const isVisited = useArchiveEntryVisited(slugValue);
-
-  // Get consent state from context
-  const { hasConsent } = useContentWarningConsent();
-  const hasContentWarning = entry.metadata?.contentWarning === true;
-
-  // Get current view and search status for GA4
-  const { view, searchStatus } = useArchiveEntries();
-
-  // Handle mouse down to save scroll position before navigation
-  // Using onMouseDown instead of onClick so it runs before Next.js navigation
-  const prepareNavigationRestore = () => {
-    if (view) {
-      try {
-        saveArchiveScrollPosition(view);
-      } catch {
-        // Ignore storage errors
-      }
-    }
-  };
-
-  const handleMouseDown = (event) => {
-    prepareNavigationRestore();
-    trackArchiveEntryClickFromEntry(entry, view ?? 'images', searchStatus ?? {});
-  };
-
-  const handleClick = () => {
-    prepareNavigationRestore();
-  };
-
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      prepareNavigationRestore();
-    }
-  };
-
-  const handlePointerDown = (event) => {
-    if (event.pointerType === 'touch' || event.pointerType === 'pen') {
-      prepareNavigationRestore();
-    }
-  };
-
-  // For visual essays, overlay uses the currently displayed image's metadata
-  const overlayMeta = isVisualEssay && currentImage?.metadata
-    ? currentImage.metadata
-    : entry.metadata;
-  const overlayYear = overlayMeta?.year?.value ?? entry.year ?? '';
-  const overlaySource = overlayMeta?.source || entry.source || '';
-  const overlayArtName = overlayMeta?.artName || entry.artName || '';
-
-  const hasYear = String(overlayYear ?? '').trim() !== '';
-  const hasSource = String(overlaySource ?? '').trim() !== '';
-  const hasArtName = String(overlayArtName ?? '').trim() !== '';
-
-  // Hide metadata overlay if contentWarning is true and user hasn't consented
-  const shouldShowMetadataOverlay = !hasContentWarning || hasConsent;
-  // For visual essays, show overlay but with empty content (to keep hover effect)
-  const shouldShowOverlayContent = shouldShowMetadataOverlay && !isVisualEssay;
-
-  const content = (
-    <div className={styles.archiveEntryImageWrapper}>
-      {isVisualEssay ? (
-        <ArchiveVisualEssay
-          entry={entry}
-          width={POSTER_WIDTH}
-          contentWarning={entry.metadata?.contentWarning}
-          priority={isPriority}
-          onCurrentImageChange={(img, idx) => {
-            setCurrentImage(img);
-            if (typeof idx === 'number') setCurrentImageIndex(idx);
-          }}
-        />
-      ) : isVideo && (entry.video?.asset?.url || entry.vimeoUrl || entry.videoExcerptUrl) ? (
-        <ProtectedMediaWrapper
-          contentWarning={entry.metadata?.contentWarning}
-        >
-          <SanityVideo
-            video={entry.video}
-            poster={entry.poster}
-            vimeoUrl={entry.videoExcerptUrl || entry.vimeoUrl}
-            alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
-            className={styles.archiveEntryVideo}
-            fallbackClassName={styles.archiveEntryImage}
-            width={POSTER_WIDTH}
-            height={posterHeight}
-            // maxWidth={POSTER_WIDTH}
-            priority={isPriority}
-            preload={isPriority ? "metadata" : "none"}
-            muted
-            playsInline
-            onLoad={onImageLoad}
-          />
-        </ProtectedMediaWrapper>
-      ) : (
-        <ProtectedMediaWrapper
-          contentWarning={entry.metadata?.contentWarning}
-        >
-          <SanityImage
-            image={entry.poster}
-            alt={entry.metadata?.artName || entry.artName || 'Archive entry poster'}
-            className={styles.archiveEntryImage}
-            width={POSTER_WIDTH}
-            height={posterHeight}
-            priority={isPriority}
-            loading={isPriority ? undefined : 'lazy'}
-            placeholder={entry?.poster?.lqip ? 'blur' : undefined}
-            blurDataURL={entry?.poster?.lqip || undefined}
-            quality={isPriority ? 70 : 60}
-            onLoad={onImageLoad}
-          />
-        </ProtectedMediaWrapper>
-      )}
-      {shouldShowMetadataOverlay && (
-        <div className={styles.archiveEntryImageOverlay}>
-          {shouldShowOverlayContent && (
-            <div className={styles.archiveEntryImageOverlayContent}>
-              {hasYear && (
-                <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayYear}</p></div>
-              )}
-              {hasSource && (
-                <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlaySource}</p></div>
-              )}
-              {hasArtName && (
-                <div className={styles.archiveEntryImageOverlayContentItem}><p>{overlayArtName}</p></div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
-  const linkProps = {
-    className: styles.archiveEntryImageLink,
-    'data-visited': isVisited ? 'true' : 'false',
-  };
-
-  // Disable link if contentWarning is active and user hasn't consented
-  const isLinkDisabled = hasContentWarning && !hasConsent;
-  const shouldRenderLink = hasSlug && !isLinkDisabled;
-
-  return (
-    <div className={styles.archiveEntryImageContainer}>
-      {shouldRenderLink ? (
-        <Link
-          href={href}
-          scroll={false}
-          {...linkProps}
-          {...prefetchHandlers}
-          onMouseDown={handleMouseDown}
-          onClick={handleClick}
-          onKeyDown={handleKeyDown}
-          onPointerDown={handlePointerDown}
-        >
-          {content}
-        </Link>
-      ) : (
-        <div {...linkProps}>
-          {content}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function ArchiveListContent() {
   const { view, visibleEntries, searchStatus } = useArchiveEntries();
+  const { typeSort, handleSortClick, sortableLegendColumns } = useArchiveListSorting();
   // Hidden until useLayoutEffect + rAF applies top or saved scroll — avoids any visible "middle" frame.
   const [archiveContentVisible, setArchiveContentVisible] = useState(false);
-  const yearSort = useArchiveSortController('year', {
-    label: 'Year',
-    ariaMessages: {
-      desc: 'Year column, sorted newest to oldest. Activate to sort oldest to newest.',
-      asc: 'Year column, sorted oldest to newest. Activate to clear sorting.',
-      inactive: 'Year column, no sorting applied. Activate to sort newest to oldest.',
-    },
-  });
-  const artNameSort = useArchiveSortController('artName', { label: 'Art Name' });
-  const sourceSort = useArchiveSortController('source', { label: 'Source/Author' });
-  const typeSort = useArchiveSortController('mediaType', { label: 'Type' });
 
   useArchiveScrollRestore(view, setArchiveContentVisible);
 
@@ -260,114 +41,7 @@ export default function ArchiveListContent() {
     }
   }, [view]);
 
-  // Track the last saved scroll position in a ref
-  const lastScrollPositionRef = useRef({ view: null, position: 0, percentage: 0 });
-
-  // Cache scroll element reference to avoid repeated DOM queries
-  const scrollElementRef = useRef(null);
-
-  // Save scroll position on scroll events (optimized with cached element and change detection)
-  useEffect(() => {
-    if (!view) return;
-
-    let scrollTimeout = null;
-    let rafId = null;
-    let lastSavedPosition = 0;
-    let lastSavedPercentage = 0;
-
-    const handleScroll = () => {
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
-
-      rafId = requestAnimationFrame(() => {
-        const scrollElement = scrollElementRef.current;
-        if (!scrollElement) return;
-
-        const scrollPosition = scrollElement.scrollTop;
-        const scrollHeight = scrollElement.scrollHeight;
-        const clientHeight = scrollElement.clientHeight;
-        const maxScroll = scrollHeight - clientHeight;
-        const scrollPercentage = maxScroll > 0 ? scrollPosition / maxScroll : 0;
-
-        lastScrollPositionRef.current = {
-          view,
-          position: scrollPosition,
-          percentage: scrollPercentage
-        };
-
-        const positionDiff = Math.abs(scrollPosition - lastSavedPosition);
-        const percentageDiff = Math.abs(scrollPercentage - lastSavedPercentage);
-
-        if (positionDiff > 5 || percentageDiff > 0.001) {
-          clearTimeout(scrollTimeout);
-          scrollTimeout = setTimeout(() => {
-            lastSavedPosition = scrollPosition;
-            lastSavedPercentage = scrollPercentage;
-            saveArchiveScrollPosition(view);
-          }, 150);
-        }
-      });
-    };
-
-    const setupScrollListener = () => {
-      scrollElementRef.current = getArchiveScrollElement(view);
-
-      if (scrollElementRef.current) {
-        scrollElementRef.current.addEventListener('scroll', handleScroll, { passive: true });
-        return true;
-      }
-      return false;
-    };
-
-    // Try immediately, retry if needed
-    if (!setupScrollListener()) {
-      const retryTimeout = setTimeout(() => {
-        setupScrollListener();
-      }, 100);
-      return () => {
-        clearTimeout(retryTimeout);
-        clearTimeout(scrollTimeout);
-        if (rafId) {
-          cancelAnimationFrame(rafId);
-        }
-        if (scrollElementRef.current) {
-          scrollElementRef.current.removeEventListener('scroll', handleScroll);
-        }
-        scrollElementRef.current = null;
-      };
-    }
-
-    return () => {
-      clearTimeout(scrollTimeout);
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
-      if (scrollElementRef.current) {
-        scrollElementRef.current.removeEventListener('scroll', handleScroll);
-      }
-      scrollElementRef.current = null;
-    };
-  }, [view]);
-
-  // Save scroll position when view changes - use the ref value (last known position)
-  const previousViewForSaveRef = useRef(view);
-  useEffect(() => {
-    if (previousViewForSaveRef.current && previousViewForSaveRef.current !== view) {
-      // Use the last known position from the ref (saved during scroll)
-      const lastPosition = lastScrollPositionRef.current;
-      if (lastPosition.view === previousViewForSaveRef.current) {
-        // Save the last known percentage for the old view
-        try {
-          sessionStorage.setItem(ARCHIVE_SCROLL_PERCENTAGE_KEY, String(lastPosition.percentage));
-          sessionStorage.setItem(ARCHIVE_SCROLL_VIEW_KEY, previousViewForSaveRef.current);
-        } catch (error) {
-          // Silently fail if save fails
-        }
-      }
-    }
-    previousViewForSaveRef.current = view;
-  }, [view]);
+  useArchiveListScrollPersistence(view);
 
   // Initialize view content opacity on mount
   useLayoutEffect(() => {
@@ -454,200 +128,27 @@ export default function ArchiveListContent() {
     };
   }, [view]);
 
-  // Same cycle as ArchiveEntriesProvider: null → desc → asc → null
-  const handleSortClick = useCallback((sort) => {
-    const order = ['desc', 'asc', null];
-    const curr = sort.direction ?? null;
-    const nextDir = order[(order.indexOf(curr) + 1) % order.length];
-    if (nextDir) trackArchiveSort(sort.column, nextDir);
-    sort.toggleSort();
-  }, []);
-
-  const sortableLegendColumns = useMemo(
-    () => [
-      { key: 'year', label: 'Year', sort: yearSort },
-      { key: 'artName', label: 'Art Name', sort: artNameSort },
-      { key: 'source', label: 'Source/Author', sort: sourceSort },
-    ],
-    [artNameSort, sourceSort, yearSort]
-  );
   const contentRef = useRef(null);
   const viewContentRef = useRef(null);
-  const measurementFrameRef = useRef(null);
-  const scrollContainerRef = useRef(null);
   const viewTransitionAnimationRef = useRef(null);
   const previousViewRef = useRef(view);
   const pendingViewChangeRef = useRef(false);
   const isInitialMountRef = useRef(true);
-  const [isScrollNeeded, setIsScrollNeeded] = useState(true);
+  const scrollContainerRef = useRef(null);
 
   const hasEntries = visibleEntries.length > 0;
   const visibleEntriesSignature = useMemo(
     () => visibleEntries.map((entry) => entry._id).join('|'),
     [visibleEntries]
   );
-
-  /**
-   * Restore hook already applies saved %. Do not sync immediately here — unstable scrollHeight
-   * causes pct×maxScroll to jump (visible flicker). One double-rAF pass + debounced ResizeObserver only.
-   */
-  useEffect(() => {
-    if (!archiveContentVisible || !view) {
-      return undefined;
-    }
-
-    const run = () => {
-      try {
-        if (
-          sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY) !== null &&
-          sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null
-        ) {
-          syncArchiveScrollTopFromSession(view);
-        } else {
-          enforceArchiveScrollTopWhenNoSession(view);
-        }
-      } catch {
-        enforceArchiveScrollTopWhenNoSession(view);
-      }
-    };
-
-    let raf1 = 0;
-    let raf2 = 0;
-    raf1 = requestAnimationFrame(() => {
-      raf1 = 0;
-      raf2 = requestAnimationFrame(run);
-    });
-
-    const RESYNC_DEBOUNCE_MS = 120;
-    let ro = null;
-    let debounceId = null;
-    const el = getArchiveScrollElement(view);
-    if (el && typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(() => {
-        if (debounceId !== null) {
-          clearTimeout(debounceId);
-        }
-        debounceId = window.setTimeout(() => {
-          debounceId = null;
-          run();
-        }, RESYNC_DEBOUNCE_MS);
-      });
-      ro.observe(el);
-    }
-
-    return () => {
-      if (raf1) {
-        cancelAnimationFrame(raf1);
-      }
-      if (raf2) {
-        cancelAnimationFrame(raf2);
-      }
-      if (debounceId !== null) {
-        clearTimeout(debounceId);
-      }
-      if (ro) {
-        ro.disconnect();
-      }
-    };
-  }, [archiveContentVisible, view, isScrollNeeded, visibleEntriesSignature]);
-
-  /**
-   * The archive layout relies on CSS custom properties that mirror the rendered height.
-   * To avoid layout shifts we:
-   *   - Measure the list container via rAF and keep the measurement debounced.
-   *   - Write the result into `--archive-list-height`, which downstream styles use to
-   *     position navigation elements.
-   *   - Detect whether scrolling is actually required so we can toggle overflow states.
-   * This block runs in both views because the navigation depends on the aggregate height.
-   */
-  const performMeasurement = useCallback(() => {
-    if (!hasEntries) {
-      setGlobalArchiveListHeight(null);
-      setIsScrollNeeded(false);
-      return;
-    }
-
-    const element = contentRef.current;
-
-    if (!element) {
-      setGlobalArchiveListHeight(null);
-      setIsScrollNeeded(false);
-      return;
-    }
-
-    const { height } = element.getBoundingClientRect();
-
-    if (height > 0) {
-      const roundedHeight = Math.round(height * 10) / 10 + 1;
-      setGlobalArchiveListHeight(roundedHeight);
-    } else {
-      setGlobalArchiveListHeight(0);
-    }
-
-    if (view === 'list') {
-      const scrollElement = scrollContainerRef.current;
-      if (scrollElement) {
-        const needsScroll = scrollElement.scrollHeight - scrollElement.clientHeight > 1;
-        setIsScrollNeeded((prev) => (prev !== needsScroll ? needsScroll : prev));
-      } else {
-        setIsScrollNeeded(true);
-      }
-    } else {
-      setIsScrollNeeded((prev) => (prev ? false : prev));
-    }
-  }, [hasEntries, view]);
-
-  const scheduleMeasurement = useCallback(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    if (measurementFrameRef.current !== null) {
-      window.cancelAnimationFrame(measurementFrameRef.current);
-    }
-
-    measurementFrameRef.current = window.requestAnimationFrame(() => {
-      measurementFrameRef.current = null;
-      performMeasurement();
-    });
-  }, [performMeasurement]);
-
-  /**
-   * Measurements need to stay current when:
-   *   - the set of visible entries changes (search, view switch, duplication),
-   *   - the viewport resizes,
-   *   - or the component unmounts.
-   * The effects below cover each of those cases, centralising cleanup so we never leave
-   * dangling animation frames or stale CSS variables behind.
-   */
-  useEffect(() => {
-    scheduleMeasurement();
-  }, [hasEntries, scheduleMeasurement, view, visibleEntriesSignature]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
-
-    const handleResize = () => {
-      scheduleMeasurement();
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [scheduleMeasurement]);
-
-  useEffect(() => {
-    return () => {
-      if (measurementFrameRef.current !== null && typeof window !== 'undefined') {
-        window.cancelAnimationFrame(measurementFrameRef.current);
-      }
-      setGlobalArchiveListHeight(null);
-      setIsScrollNeeded(true);
-    };
-  }, []);
+  const { isScrollNeeded, scheduleMeasurement } = useArchiveListMeasurement({
+    hasEntries,
+    view,
+    visibleEntriesSignature,
+    contentRef,
+    scrollContainerRef,
+  });
+  useArchiveListScrollResync({ archiveContentVisible, view, isScrollNeeded, visibleEntriesSignature });
 
   const handleImageLoad = useCallback(() => {
     scheduleMeasurement();
@@ -676,7 +177,7 @@ export default function ArchiveListContent() {
               view === 'images' ? (
                 <MaskScrollWrapper className={`${styles.containerContent} isAtTop`}>
                   {visibleEntries.map((entry, index) => (
-                    <ArchiveEntryImageLink
+                    <ArchiveEntryMediaLink
                       key={entry._id}
                       entry={entry}
                       index={index}
@@ -698,52 +199,12 @@ export default function ArchiveListContent() {
             ) : null}
           </div>
         </div>
-        <div
-          className={styles.containerLegend}
-          data-visible={hasEntries ? 'true' : 'false'}
-          aria-hidden={hasEntries ? undefined : 'true'}
-        >
-          {sortableLegendColumns.map(({ key, label, sort }) => (
-            <div key={key} className={styles.containerLegendColumn}>
-              <button
-                type="button"
-                className={styles.containerLegendColumnButton}
-                onClick={() => handleSortClick(sort)}
-                data-sort-state={sort.dataState}
-                aria-label={sort.ariaLabel}
-              >
-                <span>{label}</span>
-                <span aria-hidden="true" className={styles.containerLegendSortIndicator}>
-                  {sort.indicator}
-                </span>
-              </button>
-            </div>
-          ))}
-          <div className={styles.containerLegendColumn}>
-            <div className={styles.containerLegendColumnItem}>
-              <p>Tags</p>
-            </div>
-          </div>
-          <div className={styles.containerLegendColumn}>
-            <div className={styles.containerLegendColumnItem}>
-              <p>Mood Tags</p>
-            </div>
-          </div>
-          <div className={styles.containerLegendColumn}>
-            <button
-              type="button"
-              className={styles.containerLegendColumnButton}
-              onClick={() => handleSortClick(typeSort)}
-              data-sort-state={typeSort.dataState}
-              aria-label={typeSort.ariaLabel}
-            >
-              <span>Type</span>
-              <span aria-hidden="true" className={styles.containerLegendSortIndicator}>
-                {typeSort.indicator}
-              </span>
-            </button>
-          </div>
-        </div>
+        <ArchiveListLegend
+          hasEntries={hasEntries}
+          sortableLegendColumns={sortableLegendColumns}
+          typeSort={typeSort}
+          onSortClick={handleSortClick}
+        />
       </div>
     </ErrorBoundary>
   );
