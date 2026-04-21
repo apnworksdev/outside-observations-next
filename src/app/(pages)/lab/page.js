@@ -1,4 +1,4 @@
-import styles from '@app/_assets/lab.module.css';
+import styles from '@app/_assets/lab/lab.module.css';
 import LabTypewriter from '@/app/_components/Lab/LabTypewriter';
 import LabSubmitProposalLink from '@/app/_components/Lab/LabSubmitProposalLink';
 import { getSiteSettings } from '@/app/_data/archive';

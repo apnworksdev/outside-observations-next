@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getRedis } from './redis';
-import { getActiveVisitorCount, handleVisitorRegisterOrHeartbeat } from './service';
-import { logVisitorsError } from './http';
+import { getRedis } from './server/redis';
+import { getActiveVisitorCount, handleVisitorRegisterOrHeartbeat } from './server/service';
+import { logVisitorsError } from './server/http';
 
 /**
  * POST /api/visitors

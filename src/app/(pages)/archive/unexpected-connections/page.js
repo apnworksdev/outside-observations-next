@@ -1,6 +1,6 @@
 import { getTwoRandomForUnexpectedConnections } from '@app/_data/unexpectedConnections';
-import UnexpectedConnectionsContent from '@app/_components/Archive/UnexpectedConnectionsContent';
-import UnexpectedConnectionsEmpty from '@app/_components/Archive/UnexpectedConnectionsEmpty';
+import UnexpectedConnectionsContent from '@app/_components/Archive/features/unexpected/UnexpectedConnectionsContent';
+import UnexpectedConnectionsEmpty from '@app/_components/Archive/features/unexpected/UnexpectedConnectionsEmpty';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
 

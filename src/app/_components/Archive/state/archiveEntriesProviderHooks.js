@@ -1,3 +1,3 @@
-export { useArchiveViewSync } from './hooks/useArchiveViewSync';
-export { useRestoreArchiveState, useSyncArchiveFilterRefs } from './hooks/useArchiveStateRestore';
-export { useArchiveFilterActions } from './hooks/useArchiveFilterActions';
+export { useArchiveViewSync } from './useArchiveViewSync';
+export { useRestoreArchiveState, useSyncArchiveFilterRefs } from './useArchiveStateRestore';
+export { useArchiveFilterActions } from './useArchiveFilterActions';

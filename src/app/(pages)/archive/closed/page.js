@@ -1,5 +1,5 @@
-import ClosedArchiveCountdownSection from '@/app/_components/Archive/ClosedArchiveCountdownSection';
-import ArchiveClosedViewTracker from '@/app/_components/Archive/ArchiveClosedViewTracker';
+import ClosedArchiveCountdownSection from '@/app/_components/Archive/features/unexpected/ClosedArchiveCountdownSection';
+import ArchiveClosedViewTracker from '@/app/_components/Archive/features/unexpected/ArchiveClosedViewTracker';
 import styles from '@app/_assets/archive/closed.module.css';
 import { getSiteSettings } from '@/app/_data/archive';
 import { getClosedHoursLabel } from '@/lib/closedArchiveHours';

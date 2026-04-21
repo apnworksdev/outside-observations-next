@@ -1,7 +1,7 @@
-import ArchiveNavigationContainer from '@/app/_components/Archive/Navigation/ArchiveNavigationContainer';
-import ArchiveEntriesProvider from '@/app/_components/Archive/ArchiveEntriesProvider';
-import ClosedArchiveRedirect from '@/app/_components/Archive/ClosedArchiveRedirect';
-import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
+import ArchiveNavigationContainer from '@/app/_components/Archive/features/navigation/ArchiveNavigationContainer';
+import ArchiveEntriesProvider from '@/app/_components/Archive/providers/ArchiveEntriesProvider';
+import ClosedArchiveRedirect from '@/app/_components/Archive/features/unexpected/ClosedArchiveRedirect';
+import { ErrorBoundary } from '@/app/_components/shared/error/ErrorBoundary';
 import { getArchiveEntries } from '@app/_data/archive';
 import { useTimezoneRedirect } from '@/lib/closedArchiveHours';
 

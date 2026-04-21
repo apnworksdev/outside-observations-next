@@ -1,6 +1,6 @@
 'use client';
 
-import { getLocalStorage, setLocalStorage } from '@/app/_helpers/localStorage';
+import { getLocalStorage, setLocalStorage } from '@/app/_helpers/storage/localStorage';
 
 export const VIEW_STORAGE_KEY = 'outside-observations-archive-view';
 export const VIEW_CHANGE_EVENT = 'outside-observations:archive-view-change';

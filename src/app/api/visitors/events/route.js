@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getRedis, getRedisConfig } from '../redis';
-import { getRecentVisitorEvents } from '../service';
-import { logVisitorsError, visitorsConfigErrorResponse } from '../http';
+import { getRedis, getRedisConfig } from '../server/redis';
+import { getRecentVisitorEvents } from '../server/service';
+import { logVisitorsError, visitorsConfigErrorResponse } from '../server/http';
 
 /**
  * GET /api/visitors/events

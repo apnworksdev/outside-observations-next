@@ -4,14 +4,14 @@ import { useState, useEffect, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
 import FirstVisitAnimation from '@/app/_components/Home/FirstVisitAnimation';
-import ChatBox from '@/app/_components/Home/ChatBox';
-import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
-import { HomeErrorFallback, ChatErrorFallback } from '@/app/_components/ErrorFallbacks';
-import { isFirstWebsiteVisit, markWebsiteAsVisited } from '@/app/_helpers/websiteVisitState';
-import { clearChatStorage } from '@/app/_helpers/chatStorage';
-import { trackFirstVisitAnimationSkip } from '@/app/_helpers/gtag';
-import errorStyles from '@app/_assets/error.module.css';
-import homeStyles from '@app/_assets/home.module.css';
+import ChatBox from '@/app/_components/chat/ChatBox';
+import { ErrorBoundary } from '@/app/_components/shared/error/ErrorBoundary';
+import { HomeErrorFallback, ChatErrorFallback } from '@/app/_components/shared/error/ErrorFallbacks';
+import { isFirstWebsiteVisit, markWebsiteAsVisited } from '@/app/_helpers/tracking/websiteVisitState';
+import { clearChatStorage } from '@/app/_helpers/storage/chatStorage';
+import { trackFirstVisitAnimationSkip } from '@/app/_helpers/analytics/gtag';
+import errorStyles from '@app/_assets/shared/error.module.css';
+import homeStyles from '@app/_assets/home/home.module.css';
 
 /**
  * HomeContent - Home page content component

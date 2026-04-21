@@ -11,7 +11,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import styles from '@app/_assets/vectorStore.module.css'
+import styles from '@app/_assets/admin/vector-store.module.css'
 import { removeFromVectorStore } from '@/sanity/lib/vectorStore'
 
 export default function VectorStorePage() {

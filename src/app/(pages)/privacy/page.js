@@ -1,4 +1,4 @@
-import styles from '@app/_assets/privacy.module.css';
+import styles from '@app/_assets/legal/privacy.module.css';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
 

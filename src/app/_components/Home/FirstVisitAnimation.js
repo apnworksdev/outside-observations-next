@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { gsap } from 'gsap';
-import { trackFirstVisitAnimationComplete } from '@/app/_helpers/gtag';
-import styles from '@app/_assets/home.module.css';
+import { trackFirstVisitAnimationComplete } from '@/app/_helpers/analytics/gtag';
+import styles from '@app/_assets/home/home.module.css';
 
 /**
  * FirstVisitAnimation - Complex animation sequence for first-time visitors
