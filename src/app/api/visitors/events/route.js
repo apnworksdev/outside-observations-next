@@ -1,34 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Redis } from '@upstash/redis';
-
-// Initialize Redis client
-let redis = null;
-
-function getRedis() {
-  // Support both naming conventions
-  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_URL;
-  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_TOKEN;
-
-  if (!redisUrl || !redisToken) {
-    const missingVars = [];
-    if (!redisUrl) missingVars.push('UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_URL');
-    if (!redisToken) missingVars.push('UPSTASH_REDIS_REST_TOKEN or UPSTASH_REDIS_TOKEN');
-    throw new Error(`Upstash Redis is not configured. Missing: ${missingVars.join(', ')}`);
-  }
-
-  if (!redis) {
-    try {
-      redis = new Redis({
-        url: redisUrl,
-        token: redisToken,
-      });
-    } catch (error) {
-      throw new Error(`Failed to initialize Redis client: ${error.message}`);
-    }
-  }
-
-  return redis;
-}
+import { getRedis, getRedisConfig, getRedisMissingDetails } from '../redis';
 
 /**
  * GET /api/visitors/events
@@ -40,8 +11,7 @@ function getRedis() {
 export async function GET() {
   try {
     // Check for Redis configuration (support both naming conventions)
-    const hasRedisUrl = !!(process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_URL);
-    const hasRedisToken = !!(process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_TOKEN);
+    const { hasRedisUrl, hasRedisToken } = getRedisConfig();
     
     if (!hasRedisUrl || !hasRedisToken) {
       console.error('[Visitors Events API] Missing Redis configuration:', {
@@ -52,7 +22,7 @@ export async function GET() {
       return NextResponse.json(
         { 
           error: 'Visitor tracking is not configured',
-          details: `Missing: ${!hasRedisUrl ? 'UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_URL' : ''} ${!hasRedisToken ? 'UPSTASH_REDIS_REST_TOKEN or UPSTASH_REDIS_TOKEN' : ''}`.trim(),
+          details: getRedisMissingDetails(),
         },
         { status: 500 }
       );
@@ -117,10 +87,11 @@ export async function GET() {
     });
   } catch (error) {
     // Log error for debugging (always log to help diagnose production issues)
+    const { hasRedisUrl, hasRedisToken } = getRedisConfig();
     console.error('[Visitors Events API] Error:', {
       message: error.message,
-      hasRedisUrl: !!(process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_URL),
-      hasRedisToken: !!(process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_TOKEN),
+      hasRedisUrl,
+      hasRedisToken,
       stack: error.stack,
     });
     

@@ -1,38 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Redis } from '@upstash/redis';
-
-// Initialize Redis client
-// These environment variables will be set in Netlify or locally in .env.local
-let redis = null;
-
-// Lazy initialization to provide better error messages
-function getRedis() {
-  // Support both naming conventions:
-  // - UPSTASH_REDIS_URL / UPSTASH_REDIS_TOKEN (standard)
-  // - UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN (Upstash dashboard naming)
-  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_URL;
-  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_TOKEN;
-
-  if (!redisUrl || !redisToken) {
-    const missingVars = [];
-    if (!redisUrl) missingVars.push('UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_URL');
-    if (!redisToken) missingVars.push('UPSTASH_REDIS_REST_TOKEN or UPSTASH_REDIS_TOKEN');
-    throw new Error(`Upstash Redis is not configured. Missing: ${missingVars.join(', ')}`);
-  }
-
-  if (!redis) {
-    try {
-      redis = new Redis({
-        url: redisUrl,
-        token: redisToken,
-      });
-    } catch (error) {
-      throw new Error(`Failed to initialize Redis client: ${error.message}`);
-    }
-  }
-
-  return redis;
-}
+import { getRedis, getRedisConfig } from './redis';
 
 // Visitor session TTL (time-to-live) in seconds
 // After this time, the visitor is considered inactive
@@ -188,11 +155,12 @@ export async function POST(request) {
     const isConfigError = errorMessage.includes('not configured') || errorMessage.includes('initialize Redis');
     
     // Log error for debugging (always log in production to help diagnose issues)
+    const { hasRedisUrl, hasRedisToken } = getRedisConfig();
     console.error('[Visitors API] Error:', {
       message: errorMessage,
       isConfigError,
-      hasRedisUrl: !!process.env.UPSTASH_REDIS_REST_URL || !!process.env.UPSTASH_REDIS_URL,
-      hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN || !!process.env.UPSTASH_REDIS_TOKEN,
+      hasRedisUrl,
+      hasRedisToken,
       stack: error.stack,
     });
     
@@ -230,11 +198,12 @@ export async function GET() {
     const isConfigError = errorMessage.includes('not configured') || errorMessage.includes('initialize Redis');
     
     // Log error for debugging
+    const { hasRedisUrl, hasRedisToken } = getRedisConfig();
     console.error('[Visitors API GET] Error:', {
       message: errorMessage,
       isConfigError,
-      hasRedisUrl: !!process.env.UPSTASH_REDIS_REST_URL || !!process.env.UPSTASH_REDIS_URL,
-      hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN || !!process.env.UPSTASH_REDIS_TOKEN,
+      hasRedisUrl,
+      hasRedisToken,
       stack: error.stack,
     });
     
