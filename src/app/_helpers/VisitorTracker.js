@@ -2,6 +2,11 @@
 
 import { useEffect, useRef } from 'react';
 import { useVisitorCount } from '@/app/_components/VisitorCountProvider';
+import {
+  getOrCreateVisitorSessionId,
+  collectNewVisitorEvents,
+  groupVisitorEventsByTimeWindow,
+} from './visitorTrackerUtils';
 
 /**
  * VisitorTracker - Tracks active visitors using Upstash Redis
@@ -27,29 +32,9 @@ export default function VisitorTracker() {
 
   // Generate a unique session ID
   const getSessionId = () => {
-    if (sessionIdRef.current) {
-      return sessionIdRef.current;
-    }
-
-    // Try to get existing session ID from sessionStorage
-    if (typeof window !== 'undefined') {
-      const stored = sessionStorage.getItem('visitor_session_id');
-      if (stored) {
-        sessionIdRef.current = stored;
-        return stored;
-      }
-    }
-
-    // Generate new session ID
-    const newSessionId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-    sessionIdRef.current = newSessionId;
-
-    // Store in sessionStorage so it persists across page navigations
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('visitor_session_id', newSessionId);
-    }
-
-    return newSessionId;
+    const sessionId = getOrCreateVisitorSessionId(sessionIdRef.current);
+    sessionIdRef.current = sessionId;
+    return sessionId;
   };
 
   // Register visitor or send heartbeat
@@ -119,55 +104,15 @@ export default function VisitorTracker() {
         const data = await response.json();
         const events = data.events || [];
 
-        // Process events in order (they're already sorted newest first)
-        // Aggregate multiple visitor_joined events within a short time window
-        // Update lastEventTimestamp to the highest timestamp we've seen
-        let foundNewEvent = false;
-        let highestTimestamp = lastEventTimestampRef.current;
-        const newVisitorEvents = [];
-
-        // Collect all new visitor_joined events
-        for (const event of events) {
-          // Validate event has required fields
-          if (!event || typeof event.timestamp !== 'number') continue;
-          
-          if (event.timestamp > lastEventTimestampRef.current) {
-            highestTimestamp = Math.max(highestTimestamp, event.timestamp);
-            foundNewEvent = true;
-
-            if (event.type === 'visitor_joined') {
-              newVisitorEvents.push(event);
-            }
-          }
-        }
+        const {
+          foundNewEvent,
+          highestTimestamp,
+          newVisitorEvents,
+        } = collectNewVisitorEvents(events, lastEventTimestampRef.current);
 
         // Aggregate visitor events that happened within 2 seconds of each other
         if (newVisitorEvents.length > 0) {
-          // Group events by time windows (events within 2 seconds are grouped together)
-          const groupedEvents = [];
-          let currentGroup = [newVisitorEvents[0]];
-          let groupStartTime = newVisitorEvents[0].timestamp;
-
-          for (let i = 1; i < newVisitorEvents.length; i++) {
-            const event = newVisitorEvents[i];
-            // Validate event has valid timestamp
-            if (!event || typeof event.timestamp !== 'number') continue;
-            
-            // If event is within 2 seconds of the group start, add to current group
-            // Use Math.abs to handle any timestamp ordering issues
-            if (Math.abs(groupStartTime - event.timestamp) <= 2000) {
-              currentGroup.push(event);
-            } else {
-              // Start a new group
-              groupedEvents.push(currentGroup);
-              currentGroup = [event];
-              groupStartTime = event.timestamp;
-            }
-          }
-          // Don't forget the last group
-          if (currentGroup.length > 0) {
-            groupedEvents.push(currentGroup);
-          }
+          const groupedEvents = groupVisitorEventsByTimeWindow(newVisitorEvents);
 
           // Create notifications for each group
           for (const group of groupedEvents) {
