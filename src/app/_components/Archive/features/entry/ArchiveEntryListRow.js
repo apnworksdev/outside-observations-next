@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { memo } from 'react';
 import Link from 'next/link';
 import SanityImage from '@/sanity/components/SanityImage';
 import SanityVideo from '@/sanity/components/SanityVideo';
@@ -9,12 +10,17 @@ import { ProtectedMediaWrapper } from '@/app/_components/Archive/features/entry/
 import { usePrefetchOnHover } from '@/app/_hooks/shared/usePrefetchOnHover';
 import { useArchiveEntryVisited } from '@/app/_hooks/archive/useArchiveEntryVisited';
 import { useContentWarningConsent } from '@/app/_contexts/archive/ContentWarningConsentContext';
-import { useArchiveEntries } from '../../providers/ArchiveEntriesProvider';
 import { saveArchiveScrollPosition } from '@/app/_hooks/archive/useArchiveScrollPosition';
 import { trackArchiveEntryClickFromEntry } from '@/app/_helpers/analytics/gtag';
 import styles from '@app/_assets/archive/archive-page.module.css';
 
-export default function ArchiveEntryListRow({ entry, index = 0 }) {
+function ArchiveEntryListRow({
+  entry,
+  index = 0,
+  currentView = 'list',
+  currentSearchStatus = null,
+}) {
+  const isWidlineMedia = entry?.kind === 'widlineMedia';
   const slug = entry.metadata?.slug || entry.slug
   const hasSlug = slug?.current
   const slugValue = slug?.current || null;
@@ -22,9 +28,12 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
   const posterWidth = 300;
   const isVisualEssay = entry.mediaType === 'visualEssay';
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const href = hasSlug
-    ? `/archive/entry/${slug.current}${isVisualEssay ? `?image=${currentImageIndex}` : ''}`
-    : null;
+  const widlineMediaIndex = Number.isInteger(entry?.widlineMediaIndex) ? entry.widlineMediaIndex : 0;
+  const href = isWidlineMedia
+    ? `/archive/widline-cadet?media=${widlineMediaIndex}`
+    : hasSlug
+      ? `/archive/entry/${slug.current}${isVisualEssay ? `?image=${currentImageIndex}` : ''}`
+      : null;
   const prefetchHandlers = usePrefetchOnHover(href, 300);
   // Set priority for first 3 rows (above the fold in list view)
   const isPriority = index < 3;
@@ -37,7 +46,8 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
   const hasContentWarning = entry.metadata?.contentWarning === true;
 
   // Get current view and search status for GA4
-  const { view, searchStatus } = useArchiveEntries();
+  const view = currentView;
+  const searchStatus = currentSearchStatus;
 
   // Handle mouse down to save scroll position before navigation
   // Using onMouseDown instead of onClick so it runs before Next.js navigation
@@ -53,7 +63,9 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
 
   const handleMouseDown = (event) => {
     prepareNavigationRestore();
-    trackArchiveEntryClickFromEntry(entry, view ?? 'list', searchStatus ?? {});
+    if (!isWidlineMedia) {
+      trackArchiveEntryClickFromEntry(entry, view ?? 'list', searchStatus ?? {});
+    }
   };
 
   const handleClick = () => {
@@ -166,7 +178,7 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
 
   // Disable link if contentWarning is active and user hasn't consented
   const isLinkDisabled = hasContentWarning && !hasConsent;
-  const shouldRenderLink = hasSlug && !isLinkDisabled;
+  const shouldRenderLink = !!href && !isLinkDisabled;
 
   return shouldRenderLink ? (
     <Link
@@ -187,3 +199,12 @@ export default function ArchiveEntryListRow({ entry, index = 0 }) {
     </div>
   );
 }
+
+export default memo(ArchiveEntryListRow, (prev, next) => {
+  return (
+    prev.entry === next.entry &&
+    prev.index === next.index &&
+    prev.currentView === next.currentView &&
+    prev.currentSearchStatus === next.currentSearchStatus
+  );
+});

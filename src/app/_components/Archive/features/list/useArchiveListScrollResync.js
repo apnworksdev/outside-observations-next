@@ -9,24 +9,37 @@ import {
   ARCHIVE_SCROLL_VIEW_KEY,
 } from '@/app/_hooks/archive/useArchiveScrollPosition';
 
-export function useArchiveListScrollResync({ archiveContentVisible, view, isScrollNeeded, visibleEntriesSignature }) {
+export function useArchiveListScrollResync({ archiveContentVisible, view, isScrollNeeded }) {
   useEffect(() => {
     if (!archiveContentVisible || !view) {
       return undefined;
     }
 
     const run = () => {
+      const scrollElement = getArchiveScrollElement(view);
+      if (!scrollElement) {
+        return;
+      }
+
       try {
-        if (
+        const hasSavedScroll =
           sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY) !== null &&
-          sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null
+          sessionStorage.getItem(ARCHIVE_SCROLL_VIEW_KEY) !== null;
+
+        // Only restore while scroller is still at top; never override active user scroll.
+        const isAtTop = scrollElement.scrollTop <= 2;
+        if (
+          hasSavedScroll &&
+          isAtTop
         ) {
           syncArchiveScrollTopFromSession(view);
-        } else {
+        } else if (!hasSavedScroll && isAtTop) {
           enforceArchiveScrollTopWhenNoSession(view);
         }
       } catch {
-        enforceArchiveScrollTopWhenNoSession(view);
+        if (scrollElement.scrollTop <= 2) {
+          enforceArchiveScrollTopWhenNoSession(view);
+        }
       }
     };
 
@@ -68,5 +81,5 @@ export function useArchiveListScrollResync({ archiveContentVisible, view, isScro
         ro.disconnect();
       }
     };
-  }, [archiveContentVisible, view, isScrollNeeded, visibleEntriesSignature]);
+  }, [archiveContentVisible, view, isScrollNeeded]);
 }

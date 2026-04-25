@@ -3,11 +3,22 @@
   width: 384px;
   z-index: 10000;
   background-color: var(--gray-color);
+  color: var(--bg-color);
   padding: 2px;
-  border: 1px solid var(--bg-color);
+  border: 1px solid currentColor;
   transition: opacity 0.2s ease;
   will-change: transform;
   contain: layout style paint;
+}
+
+:global(body[data-page="widline-cadet"]) .radioIframe {
+  background-color: #5D5D5D;
+  color: var(--fg-color);
+}
+
+:global(body[data-page="unexpected-connections"]) .radioIframe,
+:global(body[data-page="lab"]) .radioNavButtons {
+  background-color: var(--fg-color-75);
 }
 
 .radioIframeDragging {
@@ -67,13 +78,13 @@
   width: 2px;
   height: 2px;
   border-radius: 50%;
-  background-color: var(--bg-color);
+  background-color: currentColor;
 }
 
 .radioButton {
   width: 17px;
   height: 100%;
-  color: var(--bg-color);
+  color: currentColor;
   border: none;
   cursor: pointer;
   padding: 0;
@@ -96,7 +107,7 @@
   left: 50%;
   width: 8px;
   height: 1px;
-  background-color: var(--bg-color);
+  background-color: currentColor;
   transform: translate(-50%, -50%);
 }
 
@@ -121,7 +132,7 @@
   left: 50%;
   width: 10px;
   height: 1.5px;
-  background-color: var(--bg-color);
+  background-color: currentColor;
   transform-origin: center;
 }
 

@@ -2,25 +2,9 @@ import ArchiveNavigationContainer from '@/app/_components/Archive/features/navig
 import ArchiveEntriesProvider from '@/app/_components/Archive/providers/ArchiveEntriesProvider';
 import ClosedArchiveRedirect from '@/app/_components/Archive/features/unexpected/ClosedArchiveRedirect';
 import { ErrorBoundary } from '@/app/_components/shared/error/ErrorBoundary';
-import { getArchiveEntries } from '@app/_data/archive';
 import { useTimezoneRedirect } from '@/lib/closedArchiveHours';
 
 export default async function ArchiveLayout({ children }) {
-  let entries = [];
-
-  try {
-    entries = await getArchiveEntries();
-    // Ensure entries is an array
-    if (!Array.isArray(entries)) {
-      console.warn('getArchiveEntries returned non-array, using empty array');
-      entries = [];
-    }
-  } catch (error) {
-    console.error('Failed to fetch archive entries in archive layout:', error);
-    // Continue with empty array - components should handle this gracefully
-    entries = [];
-  }
-
   // View preference is read from localStorage client-side by ArchiveEntriesProvider
   // This allows static generation while still restoring view preference on the client
   const content = (
@@ -32,7 +16,7 @@ export default async function ArchiveLayout({ children }) {
 
   return (
     <ErrorBoundary>
-      <ArchiveEntriesProvider initialEntries={entries}>
+      <ArchiveEntriesProvider>
         {useTimezoneRedirect ? content : <ClosedArchiveRedirect>{content}</ClosedArchiveRedirect>}
       </ArchiveEntriesProvider>
     </ErrorBoundary>

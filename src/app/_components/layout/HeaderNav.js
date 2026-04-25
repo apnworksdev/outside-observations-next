@@ -61,6 +61,14 @@ export default function HeaderNav({ newsletterTitle, newsletterDescription }) {
             label="Archive"
             onClick={() => trackNavClick('archive', 'same_page')}
           >
+            <Link
+              href="/archive/widline-cadet"
+              className={`${styles.navBubble} widline-cadet-nav-bubble`}
+              data-transition="nav"
+              onClick={() => trackNavClick('widline_cadet', 'same_page')}
+            >
+              Widline Cadet
+            </Link>
             <div className={styles.archiveNavOptions}>
               <ArchiveViewToggle
                 className={`${styles.archiveNavOption} ${styles.navBubble}`}

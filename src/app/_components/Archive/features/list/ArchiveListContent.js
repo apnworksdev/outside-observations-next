@@ -12,6 +12,7 @@ import { useArchiveListScrollResync } from '@/app/_components/Archive/features/l
 import MaskScrollWrapper from '@/app/_web-components/MaskScrollWrapper';
 import ScrollContainerWrapper from '@/app/_web-components/ScrollContainerWrapper';
 import { useArchiveEntries } from '../../providers/ArchiveEntriesProvider';
+import { getArchiveScrollElement } from '@/app/_hooks/archive/useArchiveScrollPosition';
 import { trackArchiveLoaded } from '@/app/_helpers/analytics/gtag';
 import { useArchiveScrollRestore } from '@/app/_hooks/archive/useArchiveScrollPosition';
 import { ErrorBoundary } from '@/app/_components/shared/error/ErrorBoundary';
@@ -23,7 +24,18 @@ import styles from '@app/_assets/archive/archive-page.module.css';
 const OFFSCREEN_SCROLL_LOCK_STYLE = { visibility: 'hidden' };
 
 export default function ArchiveListContent() {
-  const { view, visibleEntries, searchStatus } = useArchiveEntries();
+  const {
+    view,
+    visibleEntries,
+    searchStatus,
+    hasMore,
+    isInitialLoading,
+    isLoadingMore,
+    paginationError,
+    loadMore,
+    retryLoadMore,
+    isRefreshing,
+  } = useArchiveEntries();
   const { typeSort, handleSortClick, sortableLegendColumns } = useArchiveListSorting();
   // Hidden until useLayoutEffect + rAF applies top or saved scroll — avoids any visible "middle" frame.
   const [archiveContentVisible, setArchiveContentVisible] = useState(false);
@@ -133,6 +145,8 @@ export default function ArchiveListContent() {
   const pendingViewChangeRef = useRef(false);
   const isInitialMountRef = useRef(true);
   const scrollContainerRef = useRef(null);
+  const infiniteSentinelRef = useRef(null);
+  const hasUserScrolledRef = useRef(false);
 
   const hasEntries = visibleEntries.length > 0;
   const visibleEntriesSignature = useMemo(
@@ -146,7 +160,7 @@ export default function ArchiveListContent() {
     contentRef,
     scrollContainerRef,
   });
-  useArchiveListScrollResync({ archiveContentVisible, view, isScrollNeeded, visibleEntriesSignature });
+  useArchiveListScrollResync({ archiveContentVisible, view, isScrollNeeded });
 
   const handleImageLoad = useCallback(() => {
     scheduleMeasurement();
@@ -155,6 +169,66 @@ export default function ArchiveListContent() {
   // Handle error state
   const hasError = searchStatus?.status === 'error';
   const errorMessage = searchStatus?.error;
+
+  useEffect(() => {
+    hasUserScrolledRef.current = false;
+  }, [view]);
+
+  useEffect(() => {
+    if (!view || !archiveContentVisible) {
+      return undefined;
+    }
+
+    const scrollElement = getArchiveScrollElement(view);
+    if (!scrollElement) return undefined;
+
+    const handleScrollIntent = () => {
+      if (scrollElement.scrollTop > 2) {
+        hasUserScrolledRef.current = true;
+      }
+    };
+
+    if (scrollElement.scrollTop > 2) {
+      hasUserScrolledRef.current = true;
+    }
+
+    scrollElement.addEventListener('scroll', handleScrollIntent, { passive: true });
+
+    return () => {
+      scrollElement.removeEventListener('scroll', handleScrollIntent);
+    };
+  }, [archiveContentVisible, view, visibleEntriesSignature]);
+
+  useEffect(() => {
+    const sentinel = infiniteSentinelRef.current;
+    const scrollRoot = view ? getArchiveScrollElement(view) : null;
+    if (!archiveContentVisible || !sentinel || !scrollRoot || !hasMore || isInitialLoading || isLoadingMore) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first?.isIntersecting) {
+          if (!hasUserScrolledRef.current && scrollRoot.scrollTop <= 2) {
+            return;
+          }
+          loadMore();
+        }
+      },
+      {
+        root: scrollRoot,
+        rootMargin: '300px 0px 300px 0px',
+        threshold: 0.01,
+      }
+    );
+
+    observer.observe(sentinel);
+    return () => {
+      observer.disconnect();
+    };
+  }, [archiveContentVisible, hasMore, isInitialLoading, isLoadingMore, loadMore, visibleEntriesSignature, view]);
+
 
   return (
     <ErrorBoundary fallback={ArchiveListErrorFallback}>
@@ -180,8 +254,15 @@ export default function ArchiveListContent() {
                       entry={entry}
                       index={index}
                       onImageLoad={handleImageLoad}
+                      currentView={view}
+                      currentSearchStatus={searchStatus}
                     />
                   ))}
+                  <div
+                    ref={infiniteSentinelRef}
+                    className={styles.archivePaginationSentinel}
+                    aria-hidden="true"
+                  />
                 </MaskScrollWrapper>
               ) : (
                 <ScrollContainerWrapper
@@ -190,10 +271,33 @@ export default function ArchiveListContent() {
                   data-scroll-state={isScrollNeeded ? 'needed' : 'not-needed'}
                 >
                   {visibleEntries.map((entry, index) => (
-                    <ArchiveEntry key={entry._id} entry={entry} index={index} />
+                    <ArchiveEntry
+                      key={entry._id}
+                      entry={entry}
+                      index={index}
+                      currentView={view}
+                      currentSearchStatus={searchStatus}
+                    />
                   ))}
+                  <div
+                    ref={infiniteSentinelRef}
+                    className={styles.archivePaginationSentinel}
+                    aria-hidden="true"
+                  />
                 </ScrollContainerWrapper>
               )
+            ) : null}
+            {isLoadingMore ? (
+              <div className={styles.archivePaginationLoadingMore} role="status" aria-live="polite">
+                <p>Loading...</p>
+              </div>
+            ) : null}
+            {paginationError ? (
+              <div className={styles.archivePaginationError} role="alert">
+                <button type="button" onClick={retryLoadMore} className={styles.archivePaginationRetryButton}>
+                  Retry
+                </button>
+              </div>
             ) : null}
           </div>
         </div>

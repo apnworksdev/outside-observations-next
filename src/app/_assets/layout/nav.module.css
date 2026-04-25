@@ -96,6 +96,10 @@
     padding-left: calc(var(--padding) * 2);
   }
 
+  .navNavigation .navLi:global(.archive-nav) .navBubble:global(.widline-cadet-nav-bubble):hover {
+    padding-left: calc(var(--padding) * 2);
+  }
+
   .archiveViewToggleButton:hover,
   :global(.help-nav) .navBubble:hover,
   .backToArchiveButton .navBubble:hover {
@@ -107,6 +111,7 @@
 }
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav),
+:global(body[data-page="widline-cadet"]) .navNavigation .navLi:global(.archive-nav),
 :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav),
 :global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) {
   margin-left: 0;
@@ -114,6 +119,7 @@
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav),
 :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav),
+:global(body[data-page="widline-cadet"]) .navNavigation .navLi:global(.archive-nav),
 .navNavigation .navLi:global(.radio-nav)[data-active="true"] {
   position: relative;
   display: flex;
@@ -121,13 +127,20 @@
 }
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) .navLink,
+:global(body[data-page="widline-cadet"]) .navNavigation .navLi:global(.archive-nav) .navBubble:global(.widline-cadet-nav-bubble),
 :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) .navLink,
 :global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) .navLink,
 .navNavigation .navLi:global(.radio-nav)[data-active="true"] .navLink {
   padding-left: calc(var(--padding) * 2);
 }
 
+.navNavigation .navLi:global(.archive-nav) .navBubble:global(.widline-cadet-nav-bubble) {
+  position: relative;
+  transition: padding-left var(--transition-time) var(--transition-effect), background-color var(--transition-time) var(--transition-effect);
+}
+
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) .navLink::before,
+:global(body[data-page="widline-cadet"]) .navNavigation .navLi:global(.archive-nav) .navBubble:global(.widline-cadet-nav-bubble)::before,
 :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) .navLink::before,
 :global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) .navLink::before,
 .navNavigation .navLi:global(.radio-nav)[data-active="true"] .navLink::before {
@@ -139,7 +152,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--bg-color);
+  background-color: currentColor;
 }
 
 .navNavigation .navLi:global(.radio-nav)[data-active="true"] .navLink::before {
@@ -253,6 +266,16 @@
 
 .navNavigation .navLi:global(.radio-nav)[data-active="true"] .radioNavButtons {
   display: flex;
+  color: var(--bg-color);
+}
+
+:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.radio-nav)[data-active="true"] .radioNavButtons {
+  background-color: var(--fg-color-75);
+}
+
+:global(body[data-page="widline-cadet"]) .navNavigation .navLi:global(.radio-nav)[data-active="true"] .radioNavButtons {
+  background-color: #5D5D5D;
+  color: var(--fg-color);
 }
 
 .radioNavButton {
@@ -276,7 +299,7 @@
   width: 8px;
   height: 8px;
   background-color: transparent;
-  border: 1px solid var(--bg-color);
+  border: 1px solid currentColor;
   border-top-width: 2px;
   border-right-width: 1px;
   border-bottom-width: 1px;
@@ -293,7 +316,7 @@
   left: 50%;
   width: 10px;
   height: 1.5px;
-  background-color: var(--bg-color);
+  background-color: currentColor;
   transform-origin: center;
 }
 
@@ -330,6 +353,12 @@
 :global(body[data-page="unexpected-connections"]) .navBubble,
 :global(body[data-page="unexpected-connections"]) .helpNav {
   background-color: var(--fg-color-75);
+}
+
+:global(body[data-page="widline-cadet"]) .navBubble,
+:global(body[data-page="widline-cadet"]) .helpNav {
+  background-color: #5D5D5D;
+  color: var(--fg-color);
 }
 
 :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.lab-nav) {
@@ -376,7 +405,7 @@
   }
 
   :global(body.mobile-nav-open) .navNavigation {
-    height: calc(var(--bubble-height) * 4 + var(--gap) * 3);
+    height: calc(var(--bubble-height) * 5 + var(--gap) * 4);
     overflow-y: hidden;
     overflow-x: visible;
     pointer-events: auto;

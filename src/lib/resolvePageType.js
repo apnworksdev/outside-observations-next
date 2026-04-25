@@ -1,6 +1,7 @@
 // Pure helper to map a pathname to a page type. Safe for server, edge, and client.
 export function resolvePageType(pathname) {
   if (!pathname || pathname === '/') return 'home';
+  if (pathname.startsWith('/archive/widline-cadet')) return 'widline-cadet';
   if (pathname.startsWith('/archive/entry')) return 'archive-entry';
   if (pathname.startsWith('/archive/unexpected-connections')) return 'unexpected-connections';
   if (pathname.startsWith('/archive/closed')) return 'archive-closed';

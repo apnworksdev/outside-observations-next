@@ -13,8 +13,6 @@ import {
 } from '../state/archiveStorage';
 import {
   getInitialArchiveSorting,
-  getFilteredArchiveEntries,
-  getSortedArchiveEntries,
 } from '../state/archiveEntryFilters';
 import {
   useArchiveViewSync,
@@ -24,6 +22,28 @@ import {
 } from '../state/archiveEntriesProviderHooks';
 
 const ArchiveEntriesContext = createContext(null);
+const ROWS_PER_PAGE = 10;
+const PAGE_SIZE_RESIZE_DEBOUNCE_MS = 180;
+
+function getPageSizeForViewportWidth(width) {
+  if (width < 768) {
+    return 2 * ROWS_PER_PAGE;
+  }
+  if (width < 1024) {
+    return 3 * ROWS_PER_PAGE;
+  }
+  if (width < 1280) {
+    return 4 * ROWS_PER_PAGE;
+  }
+  return 6 * ROWS_PER_PAGE;
+}
+
+function getPageSizeBucket(width) {
+  if (width < 768) return 'xs';
+  if (width < 1024) return 'sm';
+  if (width < 1280) return 'md';
+  return 'lg';
+}
 
 export default function ArchiveEntriesProvider({ initialEntries = [], initialView = null, children }) {
   /**
@@ -33,9 +53,14 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
    */
   // Ensure initialEntries is an array
   const safeInitialEntries = Array.isArray(initialEntries) ? initialEntries : [];
-  const [entries] = useState(() => {
-    return safeInitialEntries;
-  });
+  const [entries, setEntries] = useState(() => safeInitialEntries);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [paginationError, setPaginationError] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pageSize, setPageSize] = useState(40);
   // Initialize view: Always start with 'images' to match server render and prevent hydration mismatch
   // The view will be updated from localStorage in useLayoutEffect after mount
   const [view, setViewState] = useState(() => {
@@ -55,6 +80,10 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   const router = useRouter();
   const pathname = usePathname();
   const requestIdRef = useRef(0);
+  const fetchAbortRef = useRef(null);
+  const pageSizeBucketRef = useRef(null);
+  const hasLoadedArchivePageRef = useRef(false);
+  const lastArchiveQuerySignatureRef = useRef(null);
   
   // Get search state from global provider (set by ChatBox or other components)
   const { consumeSearchPayload, setSearchPayload: setGlobalSearchPayload, searchPayload: globalSearchPayload } = useArchiveSearchState();
@@ -98,21 +127,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
 
   useSyncArchiveFilterRefs({ searchStatus, selectedMoodTags, searchQueryRef, selectedMoodTagsRef });
 
-  /**
-   * Derive the list of visible entries. When there is no active search we return all
-   * entries. Once a search is running we filter by the set of matching IDs and keep
-   * the order consistent with the ranking provided by the vector store.
-   * Also filters by selected mood tag if one is active.
-   */
-  const filtered = useMemo(
-    () => getFilteredArchiveEntries(entries, searchResults, selectedMoodTags),
-    [entries, searchResults, selectedMoodTags]
-  );
-
-  const sortedEntries = useMemo(
-    () => getSortedArchiveEntries(filtered, sorting),
-    [filtered, sorting]
-  );
+  const visibleEntries = entries;
 
   const {
     setSearchFromPayload,
@@ -136,6 +151,192 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
     setSelectedMoodTags,
     setSortingWithStorage,
   });
+
+  const loadArchivePage = useCallback(async ({ cursor = null, append = false, showRefreshing = false } = {}) => {
+    if (fetchAbortRef.current) {
+      fetchAbortRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+
+    const searchIds = searchResults?.active ? searchResults?.ids ?? [] : [];
+    const sortColumn = sorting?.column ?? null;
+    const sortDirection = sorting?.direction ?? null;
+
+    if (!append) {
+      setIsInitialLoading(true);
+      setPaginationError(null);
+      if (showRefreshing) {
+        setIsRefreshing(true);
+      }
+    } else {
+      setIsLoadingMore(true);
+      setPaginationError(null);
+    }
+
+    try {
+      const response = await fetch('/api/archive-entries/paginated', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          cursor,
+          limit: pageSize,
+          sortColumn,
+          sortDirection,
+          moodTags: selectedMoodTags,
+          searchIds,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Pagination request failed with status ${response.status}`);
+      }
+
+      const payload = await response.json();
+      const incomingItems = Array.isArray(payload?.items) ? payload.items : [];
+      const normalisedItems = incomingItems.filter(
+        (item) => item && typeof item._id === 'string' && item._id.trim().length > 0
+      );
+      const incomingCursor = payload?.nextCursor ?? null;
+      const incomingHasMore = payload?.hasMore === true;
+      const safeHasMore = incomingHasMore && normalisedItems.length > 0;
+
+      if (append && incomingHasMore && normalisedItems.length === 0) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[archive/pagination] Append returned empty items while hasMore=true. Stopping pagination.');
+        }
+        setHasMore(false);
+        setNextCursor(null);
+        setPaginationError('Pagination returned no new entries. Please refresh and try again.');
+        return;
+      }
+
+      setEntries((previous) => {
+        if (!append) {
+          return normalisedItems;
+        }
+
+        const seen = new Set(previous.map((item) => item?._id).filter(Boolean));
+        const dedupedIncoming = normalisedItems.filter((item) => {
+          const id = item?._id;
+          if (!id || seen.has(id)) {
+            return false;
+          }
+          seen.add(id);
+          return true;
+        });
+        return [...previous, ...dedupedIncoming];
+      });
+      setNextCursor(safeHasMore ? incomingCursor : null);
+      setHasMore(safeHasMore);
+      setPaginationError(null);
+      if (!append) {
+        hasLoadedArchivePageRef.current = true;
+      }
+    } catch (error) {
+      if (error?.name !== 'AbortError') {
+        setPaginationError(error?.message || 'Failed to load archive entries.');
+      }
+    } finally {
+      if (fetchAbortRef.current === controller) {
+        fetchAbortRef.current = null;
+      }
+      setIsInitialLoading(false);
+      setIsLoadingMore(false);
+      setIsRefreshing(false);
+    }
+  }, [pageSize, searchResults, selectedMoodTags, sorting]);
+
+  const loadMore = useCallback(() => {
+    if (!hasMore || isLoadingMore || isInitialLoading || !nextCursor) {
+      return;
+    }
+    loadArchivePage({ cursor: nextCursor, append: true });
+  }, [hasMore, isLoadingMore, isInitialLoading, loadArchivePage, nextCursor]);
+
+  const retryLoadMore = useCallback(() => {
+    if (isLoadingMore || isInitialLoading) {
+      return;
+    }
+
+    if (nextCursor) {
+      loadArchivePage({ cursor: nextCursor, append: true });
+      return;
+    }
+
+    loadArchivePage({ cursor: null, append: false });
+  }, [isInitialLoading, isLoadingMore, loadArchivePage, nextCursor]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    let debounceTimer = null;
+    const applyPageSize = () => {
+      const width = window.innerWidth;
+      const nextBucket = getPageSizeBucket(width);
+      if (pageSizeBucketRef.current === nextBucket) {
+        return;
+      }
+      pageSizeBucketRef.current = nextBucket;
+      setPageSize(getPageSizeForViewportWidth(width));
+    };
+
+    const onResize = () => {
+      if (debounceTimer) {
+        window.clearTimeout(debounceTimer);
+      }
+      debounceTimer = window.setTimeout(() => {
+        applyPageSize();
+      }, PAGE_SIZE_RESIZE_DEBOUNCE_MS);
+    };
+
+    applyPageSize();
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      if (debounceTimer) {
+        window.clearTimeout(debounceTimer);
+      }
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
+  const querySignature = useMemo(() => {
+    const sortKey = `${sorting?.column ?? 'none'}:${sorting?.direction ?? 'none'}`;
+    const moodKey = selectedMoodTags.join('|');
+    const searchKey = searchResults?.active ? (searchResults?.ids ?? []).join('|') : 'none';
+    return `${sortKey}::${moodKey}::${searchKey}::${pageSize}`;
+  }, [pageSize, searchResults, selectedMoodTags, sorting]);
+
+  useEffect(() => {
+    if (pathname !== '/archive') {
+      return;
+    }
+
+    const queryChanged = lastArchiveQuerySignatureRef.current !== querySignature;
+    const needsInitialLoad = !hasLoadedArchivePageRef.current;
+    lastArchiveQuerySignatureRef.current = querySignature;
+
+    if (!needsInitialLoad && !queryChanged) {
+      return;
+    }
+
+    setNextCursor(null);
+    setHasMore(true);
+    loadArchivePage({ cursor: null, append: false, showRefreshing: true });
+  }, [pathname, querySignature, loadArchivePage]);
+
+  useEffect(() => {
+    return () => {
+      if (fetchAbortRef.current) {
+        fetchAbortRef.current.abort();
+      }
+    };
+  }, []);
 
   /**
    * Dispatch filter change events whenever filter state changes
@@ -179,7 +380,7 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   const value = useMemo(
     () => ({
       entries,
-      visibleEntries: sortedEntries,
+      visibleEntries,
       view,
       setView,
       searchStatus,
@@ -192,8 +393,15 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
       setMoodTags,
       clearMoodTag,
       clearAllFilters,
+      hasMore,
+      isInitialLoading,
+      isLoadingMore,
+      paginationError,
+      loadMore,
+      retryLoadMore,
+      isRefreshing,
     }),
-    [clearAllFilters, clearSearch, clearMoodTag, entries, setSearchFromPayload, searchStatus, selectedMoodTags, setMoodTag, setMoodTags, setSortingWithStorage, setView, sortedEntries, sorting, view]
+    [clearAllFilters, clearSearch, clearMoodTag, entries, hasMore, isInitialLoading, isLoadingMore, isRefreshing, loadMore, paginationError, retryLoadMore, setSearchFromPayload, searchStatus, selectedMoodTags, setMoodTag, setMoodTags, setSortingWithStorage, setView, sorting, view, visibleEntries]
   );
 
   return <ArchiveEntriesContext.Provider value={value}>{children}</ArchiveEntriesContext.Provider>;

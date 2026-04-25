@@ -127,6 +127,61 @@ export const ARCHIVE_PAGE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"
 }`)
 
 /**
+ * Shared lightweight projection for archive pagination endpoints.
+ * Keep this list focused on fields needed by archive list/grid cards.
+ */
+export const ARCHIVE_PAGE_ENTRY_PREVIEW_PROJECTION = `
+  _id,
+  _updatedAt,
+  metadata {
+    year,
+    slug { current },
+    artName,
+    source,
+    contentWarning,
+    tags[]->{ name }
+  },
+  year,
+  slug { current },
+  artName,
+  source,
+  mediaType,
+  video{
+    asset->{
+      url,
+      mimeType
+    }
+  },
+  vimeoUrl,
+  videoExcerptUrl,
+  poster{
+    asset,
+    crop,
+    hotspot,
+    'lqip': asset->metadata.lqip,
+    'dimensions': asset->metadata.dimensions
+  },
+  aiMoodTags[]->{ name },
+  // Keep visual essay payload lightweight: first image only for archive previews.
+  "visualEssayPreviewImage": visualEssayImages[0]->{
+    _id,
+    image{
+      asset,
+      crop,
+      hotspot,
+      'lqip': asset->metadata.lqip,
+      'dimensions': asset->metadata.dimensions
+    },
+    metadata {
+      artName,
+      fileName,
+      year { value },
+      source
+    }
+  }
+`;
+
+/**
  * Full query for archive entries - includes all data (used for individual entry pages)
  * Keep this for backward compatibility and for pages that need full data
  */
@@ -333,6 +388,46 @@ export const SITE_SETTINGS_QUERY = defineQuery(`*[_type == "siteSettings"][0] {
     'dimensions': asset->metadata.dimensions
   }
 }`)
+
+export const WIDLINE_CADET_QUERY = defineQuery(
+  `*[_type == "widlineCadet"][0]{
+    _id,
+    title,
+    backgroundMedia[]{
+      ...,
+      image{
+        ...,
+        asset,
+        "lqip": asset->metadata.lqip,
+        "dimensions": asset->metadata.dimensions
+      },
+      video{
+        asset->{
+          url,
+          mimeType,
+          originalFilename
+        }
+      }
+    },
+    foregroundMedia[]{
+      ...,
+      image{
+        ...,
+        asset,
+        "lqip": asset->metadata.lqip,
+        "dimensions": asset->metadata.dimensions
+      },
+      video{
+        asset->{
+          url,
+          mimeType,
+          originalFilename
+        }
+      }
+    },
+    richText
+  }`
+)
 
 /**
  * Pool: archive entry IDs eligible for Unexpected Connections.

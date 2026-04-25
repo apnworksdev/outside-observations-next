@@ -1,13 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { usePrefetchOnHover } from '@/app/_hooks/shared/usePrefetchOnHover';
 import { useContentWarningConsent } from '@/app/_contexts/archive/ContentWarningConsentContext';
 import { useArchiveEntryVisited } from '@/app/_hooks/archive/useArchiveEntryVisited';
 import { trackArchiveEntryClickFromEntry } from '@/app/_helpers/analytics/gtag';
 import { saveArchiveScrollPosition } from '@/app/_hooks/archive/useArchiveScrollPosition';
-import { useArchiveEntries } from '../../providers/ArchiveEntriesProvider';
 import ArchiveVisualEssay from '@/app/_components/Archive/features/entry/ArchiveVisualEssay';
 import SanityVideo from '@/sanity/components/SanityVideo';
 import SanityImage from '@/sanity/components/SanityImage';
@@ -16,16 +15,26 @@ import styles from '@app/_assets/archive/archive-page.module.css';
 
 const POSTER_WIDTH = 300;
 
-export default function ArchiveEntryMediaLink({ entry, onImageLoad, index = 0 }) {
+function ArchiveEntryMediaLink({
+  entry,
+  onImageLoad,
+  index = 0,
+  currentView = 'images',
+  currentSearchStatus = null,
+}) {
+  const isWidlineMedia = entry?.kind === 'widlineMedia';
   const slug = entry.metadata?.slug || entry.slug;
   const hasSlug = slug?.current;
   const slugValue = slug?.current || null;
   const isVisualEssay = entry.mediaType === 'visualEssay';
+  const widlineMediaIndex = Number.isInteger(entry?.widlineMediaIndex) ? entry.widlineMediaIndex : 0;
   const [currentImage, setCurrentImage] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const href = hasSlug
-    ? `/archive/entry/${slug.current}${isVisualEssay ? `?image=${currentImageIndex}` : ''}`
-    : null;
+  const href = isWidlineMedia
+    ? `/archive/widline-cadet?media=${widlineMediaIndex}`
+    : hasSlug
+      ? `/archive/entry/${slug.current}${isVisualEssay ? `?image=${currentImageIndex}` : ''}`
+      : null;
   const prefetchHandlers = usePrefetchOnHover(href, 300);
   const isPriority = index < 4;
   const isVideo = entry.mediaType === 'video';
@@ -38,7 +47,8 @@ export default function ArchiveEntryMediaLink({ entry, onImageLoad, index = 0 })
   const { hasConsent } = useContentWarningConsent();
   const hasContentWarning = entry.metadata?.contentWarning === true;
 
-  const { view, searchStatus } = useArchiveEntries();
+  const view = currentView;
+  const searchStatus = currentSearchStatus;
 
   const prepareNavigationRestore = () => {
     if (view) {
@@ -52,7 +62,9 @@ export default function ArchiveEntryMediaLink({ entry, onImageLoad, index = 0 })
 
   const handleMouseDown = () => {
     prepareNavigationRestore();
-    trackArchiveEntryClickFromEntry(entry, view ?? 'images', searchStatus ?? {});
+    if (!isWidlineMedia) {
+      trackArchiveEntryClickFromEntry(entry, view ?? 'images', searchStatus ?? {});
+    }
   };
 
   const handleClick = () => {
@@ -132,7 +144,7 @@ export default function ArchiveEntryMediaLink({ entry, onImageLoad, index = 0 })
             loading={isPriority ? undefined : 'lazy'}
             placeholder={entry?.poster?.lqip ? 'blur' : undefined}
             blurDataURL={entry?.poster?.lqip || undefined}
-            quality={isPriority ? 70 : 60}
+                quality={isPriority ? 70 : 50}
             onLoad={onImageLoad}
           />
         </ProtectedMediaWrapper>
@@ -163,7 +175,7 @@ export default function ArchiveEntryMediaLink({ entry, onImageLoad, index = 0 })
   };
 
   const isLinkDisabled = hasContentWarning && !hasConsent;
-  const shouldRenderLink = hasSlug && !isLinkDisabled;
+  const shouldRenderLink = !!href && !isLinkDisabled;
 
   return (
     <div className={styles.archiveEntryImageContainer}>
@@ -188,3 +200,13 @@ export default function ArchiveEntryMediaLink({ entry, onImageLoad, index = 0 })
     </div>
   );
 }
+
+export default memo(ArchiveEntryMediaLink, (prev, next) => {
+  return (
+    prev.entry === next.entry &&
+    prev.index === next.index &&
+    prev.onImageLoad === next.onImageLoad &&
+    prev.currentView === next.currentView &&
+    prev.currentSearchStatus === next.currentSearchStatus
+  );
+});
