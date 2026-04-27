@@ -6,7 +6,7 @@ import {
 } from '@/sanity/lib/queries';
 import {
   toWidlineMediaItems,
-  buildMergedFeedTokens,
+  getDeterministicSlots,
 } from '@/app/_data/archiveCollaborationFeed';
 
 const DEFAULT_LIMIT = 40;
@@ -79,6 +79,114 @@ function normaliseEntry(entry) {
   };
 }
 
+function countSlotsLessOrEqual(slots, value) {
+  let left = 0;
+  let right = slots.length;
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+    if (slots[mid] <= value) {
+      left = mid + 1;
+    } else {
+      right = mid;
+    }
+  }
+  return left;
+}
+
+function lowerBoundByPosition(archiveCount, slots, mergedPosition) {
+  let left = 0;
+  let right = archiveCount;
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+    const position = mid + countSlotsLessOrEqual(slots, mid);
+    if (position < mergedPosition) {
+      left = mid + 1;
+    } else {
+      right = mid;
+    }
+  }
+  return left;
+}
+
+function buildMergedWindow({
+  archiveCount,
+  slots,
+  widlineItems,
+  offset,
+  limit,
+}) {
+  const widlineCount = Math.min(widlineItems.length, slots.length);
+  const totalMergedCount = archiveCount + widlineCount;
+  const safeOffset = Math.max(0, Math.min(offset, totalMergedCount));
+  const endExclusive = Math.min(totalMergedCount, safeOffset + limit);
+
+  if (safeOffset >= endExclusive) {
+    return {
+      tokens: [],
+      totalMergedCount,
+      nextOffset: safeOffset,
+      hasMore: false,
+      archiveRangeStart: 0,
+      archiveRangeEndExclusive: 0,
+    };
+  }
+
+  const widlinePositions = slots.map((slot, idx) => slot + idx);
+  let widlinePtr = 0;
+  while (widlinePtr < widlinePositions.length && widlinePositions[widlinePtr] < safeOffset) {
+    widlinePtr += 1;
+  }
+
+  let archiveIndex = lowerBoundByPosition(archiveCount, slots, safeOffset);
+  const tokens = [];
+  const archiveIndices = [];
+  let position = safeOffset;
+
+  while (position < endExclusive) {
+    const nextWidlinePos =
+      widlinePtr < widlinePositions.length ? widlinePositions[widlinePtr] : Number.POSITIVE_INFINITY;
+    const nextArchivePos =
+      archiveIndex < archiveCount
+        ? archiveIndex + countSlotsLessOrEqual(slots, archiveIndex)
+        : Number.POSITIVE_INFINITY;
+
+    if (nextWidlinePos <= nextArchivePos) {
+      const item = widlineItems[widlinePtr];
+      if (item) {
+        tokens.push({ kind: 'widline', item });
+      }
+      widlinePtr += 1;
+      position += 1;
+      continue;
+    }
+
+    if (archiveIndex < archiveCount) {
+      tokens.push({ kind: 'archive', archiveIndex });
+      archiveIndices.push(archiveIndex);
+      archiveIndex += 1;
+      position += 1;
+      continue;
+    }
+
+    break;
+  }
+
+  const archiveRangeStart = archiveIndices.length > 0 ? archiveIndices[0] : 0;
+  const archiveRangeEndExclusive =
+    archiveIndices.length > 0 ? archiveIndices[archiveIndices.length - 1] + 1 : 0;
+  const nextOffset = safeOffset + tokens.length;
+  const hasMore = nextOffset < totalMergedCount;
+
+  return {
+    tokens,
+    totalMergedCount,
+    nextOffset,
+    hasMore,
+    archiveRangeStart,
+    archiveRangeEndExclusive,
+  };
+}
+
 export async function POST(request) {
   try {
     const rawBody = await request.text();
@@ -110,17 +218,6 @@ export async function POST(request) {
         ? parsedCursor.offset
         : 0;
 
-    if (process.env.NODE_ENV !== 'production' && cursor && !parsedCursor) {
-      console.warn('[archive/paginated] Invalid cursor payload, restarting from first page.');
-    }
-    if (
-      process.env.NODE_ENV !== 'production' &&
-      parsedCursor &&
-      parsedCursor.signature !== signature
-    ) {
-      console.warn('[archive/paginated] Cursor signature mismatch, restarting from first page.');
-    }
-
     const effectiveLimit = limit + 1;
     const orderClause = buildOrderClause(sortColumn, sortDirection);
 
@@ -129,7 +226,7 @@ export async function POST(request) {
       && (!defined($hasMoodFilter) || !$hasMoodFilter || count((aiMoodTags[]->name)[@ in $moodTags]) > 0)
     ]`;
 
-    const orderedIdsQuery = `${baseFilter} | ${orderClause}{ _id }`;
+    const archiveCountQuery = `count(${baseFilter})`;
 
     const params = {
       hasSearchFilter: searchIds.length > 0,
@@ -138,60 +235,64 @@ export async function POST(request) {
       moodTags,
     };
 
-    const [orderedIdRows, collaboration] = await Promise.all([
-      client.fetch(orderedIdsQuery, params),
+    const [archiveCountRaw, collaboration] = await Promise.all([
+      client.fetch(archiveCountQuery, params),
       client.fetch(WIDLINE_CADET_QUERY),
     ]);
-    const orderedIds = Array.isArray(orderedIdRows)
-      ? orderedIdRows.map((row) => row?._id).filter((id) => typeof id === 'string' && id.trim().length > 0)
-      : [];
+    const archiveCount = Number.isFinite(Number(archiveCountRaw)) ? Number(archiveCountRaw) : 0;
 
     const widlineItems = toWidlineMediaItems(collaboration);
-    const mergedTokens = buildMergedFeedTokens(orderedIds, widlineItems, [
+    const slots = getDeterministicSlots(archiveCount, widlineItems.length, [
       collaboration?._id || 'widline-cadet',
       ...widlineItems.map((item) => item._id),
       signature,
     ]);
+    const windowResult = buildMergedWindow({
+      archiveCount,
+      slots,
+      widlineItems,
+      offset: cursorOffset,
+      limit: effectiveLimit,
+    });
 
-    const slice = mergedTokens.slice(cursorOffset, cursorOffset + effectiveLimit);
-    const hasMore = slice.length > limit;
-    const responseTokens = hasMore ? slice.slice(0, limit) : slice;
-    const archiveIdsInPage = responseTokens
-      .filter((token) => token.kind === 'archive')
-      .map((token) => token.id);
+    const pageTokens = windowResult.hasMore
+      ? windowResult.tokens.slice(0, limit)
+      : windowResult.tokens;
 
-    const archiveItems = archiveIdsInPage.length
-      ? await client.fetch(
-          `*[_type == "archiveEntry" && _id in $ids]{
-            ${ARCHIVE_PAGE_ENTRY_PREVIEW_PROJECTION}
-          }`,
-          { ids: archiveIdsInPage }
-        )
+    const archiveItemsInRange =
+      windowResult.archiveRangeEndExclusive > windowResult.archiveRangeStart
+        ? await client.fetch(
+            `${baseFilter} | ${orderClause}[${windowResult.archiveRangeStart}...${windowResult.archiveRangeEndExclusive}]{
+              ${ARCHIVE_PAGE_ENTRY_PREVIEW_PROJECTION}
+            }`,
+            params
+          )
+        : [];
+    const archiveItems = Array.isArray(archiveItemsInRange)
+      ? archiveItemsInRange.map(normaliseEntry).filter(Boolean)
       : [];
-    const archiveById = new Map(
-      (Array.isArray(archiveItems) ? archiveItems : [])
-        .map(normaliseEntry)
-        .filter(Boolean)
-        .map((item) => [item._id, item])
+    const archiveByRangeIndex = new Map(
+      archiveItems.map((item, idx) => [windowResult.archiveRangeStart + idx, item])
     );
 
-    const responseItems = responseTokens
+    const responseItems = pageTokens
       .map((token) => {
         if (token.kind === 'widline') {
           return token.item;
         }
-        return archiveById.get(token.id) || null;
+        return archiveByRangeIndex.get(token.archiveIndex) || null;
       })
       .filter(Boolean);
 
-    const nextOffset = cursorOffset + responseTokens.length;
+    const nextOffset = cursorOffset + pageTokens.length;
+    const hasMore = windowResult.hasMore && pageTokens.length > 0;
     const nextCursor = hasMore ? encodeCursor({ offset: nextOffset, signature }) : null;
 
     return NextResponse.json({
       items: responseItems,
       hasMore,
       nextCursor,
-      total: mergedTokens.length,
+      total: windowResult.totalMergedCount,
       limit,
     });
   } catch (error) {

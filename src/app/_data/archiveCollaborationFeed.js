@@ -81,7 +81,7 @@ export function toWidlineMediaItems(collaboration) {
     .filter(Boolean);
 }
 
-function getDeterministicSlots(archiveCount, widlineCount, seedParts = []) {
+export function getDeterministicSlots(archiveCount, widlineCount, seedParts = []) {
   const insertionSlots = archiveCount + 1;
   const cappedWidlineCount = Math.min(widlineCount, insertionSlots);
   const seed = hashStringSeed(`${archiveCount}|${widlineCount}|${seedParts.join('|')}`);
