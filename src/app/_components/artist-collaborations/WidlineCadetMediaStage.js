@@ -7,7 +7,7 @@ import SanityImage from '@/sanity/components/SanityImage';
 import SanityVideo from '@/sanity/components/SanityVideo';
 import styles from '@app/_assets/archive/artist-collaboration-page.module.css';
 
-const FOREGROUND_PARALLAX_SPEED = 0.12;
+const FOREGROUND_PARALLAX_SPEED = 0.08;
 
 function renderRichText(blocks) {
   if (!Array.isArray(blocks)) {

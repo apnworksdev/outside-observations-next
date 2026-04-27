@@ -146,7 +146,6 @@ export default function ArchiveListContent() {
   const isInitialMountRef = useRef(true);
   const scrollContainerRef = useRef(null);
   const infiniteSentinelRef = useRef(null);
-  const hasUserScrolledRef = useRef(false);
 
   const hasEntries = visibleEntries.length > 0;
   const visibleEntriesSignature = useMemo(
@@ -171,35 +170,6 @@ export default function ArchiveListContent() {
   const errorMessage = searchStatus?.error;
 
   useEffect(() => {
-    hasUserScrolledRef.current = false;
-  }, [view]);
-
-  useEffect(() => {
-    if (!view || !archiveContentVisible) {
-      return undefined;
-    }
-
-    const scrollElement = getArchiveScrollElement(view);
-    if (!scrollElement) return undefined;
-
-    const handleScrollIntent = () => {
-      if (scrollElement.scrollTop > 2) {
-        hasUserScrolledRef.current = true;
-      }
-    };
-
-    if (scrollElement.scrollTop > 2) {
-      hasUserScrolledRef.current = true;
-    }
-
-    scrollElement.addEventListener('scroll', handleScrollIntent, { passive: true });
-
-    return () => {
-      scrollElement.removeEventListener('scroll', handleScrollIntent);
-    };
-  }, [archiveContentVisible, view, visibleEntriesSignature]);
-
-  useEffect(() => {
     const sentinel = infiniteSentinelRef.current;
     const scrollRoot = view ? getArchiveScrollElement(view) : null;
     if (!archiveContentVisible || !sentinel || !scrollRoot || !hasMore || isInitialLoading || isLoadingMore) {
@@ -210,9 +180,6 @@ export default function ArchiveListContent() {
       (entries) => {
         const first = entries[0];
         if (first?.isIntersecting) {
-          if (!hasUserScrolledRef.current && scrollRoot.scrollTop <= 2) {
-            return;
-          }
           loadMore();
         }
       },
@@ -228,6 +195,24 @@ export default function ArchiveListContent() {
       observer.disconnect();
     };
   }, [archiveContentVisible, hasMore, isInitialLoading, isLoadingMore, loadMore, visibleEntriesSignature, view]);
+
+  useEffect(() => {
+    if (!archiveContentVisible || !view || !hasMore || isInitialLoading || isLoadingMore) {
+      return;
+    }
+
+    const scrollRoot = getArchiveScrollElement(view);
+    if (!scrollRoot) {
+      return;
+    }
+
+    const maxScroll = scrollRoot.scrollHeight - scrollRoot.clientHeight;
+    // If there is no scroll room yet (common on mobile), eagerly load more pages until
+    // scrolling becomes possible or pagination is exhausted.
+    if (maxScroll <= 2) {
+      loadMore();
+    }
+  }, [archiveContentVisible, hasMore, isInitialLoading, isLoadingMore, loadMore, view, visibleEntriesSignature]);
 
 
   return (
