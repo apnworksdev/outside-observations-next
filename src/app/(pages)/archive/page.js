@@ -1,6 +1,6 @@
-import ArchiveListContent from '@/app/_components/Archive/ArchiveListContent';
-import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
-import { ArchiveErrorFallback } from '@/app/_components/ErrorFallbacks';
+import ArchiveListContent from '@/app/_components/Archive/features/list/ArchiveListContent';
+import { ErrorBoundary } from '@/app/_components/shared/error/ErrorBoundary';
+import { ArchiveErrorFallback } from '@/app/_components/shared/error/ErrorFallbacks';
 
 // Enable ISR - revalidate every 60 seconds
 export const revalidate = 60;

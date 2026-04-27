@@ -541,6 +541,10 @@
     transition: height var(--transition-time) var(--transition-effect);
   }
 
+  :global(body[data-page="widline-cadet"]) .archiveNavigationGradient {
+    background: none;
+  }
+
   .archiveNavigation[data-state='open'] + .archiveNavigationGradient {
     height: 50vh;
   }

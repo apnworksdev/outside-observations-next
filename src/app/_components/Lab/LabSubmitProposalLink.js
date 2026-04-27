@@ -1,7 +1,7 @@
 'use client';
 
-import { trackLabSubmitProposalClick } from '@/app/_helpers/gtag';
-import styles from '@app/_assets/lab.module.css';
+import { trackLabSubmitProposalClick } from '@/app/_helpers/analytics/gtag';
+import styles from '@app/_assets/lab/lab.module.css';
 
 const MAILTO = 'mailto:contact@outsideobservations.com';
 

@@ -1,42 +1,7 @@
 import { NextResponse } from 'next/server';
-import { Redis } from '@upstash/redis';
-
-// Initialize Redis client
-// These environment variables will be set in Netlify or locally in .env.local
-let redis = null;
-
-// Lazy initialization to provide better error messages
-function getRedis() {
-  // Support both naming conventions:
-  // - UPSTASH_REDIS_URL / UPSTASH_REDIS_TOKEN (standard)
-  // - UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN (Upstash dashboard naming)
-  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.UPSTASH_REDIS_URL;
-  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.UPSTASH_REDIS_TOKEN;
-
-  if (!redisUrl || !redisToken) {
-    const missingVars = [];
-    if (!redisUrl) missingVars.push('UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_URL');
-    if (!redisToken) missingVars.push('UPSTASH_REDIS_REST_TOKEN or UPSTASH_REDIS_TOKEN');
-    throw new Error(`Upstash Redis is not configured. Missing: ${missingVars.join(', ')}`);
-  }
-
-  if (!redis) {
-    try {
-      redis = new Redis({
-        url: redisUrl,
-        token: redisToken,
-      });
-    } catch (error) {
-      throw new Error(`Failed to initialize Redis client: ${error.message}`);
-    }
-  }
-
-  return redis;
-}
-
-// Visitor session TTL (time-to-live) in seconds
-// After this time, the visitor is considered inactive
-const VISITOR_TTL = 300; // 5 minutes
+import { getRedis } from './server/redis';
+import { getActiveVisitorCount, handleVisitorRegisterOrHeartbeat } from './server/service';
+import { logVisitorsError } from './server/http';
 
 /**
  * POST /api/visitors
@@ -93,85 +58,18 @@ export async function POST(request) {
 
     switch (action) {
       case 'register':
-      case 'heartbeat': {
-        // Use sorted set (ZSET) to track visitors with last activity timestamp as score
-        // This allows efficient counting and automatic cleanup of expired visitors
-        const cutoffTime = now - (VISITOR_TTL * 1000); // 5 minutes ago in milliseconds
-        
-        // Check if visitor exists (only for new visitor detection)
-        // OPTIMIZATION: Only check on register, not on heartbeat
-        let isNewVisitor = false;
-        if (action === 'register') {
-          const lastActivity = await redisClient.zscore('visitor:active', sessionId);
-          isNewVisitor = (lastActivity === null || lastActivity === undefined);
-        }
-        
-        // Update visitor's last activity timestamp in sorted set
-        // OPTIMIZATION: Removed redundant set() operation - ZSET is sufficient
-        await redisClient.zadd('visitor:active', { score: now, member: sessionId });
-        
-        // Clean up expired visitors (older than 5 minutes) - efficient O(log N + M)
-        // OPTIMIZATION: Reduced cleanup frequency to 5% (was 10%) to save writes
-        const shouldCleanup = Math.random() < 0.05; // 5% chance
-        if (shouldCleanup) {
-          await redisClient.zremrangebyscore('visitor:active', 0, cutoffTime);
-        }
-        
-        // OPTIMIZATION: Only get count if explicitly requested (saves Redis calls)
-        let count = undefined;
-        if (includeCount) {
-          // Get count of active visitors (those with activity in last 5 minutes)
-          // ZCOUNT is O(log N) - much faster than keys() which is O(N)
-          const rawCount = await redisClient.zcount('visitor:active', cutoffTime, now);
-          // Ensure count is a number (zcount should return a number, but be safe)
-          count = typeof rawCount === 'number' ? rawCount : 0;
-        }
-
-        // If it's a new visitor, create a notification event using sorted set
-        if (isNewVisitor) {
-          // Need count for the event, so fetch it if not already fetched
-          if (count === undefined) {
-            const rawCount = await redisClient.zcount('visitor:active', cutoffTime, now);
-            // Ensure count is a number
-            count = typeof rawCount === 'number' ? rawCount : 0;
-          }
-          
-          // OPTIMIZATION: Batch event creation and cleanup in parallel
-          const eventCutoffTime = now - 60000;
-          await Promise.all([
-            redisClient.zadd(
-              'visitor:events',
-              {
-                score: now,
-                member: JSON.stringify({
-                  type: 'visitor_joined',
-                  count,
-                  timestamp: now,
-                }),
-              }
-            ),
-            // Clean up old events (older than 60 seconds)
-            redisClient.zremrangebyscore('visitor:events', 0, eventCutoffTime),
-          ]);
-        }
-        
-        return NextResponse.json({
-          success: true,
-          ...(count !== undefined && { count }), // Only include count if fetched
-          action,
-          isNewVisitor,
-        });
-      }
+      case 'heartbeat':
+        return NextResponse.json(
+          await handleVisitorRegisterOrHeartbeat(redisClient, {
+            sessionId,
+            action,
+            includeCount,
+          })
+        );
 
       case 'count': {
-        // Get count of active visitors (those with activity in last 5 minutes)
-        const now = Date.now();
-        const cutoffTime = now - (VISITOR_TTL * 1000);
-        const count = await redisClient.zcount('visitor:active', cutoffTime, now);
-        
-        // Ensure count is a number (zcount should return a number, but be safe)
-        const validCount = typeof count === 'number' ? count : 0;
-        
+        const validCount = await getActiveVisitorCount(redisClient, now);
+
         return NextResponse.json({
           count: validCount,
         });
@@ -184,22 +82,12 @@ export async function POST(request) {
         );
     }
   } catch (error) {
-    const errorMessage = error.message || 'Unknown error';
-    const isConfigError = errorMessage.includes('not configured') || errorMessage.includes('initialize Redis');
-    
-    // Log error for debugging (always log in production to help diagnose issues)
-    console.error('[Visitors API] Error:', {
-      message: errorMessage,
-      isConfigError,
-      hasRedisUrl: !!process.env.UPSTASH_REDIS_REST_URL || !!process.env.UPSTASH_REDIS_URL,
-      hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN || !!process.env.UPSTASH_REDIS_TOKEN,
-      stack: error.stack,
-    });
-    
+    const { message, isConfigError } = logVisitorsError('Visitors API', error);
+
     return NextResponse.json(
       { 
         error: isConfigError ? 'Visitor tracking is not configured' : 'Failed to process visitor tracking request',
-        details: errorMessage, // Always include details for debugging
+        details: message, // Always include details for debugging
       },
       { status: 500 }
     );
@@ -216,32 +104,16 @@ export async function GET() {
     // Get Redis client (will throw if not configured)
     const redisClient = getRedis();
 
-    // Get count of active visitors (those with activity in last 5 minutes)
-    const now = Date.now();
-    const cutoffTime = now - (VISITOR_TTL * 1000);
-    const rawCount = await redisClient.zcount('visitor:active', cutoffTime, now);
-    
-    // Ensure count is a number (zcount should return a number, but be safe)
-    const count = typeof rawCount === 'number' ? rawCount : 0;
-    
+    const count = await getActiveVisitorCount(redisClient);
+
     return NextResponse.json({ count });
   } catch (error) {
-    const errorMessage = error.message || 'Unknown error';
-    const isConfigError = errorMessage.includes('not configured') || errorMessage.includes('initialize Redis');
-    
-    // Log error for debugging
-    console.error('[Visitors API GET] Error:', {
-      message: errorMessage,
-      isConfigError,
-      hasRedisUrl: !!process.env.UPSTASH_REDIS_REST_URL || !!process.env.UPSTASH_REDIS_URL,
-      hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN || !!process.env.UPSTASH_REDIS_TOKEN,
-      stack: error.stack,
-    });
-    
+    const { message, isConfigError } = logVisitorsError('Visitors API GET', error);
+
     return NextResponse.json(
       { 
         error: isConfigError ? 'Visitor tracking is not configured' : 'Failed to get visitor count',
-        details: errorMessage, // Always include details for debugging
+        details: message, // Always include details for debugging
       },
       { status: 500 }
     );

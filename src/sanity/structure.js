@@ -14,6 +14,24 @@ export const structure = (S, context) =>
             .title('Archive Entries')
         ),
 
+      S.listItem()
+        .title('Artist Collaborations')
+        .icon(() => '🤝')
+        .child(
+          S.list()
+            .title('Artist Collaborations')
+            .items([
+              S.listItem()
+                .title('Widline Cadet')
+                .schemaType('widlineCadet')
+                .child(
+                  S.document()
+                    .schemaType('widlineCadet')
+                    .documentId('widlineCadet')
+                ),
+            ])
+        ),
+
       // Tags
       S.listItem()
         .title('Tags')

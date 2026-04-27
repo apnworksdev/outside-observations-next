@@ -5,11 +5,11 @@ import { client } from '@/sanity/lib/client';
 import { ARCHIVE_ENTRY_QUERY, ARCHIVE_ENTRY_SLUGS } from '@/sanity/lib/queries';
 import { urlFor } from '@/sanity/lib/image';
 import styles from '@app/_assets/archive/archive-entry.module.css';
-import { ArchiveEntryArticle, ArchiveEntryMetadata } from '@/app/_components/Archive/ArchiveEntryContent';
-import ArchiveEntryBackdrop from '@/app/_components/Archive/ArchiveEntryBackdrop';
-import ArchiveEntryVisitTracker from '@/app/_components/Archive/ArchiveEntryVisitTracker';
-import { ErrorBoundary } from '@/app/_components/ErrorBoundary';
-import { ArchiveEntryErrorFallback } from '@/app/_components/ErrorFallbacks';
+import { ArchiveEntryArticle, ArchiveEntryMetadata } from '@/app/_components/Archive/features/entry/ArchiveEntryContent';
+import ArchiveEntryBackdrop from '@/app/_components/Archive/features/entry/ArchiveEntryBackdrop';
+import ArchiveEntryVisitTracker from '@/app/_components/Archive/features/entry/ArchiveEntryVisitTracker';
+import { ErrorBoundary } from '@/app/_components/shared/error/ErrorBoundary';
+import { ArchiveEntryErrorFallback } from '@/app/_components/shared/error/ErrorFallbacks';
 
 const SITE_TITLE = 'Outside Observation';
 const META_DESCRIPTION_MAX_LENGTH = 160;

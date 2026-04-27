@@ -3,7 +3,16 @@
 import { unstable_cache } from 'next/cache';
 
 import { client } from '@/sanity/lib/client';
-import { ARCHIVE_PAGE_ENTRIES_QUERY, ARCHIVE_ENTRIES_QUERY, SITE_SETTINGS_QUERY } from '@/sanity/lib/queries';
+import {
+  ARCHIVE_PAGE_ENTRIES_QUERY,
+  ARCHIVE_ENTRIES_QUERY,
+  SITE_SETTINGS_QUERY,
+  WIDLINE_CADET_QUERY,
+} from '@/sanity/lib/queries';
+import {
+  toWidlineMediaItems,
+  mergeEntriesWithWidline,
+} from '@/app/_data/archiveCollaborationFeed';
 
 /**
  * Fetches archive entries for list view (optimized - lighter payload)
@@ -11,7 +20,10 @@ import { ARCHIVE_PAGE_ENTRIES_QUERY, ARCHIVE_ENTRIES_QUERY, SITE_SETTINGS_QUERY 
  */
 const fetchArchiveEntries = async () => {
   try {
-    const entries = await client.fetch(ARCHIVE_PAGE_ENTRIES_QUERY);
+    const [entries, collaboration] = await Promise.all([
+      client.fetch(ARCHIVE_PAGE_ENTRIES_QUERY),
+      client.fetch(WIDLINE_CADET_QUERY),
+    ]);
     
     // Validate response is an array
     if (!Array.isArray(entries)) {
@@ -19,7 +31,11 @@ const fetchArchiveEntries = async () => {
       return [];
     }
     
-    return entries;
+    const widlineItems = toWidlineMediaItems(collaboration);
+    return mergeEntriesWithWidline(entries, widlineItems, [
+      collaboration?._id || 'widline-cadet',
+      ...(widlineItems.map((item) => item._id)),
+    ]);
   } catch (error) {
     console.error('Failed to fetch archive entries:', error);
     // Return empty array instead of throwing to prevent page crashes
@@ -50,7 +66,7 @@ const fetchFullArchiveEntries = async () => {
 
 const getArchiveEntriesCached = unstable_cache(
   fetchArchiveEntries,
-  ['archive-entries-page-v2'],
+  ['archive-entries-page-v3'],
   { revalidate: 60 }
 );
 

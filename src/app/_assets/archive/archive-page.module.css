@@ -295,6 +295,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  content-visibility: auto;
+  contain-intrinsic-size: 320px;
 }
 
 .container[data-view="images"] .archiveEntryImageWrapper {
@@ -391,6 +393,96 @@
   margin: 0;
 }
 
+.archivePaginationUpdating,
+.archivePaginationLoadingMore,
+.archivePaginationEnd {
+  display: flex;
+  justify-content: center;
+  padding: var(--padding);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.archivePaginationManualLoad {
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--padding) var(--padding);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.archivePaginationLoadMoreButton {
+  border: 1px solid var(--fg-color);
+  border-radius: var(--border-radius);
+  background: var(--white-color-75);
+  color: inherit;
+  padding: 6px var(--padding);
+  cursor: pointer;
+}
+
+.archivePaginationLoadMoreButton:hover,
+.archivePaginationLoadMoreButton:focus-visible {
+  background: var(--bg-color);
+  color: var(--fg-color);
+}
+
+.archivePaginationSkeleton {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap);
+  padding: var(--padding) 0;
+}
+
+.archivePaginationSkeletonItem {
+  min-height: 140px;
+  border-radius: var(--border-radius);
+  background: linear-gradient(
+    90deg,
+    var(--gray-color) 0%,
+    var(--dark-gray-color) 50%,
+    var(--gray-color) 100%
+  );
+  background-size: 200% 100%;
+  animation: archiveLoadingPulse 1.2s ease-in-out infinite;
+}
+
+.archivePaginationSentinel {
+  width: 100%;
+  height: 0;
+}
+
+.archivePaginationError {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--padding);
+  padding: var(--padding);
+}
+
+.archivePaginationRetryButton {
+  border: 1px solid var(--fg-color);
+  background: transparent;
+  color: inherit;
+  border-radius: var(--border-radius);
+  padding: 6px var(--padding);
+  cursor: pointer;
+}
+
+@keyframes archiveLoadingPulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 @media (max-width: 1280px) {
   .container[data-view="images"] .archiveEntryImageContainer {
     grid-column: span 3;
@@ -449,5 +541,9 @@
 
   .container[data-view="images"] .archiveEntryImageContainer {
     grid-column: span 3;
+  }
+
+  .archivePaginationSkeleton {
+    grid-template-columns: 1fr;
   }
 }

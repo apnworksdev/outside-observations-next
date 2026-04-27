@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import styles from '@app/_assets/lab.module.css';
+import styles from '@app/_assets/lab/lab.module.css';
 
 const fullTexts = {
   title: "OUTSIDE OBSERVATIONS' COLLABORATIVE RESEARCH CENTER",

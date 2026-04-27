@@ -244,3 +244,7 @@ body[data-page="archive-entry"] .container {
   transition: opacity var(--transition-time) var(--transition-effect);
   pointer-events: none;
 }
+
+body[data-page="widline-cadet"] {
+  background-color: #181818;
+}

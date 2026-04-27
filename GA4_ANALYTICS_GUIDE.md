@@ -8,7 +8,7 @@ This document describes all Google Analytics (GA4) events implemented on the sit
 
 ## 1. Events we send
 
-All events are sent via the gtag helper (`src/app/_helpers/gtag.js`). GA4 automatically collects `page_view` and engagement; below are the **custom events** and their parameters.
+All events are sent via the analytics gtag helper barrel (`src/app/_helpers/analytics/gtag.js`). GA4 automatically collects `page_view` and engagement; below are the **custom events** and their parameters.
 
 ### Bottom-right menu (archive)
 
@@ -254,8 +254,8 @@ GA4 does **not** filter out localhost by default, so local traffic will appear i
 
 ## 5. Where tracking lives in code
 
-- **Measurement ID:** `src/app/_helpers/gtag.js` (default `G-28FFYLDLLZ`, overridable via `NEXT_PUBLIC_GA4_MEASUREMENT_ID`).
-- **gtag helpers:** `src/app/_helpers/gtag.js`
+- **Measurement ID:** `src/app/_helpers/analytics/gtag.js` (default `G-28FFYLDLLZ`, overridable via `NEXT_PUBLIC_GA4_MEASUREMENT_ID`).
+- **gtag helpers:** `src/app/_helpers/analytics/gtag.js`
 - **GA4 script:** `src/app/(pages)/layout.js` (Script components, measurement ID from gtag)
 - **Page/section + entry point:** `src/app/_components/PageSectionTracker.js` (route change)
 - **Components** that call the helpers: see comments and imports in `ArchiveViewToggle`, `ArchiveListContent`, `ArchiveEntryListRow`, `ArchiveEntryVideo`, `ArchiveNavigationContainer`, `ArchiveNavigationMoodPanel`, `UnexpectedConnectionsContent`, `UnexpectedConnectionsComparison`, `ChatBox`, `ExploreArchiveLink`, `HeaderNav`, `MediaProtector`, `FirstVisitAnimation`, `HomeContent`, `HelpNav`, `ScrollToVisualEssayImage`, `LabSubmitProposalLink`, `ArchiveClosedViewTracker`.

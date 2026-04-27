@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import styles from '@app/_assets/home.module.css';
+import styles from '@app/_assets/home/home.module.css';
 
 export default function CircleAnimation({ 
   onComplete, 
