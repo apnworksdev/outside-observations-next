@@ -1,7 +1,6 @@
 'use client';
 
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { useRadioIframe } from '@/app/_components/shared/RadioIframeProvider';
 import SanityImage from '@/sanity/components/SanityImage';
 import SanityVideo from '@/sanity/components/SanityVideo';
@@ -108,7 +107,6 @@ export default function WidlineCadetMediaStage({
   richTextBlocks = [],
   collaborationTitle,
 }) {
-  const searchParams = useSearchParams();
   const { isOpen: isRadioOpen, openRadio } = useRadioIframe();
   const stageRef = useRef(null);
   const backgroundRef = useRef(null);
@@ -203,7 +201,11 @@ export default function WidlineCadetMediaStage({
   }, [backgroundMedia.length, foregroundMedia.length]);
 
   useEffect(() => {
-    const mediaParam = searchParams.get('media');
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const mediaParam = new URLSearchParams(window.location.search).get('media');
     if (mediaParam === null) {
       return;
     }
@@ -229,7 +231,7 @@ export default function WidlineCadetMediaStage({
       window.cancelAnimationFrame(frameOne);
       window.cancelAnimationFrame(frameTwo);
     };
-  }, [searchParams]);
+  }, []);
 
   const richText = renderRichText(richTextBlocks);
   const shouldRenderText = richText?.length > 0;

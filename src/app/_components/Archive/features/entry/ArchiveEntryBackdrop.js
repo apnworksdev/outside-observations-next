@@ -1,14 +1,16 @@
 "use client";
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
 export default function ArchiveEntryBackdrop({ children, entry }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const handleBackdropClick = () => {
-    const view = searchParams?.get('view');
+    let view = null;
+    if (typeof window !== 'undefined') {
+      view = new URLSearchParams(window.location.search).get('view');
+    }
     const target = view ? `/archive?view=${view}` : '/archive';
     router.push(target);
   };
