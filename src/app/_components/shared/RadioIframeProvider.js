@@ -15,13 +15,15 @@ const RadioIframeContext = createContext(null);
 export function RadioIframeProvider({ children }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [anchorRect, setAnchorRect] = useState(null);
 
   /**
    * Open the radio iframe
    */
-  const openRadio = useCallback(() => {
+  const openRadio = useCallback((nextAnchorRect = null) => {
     setIsOpen(true);
     setIsMinimized(false); // Expand when opening
+    setAnchorRect(nextAnchorRect);
   }, []);
 
   /**
@@ -30,6 +32,7 @@ export function RadioIframeProvider({ children }) {
   const closeRadio = useCallback(() => {
     setIsOpen(false);
     setIsMinimized(false); // Reset minimized state when closing
+    setAnchorRect(null);
   }, []);
 
   /**
@@ -64,6 +67,7 @@ export function RadioIframeProvider({ children }) {
   const value = {
     isOpen,
     isMinimized,
+    anchorRect,
     openRadio,
     closeRadio,
     toggleRadio,

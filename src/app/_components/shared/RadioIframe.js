@@ -1,10 +1,14 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useRadioIframe } from './RadioIframeProvider';
 import styles from '@app/_assets/shared/radio-iframe.module.css';
 
 const RADIO_URL = 'https://www.outsideobservations.radio/';
+const RADIO_IFRAME_GAP = 1;
+const MOBILE_BREAKPOINT = 768;
+const RADIO_NAV_SELECTOR = '[data-nav-section="radio"]';
+const RADIO_NAV_LINK_SELECTOR = `${RADIO_NAV_SELECTOR} a`;
 
 /**
  * RadioIframe - Renders the radio iframe when open
@@ -13,7 +17,7 @@ const RADIO_URL = 'https://www.outsideobservations.radio/';
  * The iframe will remain mounted and visible as users navigate the site.
  */
 export default function RadioIframe() {
-  const { isOpen, isMinimized, closeRadio, toggleMinimize } = useRadioIframe();
+  const { isOpen, isMinimized, anchorRect, closeRadio, toggleMinimize } = useRadioIframe();
   const [position, setPosition] = useState({ x: 50, y: 50 }); // Percentage values for centering
   const isDraggingRef = useRef(false);
   const initialPosRef = useRef({ x: 0, y: 0 }); // Initial position in pixels when drag starts
@@ -23,31 +27,121 @@ export default function RadioIframe() {
   const iframeContentRef = useRef(null);
   const rafIdRef = useRef(null);
 
-  // Reset position when radio is closed
-  useEffect(() => {
-    if (!isOpen && iframeRef.current) {
-      setPosition({ x: 50, y: 50 });
-      // Reset transform
-      iframeRef.current.style.transform = 'translate(-50%, -50%)';
+  const getAnchoredPosition = useCallback(() => {
+    if (typeof window === 'undefined' || !iframeRef.current) {
+      return null;
     }
-  }, [isOpen]);
 
-  // Reset position to center when window is resized
+    if (window.innerWidth <= MOBILE_BREAKPOINT) {
+      return { x: 50, y: 50 };
+    }
+
+    const radioRect = anchorRect ?? document.querySelector(RADIO_NAV_LINK_SELECTOR)?.getBoundingClientRect();
+    if (!radioRect) return null;
+    const iframeRect = iframeRef.current.getBoundingClientRect();
+    const halfWidth = iframeRect.width / 2;
+    const halfHeight = iframeRect.height / 2;
+
+    const preferredCenterX = radioRect.right + RADIO_IFRAME_GAP + halfWidth;
+    const fallbackCenterX = radioRect.left - RADIO_IFRAME_GAP - halfWidth;
+    const canFitRight = preferredCenterX + halfWidth <= window.innerWidth;
+    const centerX = canFitRight ? preferredCenterX : fallbackCenterX;
+    // Align iframe top edge with the radio link top edge.
+    const centerY = radioRect.top + halfHeight;
+
+    const clampedX = Math.max(halfWidth, Math.min(window.innerWidth - halfWidth, centerX));
+    const clampedY = Math.max(halfHeight, Math.min(window.innerHeight - halfHeight, centerY));
+
+    return {
+      x: (clampedX / window.innerWidth) * 100,
+      y: (clampedY / window.innerHeight) * 100,
+    };
+  }, [anchorRect]);
+
+  const positionIframeNearRadioNav = useCallback(() => {
+    const anchoredPosition = getAnchoredPosition();
+    if (!anchoredPosition || !iframeRef.current) {
+      return;
+    }
+
+    setPosition(anchoredPosition);
+    iframeRef.current.style.transform = 'translate(-50%, -50%)';
+  }, [getAnchoredPosition]);
+
+  // Place iframe next to radio nav on open
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+
+    positionIframeNearRadioNav();
+  }, [isOpen, positionIframeNearRadioNav]);
+
+  // Re-anchor position when window is resized
   useEffect(() => {
     if (!isOpen) return;
 
     const handleResize = () => {
-      if (iframeRef.current) {
-        setPosition({ x: 50, y: 50 });
-        iframeRef.current.style.transform = 'translate(-50%, -50%)';
-      }
+      positionIframeNearRadioNav();
     };
 
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [isOpen]);
+  }, [isOpen, positionIframeNearRadioNav]);
+
+  // Re-anchor when radio nav bubble changes size/position (e.g. transition expansion)
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    const navItem = document.querySelector(RADIO_NAV_SELECTOR);
+    const navLink = document.querySelector(RADIO_NAV_LINK_SELECTOR);
+    if (!navItem || !navLink) {
+      return undefined;
+    }
+
+    let frameId = 0;
+    const scheduleReposition = () => {
+      if (isDraggingRef.current || frameId !== 0) {
+        return;
+      }
+      frameId = window.requestAnimationFrame(() => {
+        frameId = 0;
+        positionIframeNearRadioNav();
+      });
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      scheduleReposition();
+    });
+
+    resizeObserver.observe(navItem);
+    resizeObserver.observe(navLink);
+
+    const handleTransition = () => {
+      scheduleReposition();
+    };
+
+    navItem.addEventListener('transitionrun', handleTransition);
+    navItem.addEventListener('transitionend', handleTransition);
+    navLink.addEventListener('transitionrun', handleTransition);
+    navLink.addEventListener('transitionend', handleTransition);
+
+    // Also re-anchor immediately in case state changed before observers attached.
+    scheduleReposition();
+
+    return () => {
+      if (frameId !== 0) {
+        window.cancelAnimationFrame(frameId);
+      }
+      resizeObserver.disconnect();
+      navItem.removeEventListener('transitionrun', handleTransition);
+      navItem.removeEventListener('transitionend', handleTransition);
+      navLink.removeEventListener('transitionrun', handleTransition);
+      navLink.removeEventListener('transitionend', handleTransition);
+    };
+  }, [isOpen, positionIframeNearRadioNav]);
 
   // Cleanup: restore pointer events if component unmounts while dragging
   useEffect(() => {

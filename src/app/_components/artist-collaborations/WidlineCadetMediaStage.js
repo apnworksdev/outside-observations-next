@@ -36,7 +36,7 @@ function renderRichText(blocks) {
 
 function MediaItem({ item, index, mediaIndex, cycleIndex, collaborationTitle }) {
   const isVideo = item?.mediaType === 'video' && item?.video?.asset?.url;
-  const mediaCycle = ((cycleIndex % 7) + 1).toString();
+  const layerIndex = (cycleIndex + 1).toString();
 
   if (isVideo) {
     return (
@@ -44,7 +44,7 @@ function MediaItem({ item, index, mediaIndex, cycleIndex, collaborationTitle }) 
         className={styles.imageItemWrapper}
         data-media-item
         data-media-index={mediaIndex}
-        data-media-cycle={mediaCycle}
+        data-layer-index={layerIndex}
       >
         <div
           id={`widline-media-${mediaIndex}`}
@@ -56,6 +56,7 @@ function MediaItem({ item, index, mediaIndex, cycleIndex, collaborationTitle }) 
             className={styles.video}
             controls={false}
             muted
+            enableClickToToggleMute
             playsInline
             loop
             preload="metadata"
@@ -77,7 +78,7 @@ function MediaItem({ item, index, mediaIndex, cycleIndex, collaborationTitle }) 
       className={styles.imageItemWrapper}
       data-media-item
       data-media-index={mediaIndex}
-      data-media-cycle={mediaCycle}
+      data-layer-index={layerIndex}
     >
       <div
         id={`widline-media-${mediaIndex}`}
@@ -251,6 +252,20 @@ export default function WidlineCadetMediaStage({
               cycleIndex={index}
               collaborationTitle={collaborationTitle}
             />
+          </Fragment>
+        ))}
+      </div>
+
+      <div ref={foregroundRef} className={styles.foregroundMediaLayer}>
+        {foregroundMedia.map((item, index) => (
+          <Fragment key={item?._key || `foreground-${index}`}>
+            <MediaItem
+              item={item}
+              index={index}
+              mediaIndex={backgroundMedia.length + index}
+              cycleIndex={index}
+              collaborationTitle={collaborationTitle}
+            />
             {shouldRenderText && index === 1 ? (
               <div className={styles.richTextWrapper}>
                 <div className={styles.richText} data-media-index="text">
@@ -260,24 +275,11 @@ export default function WidlineCadetMediaStage({
             ) : null}
           </Fragment>
         ))}
-        {shouldRenderText && backgroundMedia.length < 2 ? (
+        {shouldRenderText && foregroundMedia.length < 2 ? (
           <div className={styles.richText} data-media-index="text">
             {richText}
           </div>
         ) : null}
-      </div>
-
-      <div ref={foregroundRef} className={styles.foregroundMediaLayer}>
-        {foregroundMedia.map((item, index) => (
-          <MediaItem
-            key={item?._key || `foreground-${index}`}
-            item={item}
-            index={index}
-            mediaIndex={backgroundMedia.length + index}
-            cycleIndex={index}
-            collaborationTitle={collaborationTitle}
-          />
-        ))}
       </div>
     </section>
   );

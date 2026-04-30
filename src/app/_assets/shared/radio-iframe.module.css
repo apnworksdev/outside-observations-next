@@ -12,8 +12,8 @@
 }
 
 :global(body[data-page="widline-cadet"]) .radioIframe {
-  background-color: #5D5D5D;
-  color: var(--fg-color);
+  background-color: #a5a5a5;
+  border: none;
 }
 
 :global(body[data-page="unexpected-connections"]) .radioIframe,
