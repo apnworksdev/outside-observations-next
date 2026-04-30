@@ -11,7 +11,7 @@
   transform: translateX(-50%);
   z-index: 2;
   color: var(--bg-color);
-  opacity: 0.;
+  opacity: 1;
   mix-blend-mode: overlay;
 }
 
@@ -29,10 +29,10 @@
 .foregroundMediaLayer {
   display: flex;
   flex-direction: column;
-  padding-top: 60vh;
-  padding-right: var(--padding);
-  padding-bottom: 40vh;
-  padding-left: var(--padding);
+  padding-top: 6vh;
+  padding-right: var(--responsive-padding);
+  padding-bottom: 9vh;
+  padding-left: var(--responsive-padding);
   pointer-events: none;
 }
 
@@ -65,14 +65,6 @@
   cursor: pointer;
 }
 
-@media (max-width: 768px) {
-  .backgroundMediaLayer,
-  .foregroundMediaLayer {
-    padding-top: 30vh;
-    padding-bottom: 30vh;
-  }
-}
-
 /* Background media layer */
 
 .backgroundMediaLayer {
@@ -80,11 +72,9 @@
   z-index: 0;
 }
 
-.backgroundMediaLayer .imageItemWrapper[data-layer-index="1"] { padding-top: 30vw; }
+.backgroundMediaLayer .imageItemWrapper[data-layer-index="1"] { padding-top: 0; }
 
 .backgroundMediaLayer .imageItemWrapper[data-layer-index="1"] .imageWrapper { grid-column: 5 / 13; }
-
-.backgroundMediaLayer .imageItemWrapper:first-of-type { padding-top: 0; }
 
 .backgroundMediaLayer .imageItemWrapper[data-layer-index="2"] { padding-top: 42vw; }
 
@@ -134,9 +124,7 @@
   z-index: 3;
 }
 
-.foregroundMediaLayer .imageItemWrapper[data-layer-index="1"] { padding-top: 30vw; }
-
-.foregroundMediaLayer .imageItemWrapper:first-of-type { padding-top: 2vw; }
+.foregroundMediaLayer .imageItemWrapper[data-layer-index="1"] { padding-top: 2vw; }
 
 .foregroundMediaLayer .imageItemWrapper[data-layer-index="1"] .imageWrapper { grid-column: 4 / 8; }
 
@@ -148,10 +136,12 @@
 
 .foregroundMediaLayer .richText {
   grid-column: 3 / 11;
-  max-width: 600px;
+  max-width: 850px;
   color: var(--bg-color);
   text-align: center;
   pointer-events: auto;
+  font-size: 12px;
+  line-height: 14px;
 }
 
 .foregroundMediaLayer .imageItemWrapper[data-layer-index="3"] { padding-top: 8vw; }
@@ -249,13 +239,11 @@
 .foregroundMediaLayer { will-change: transform; }
 
 @media (max-width: 768px) {
-  .backgroundMediaLayer .imageItemWrapper[data-layer-index="1"] { padding-top: 60vw; }
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="1"] { padding-top: 0; }
   
   .backgroundMediaLayer .imageItemWrapper[data-layer-index="1"] .imageWrapper { grid-column: 4 / 13; }
-  
-  .backgroundMediaLayer .imageItemWrapper:first-of-type { padding-top: 0; }
-  
-  .backgroundMediaLayer .imageItemWrapper[data-layer-index="2"] { padding-top: 49vw; }
+    
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="2"] { padding-top: 112vw; }
   
   .backgroundMediaLayer .imageItemWrapper[data-layer-index="2"] .imageWrapper { grid-column: 2 / 12; }
   
@@ -267,25 +255,39 @@
   
   .backgroundMediaLayer .imageItemWrapper[data-layer-index="4"] .imageWrapper { grid-column: 2 / 11; }
   
-  .backgroundMediaLayer .imageItemWrapper[data-layer-index="5"] { padding-top: 107vw; }
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="5"] { padding-top: 137vw; }
   
   .backgroundMediaLayer .imageItemWrapper[data-layer-index="5"] .imageWrapper { grid-column: 1 / 13; }
   
-  .backgroundMediaLayer .imageItemWrapper[data-layer-index="6"] { padding-top: 87vw; }
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="6"] { padding-top: 117vw; }
   
   .backgroundMediaLayer .imageItemWrapper[data-layer-index="6"] .imageWrapper { grid-column: 1 / 10; }
   
-  .backgroundMediaLayer .imageItemWrapper[data-layer-index="7"] { padding-top: 50vw; }
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="7"] { padding-top: 70vw; }
   
   .backgroundMediaLayer .imageItemWrapper[data-layer-index="7"] .imageWrapper { grid-column: 3 / 13; }
 
-  .foregroundMediaLayer .imageItemWrapper[data-layer-index="1"] { padding-top: 40vw; }
-  
-  .foregroundMediaLayer .imageItemWrapper:first-of-type { padding-top: 5vw; }
-  
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="8"] { padding-top: 104vw; }
+
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="8"] .imageWrapper { grid-column: 3 / 12; }
+
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="9"] { padding-top: 104vw; }
+
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="9"] .imageWrapper { grid-column: 2 / 10; }
+
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="10"] { padding-top: 67vw; }
+
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="10"] .imageWrapper { grid-column: 6 / 13; }
+
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="11"] { padding-top: 62vw; }
+
+  .backgroundMediaLayer .imageItemWrapper[data-layer-index="11"] .imageWrapper { grid-column: 3 / 11; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="1"] { padding-top: 52vw; }
+    
   .foregroundMediaLayer .imageItemWrapper[data-layer-index="1"] .imageWrapper { grid-column: 5 / 11; }
 
-  .foregroundMediaLayer .imageItemWrapper[data-layer-index="2"] { padding-top: 29vw; }
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="2"] { padding-top: 13vw; }
   
   .foregroundMediaLayer .imageItemWrapper[data-layer-index="2"] .imageWrapper { grid-column: 1 / 7; }
 
@@ -293,23 +295,95 @@
   
   .foregroundMediaLayer .richText { grid-column: 2 / 12; }
   
-  .foregroundMediaLayer .imageItemWrapper[data-layer-index="3"] { padding-top: 20vw; }
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="3"] { padding-top: 59vw; }
   
   .foregroundMediaLayer .imageItemWrapper[data-layer-index="3"] .imageWrapper { grid-column: 7 / 13; }
   
-  .foregroundMediaLayer .imageItemWrapper[data-layer-index="4"] { padding-top: 25vw; }
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="4"] { padding-top: 15vw; }
   
   .foregroundMediaLayer .imageItemWrapper[data-layer-index="4"] .imageWrapper { grid-column: 2 / 10; }
   
-  .foregroundMediaLayer .imageItemWrapper[data-layer-index="5"] { padding-top: 30vw; }
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="5"] { padding-top: 65vw; }
   
-  .foregroundMediaLayer .imageItemWrapper[data-layer-index="5"] .imageWrapper { grid-column: 6 / 11; }
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="5"] .imageWrapper { grid-column: 6 / 12; }
   
-  .foregroundMediaLayer .imageItemWrapper[data-layer-index="6"] { padding-top: 30vw; }
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="6"] { padding-top: 16vw; }
   
   .foregroundMediaLayer .imageItemWrapper[data-layer-index="6"] .imageWrapper { grid-column: 1 / 8; }
   
-  .foregroundMediaLayer .imageItemWrapper[data-layer-index="7"] { padding-top: 25vw; }
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="7"] { padding-top: 51vw; }
   
   .foregroundMediaLayer .imageItemWrapper[data-layer-index="7"] .imageWrapper { grid-column: 6 / 13; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="8"] { padding-top: 13vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="8"] .imageWrapper { grid-column: 2 / 9; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="9"] { padding-top: 19vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="9"] .imageWrapper { grid-column: 5 / 11; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="10"] { padding-top: 64vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="10"] .imageWrapper { grid-column: 3 / 10; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="11"] { padding-top: 13vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="11"] .imageWrapper { grid-column: 1 / 7; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="12"] { padding-top: 16vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="12"] .imageWrapper { grid-column: 6 / 13; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="13"] { padding-top: 53vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="13"] .imageWrapper { grid-column: 2 / 8; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="14"] { padding-top: 12vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="14"] .imageWrapper { grid-column: 6 / 12; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="15"] { padding-top: 54vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="15"] .imageWrapper { grid-column: 1 / 7; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="16"] { padding-top: 3vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="16"] .imageWrapper { grid-column: 7 / 13; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="17"] { padding-top: 17vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="17"] .imageWrapper { grid-column: 2 / 8; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="18"] { padding-top: 46vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="18"] .imageWrapper { grid-column: 5 / 11; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="19"] { padding-top: 10vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="19"] .imageWrapper { grid-column: 1 / 7; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="20"] { padding-top: 8vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="20"] .imageWrapper { grid-column: 5 / 12; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="21"] { padding-top: 31vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="21"] .imageWrapper { grid-column: 8 / 13; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="22"] { padding-top: 15vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="22"] .imageWrapper { grid-column: 3 / 9; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="23"] { padding-top: 20vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="23"] .imageWrapper { grid-column: 1 / 7; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="24"] { padding-top: 16vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="24"] .imageWrapper { grid-column: 5 / 12; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="25"] { padding-top: 59vw; }
+
+  .foregroundMediaLayer .imageItemWrapper[data-layer-index="25"] .imageWrapper { grid-column: 4 / 10; }
 }

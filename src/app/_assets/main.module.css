@@ -60,3 +60,39 @@
   justify-content: center;
   background-color: var(--light-gray-color);
 }
+
+
+/**
+ * Shared optional video controls (used by SanityVideo)
+ */
+.videoInteractiveContainer {
+  position: relative;
+}
+
+.videoMuteButton {
+  position: absolute;
+  right: var(--padding);
+  bottom: var(--padding);
+  z-index: 2;
+  padding: 4px 8px 5px 8px;
+  border: none;
+  border-radius: 999px;
+  background-color: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .videoMuteButton {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .videoInteractiveContainer:hover .videoMuteButton {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { urlForImage } from '@/sanity/lib/image';
 import SanityImage from '@/sanity/components/SanityImage';
 import { isVimeoDirectFileUrl } from '@/helpers/vimeoUtils';
+import styles from '@/app/_assets/main.module.css';
 
 /**
  * SanityVideo - A simple video component for Sanity-hosted videos
@@ -225,7 +226,7 @@ export default function SanityVideo({
   return (
     <div
       ref={containerRef}
-      className={className}
+      className={`${styles.videoInteractiveContainer} ${className || ''}`}
       style={{
         '--video-aspect-ratio-padding': aspectRatioPadding,
       }}
@@ -257,6 +258,19 @@ export default function SanityVideo({
         <source src={videoUrl} type={videoMimeType} />
         Your browser does not support the video tag.
       </video>
+      {enableClickToToggleMute ? (
+        <button
+          type="button"
+          className={styles.videoMuteButton}
+          aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+          onClick={(event) => {
+            event.stopPropagation();
+            handleVideoClick();
+          }}
+        >
+          {isMuted ? 'Unmute' : 'Mute'}
+        </button>
+      ) : null}
     </div>
   );
 }
