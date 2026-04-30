@@ -216,13 +216,13 @@ video {
   padding-top: var(--16-9);
 }
 
-@media only screen and (min-width: 820px) {
+@media only screen and (min-width: 768px) {
   .hide-on-desktop {
     display: none!important;
   }
 }
 
-@media only screen and (max-width: 820px) {
+@media only screen and (max-width: 768px) {
   .hide-on-mobile {
     display: none!important;
   }
@@ -246,5 +246,6 @@ body[data-page="archive-entry"] .container {
 }
 
 body[data-page="widline-cadet"] {
-  background-color: #181818;
+  background-color: #AFC2C6;
+  --column-line-color: white;
 }

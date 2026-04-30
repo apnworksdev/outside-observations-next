@@ -27,6 +27,7 @@ export default function SanityVideo({
   playsInline = true,
   controls = false,
   loop = true,
+  enableClickToToggleMute = false,
   maxWidth, // Optional: limit video resolution for thumbnails
   onLoad,
   onPlay,
@@ -42,6 +43,7 @@ export default function SanityVideo({
   const [shouldLoad, setShouldLoad] = useState(priority);
   const [hasError, setHasError] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isMuted, setIsMuted] = useState(muted);
 
   // Video URL: Vimeo direct file (when vimeoUrl is set and is a direct file) or Sanity file asset. Non-direct vimeoUrl is ignored.
   const videoUrl = (vimeoUrl && isVimeoDirectFileUrl(vimeoUrl)) ? vimeoUrl : video?.asset?.url;
@@ -80,6 +82,11 @@ export default function SanityVideo({
       setShouldLoad(true);
     }
   }, [priority]);
+
+  // Keep local mute state in sync when prop changes
+  useEffect(() => {
+    setIsMuted(muted);
+  }, [muted]);
 
   // Lazy load and play/pause based on visibility
   useEffect(() => {
@@ -149,6 +156,23 @@ export default function SanityVideo({
     onError?.(event);
   };
 
+  const handleVideoClick = () => {
+    if (!enableClickToToggleMute) {
+      return;
+    }
+
+    const nextMuted = !isMuted;
+    setIsMuted(nextMuted);
+    if (videoRef.current) {
+      videoRef.current.muted = nextMuted;
+      if (!nextMuted && videoRef.current.paused) {
+        videoRef.current.play().catch(() => {
+          // Ignore autoplay restrictions after user interaction edge-cases.
+        });
+      }
+    }
+  };
+
   // Validate video URL
   if (!videoUrl) {
     // If no video URL but we have a poster, show the poster as fallback
@@ -212,7 +236,7 @@ export default function SanityVideo({
         poster={posterUrl || undefined}
         preload={shouldLoad ? preload : 'none'}
         autoPlay={false}
-        muted={muted}
+        muted={isMuted}
         playsInline={playsInline}
         controls={controls}
         loop={loop}
@@ -228,6 +252,7 @@ export default function SanityVideo({
         onPlay={onPlay}
         onPause={onPause}
         onError={handleError}
+        onClick={handleVideoClick}
       >
         <source src={videoUrl} type={videoMimeType} />
         Your browser does not support the video tag.

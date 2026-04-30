@@ -272,8 +272,7 @@
 }
 
 :global(body[data-page="widline-cadet"]) .navNavigation .navLi:global(.radio-nav)[data-active="true"] .radioNavButtons {
-  background-color: #5D5D5D;
-  color: var(--fg-color);
+  background-color: #a5a5a5;
 }
 
 .radioNavButton {
@@ -355,8 +354,7 @@
 
 :global(body[data-page="widline-cadet"]) .navBubble,
 :global(body[data-page="widline-cadet"]) .helpNav {
-  background-color: #5D5D5D;
-  color: var(--fg-color);
+  background-color: #a5a5a5;
 }
 
 :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.lab-nav) {

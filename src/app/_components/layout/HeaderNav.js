@@ -28,7 +28,13 @@ export default function HeaderNav({ newsletterTitle, newsletterDescription }) {
     e.preventDefault();
     if (!isRadioOpen) {
       trackRadioOpen();
-      openRadio();
+      const rect = e.currentTarget.getBoundingClientRect();
+      openRadio({
+        top: rect.top,
+        right: rect.right,
+        left: rect.left,
+        height: rect.height,
+      });
     }
   };
 
