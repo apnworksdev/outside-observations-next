@@ -182,6 +182,7 @@ function ArchiveEntryMediaLink({
       {shouldRenderLink ? (
         <Link
           href={href}
+          prefetch={isWidlineMedia ? false : undefined}
           scroll={false}
           {...linkProps}
           {...prefetchHandlers}

@@ -69,6 +69,7 @@ export default function HeaderNav({ newsletterTitle, newsletterDescription }) {
           >
             <Link
               href="/archive/widline-cadet"
+              prefetch={false}
               className={`${styles.navBubble} widline-cadet-nav-bubble`}
               data-transition="nav"
               onClick={() => trackNavClick('widline_cadet', 'same_page')}

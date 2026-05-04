@@ -27,6 +27,10 @@ export function usePrefetchOnHover(href, delay = 300) {
 
     // Set timeout to prefetch after delay
     timeoutRef.current = setTimeout(() => {
+      // Basic-auth route: prefetch would 401 and can surface the browser login UI on the current page.
+      if (href && href.startsWith('/archive/widline-cadet')) {
+        return;
+      }
       if (href) {
         router.prefetch(href);
         hasPrefetchedRef.current = true;

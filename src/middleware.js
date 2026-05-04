@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server'
 import { resolvePageType } from '@/lib/resolvePageType'
 import { useTimezoneRedirect, isInClosedHours } from '@/lib/closedArchiveHours'
 
+/** Next.js Link / router.prefetch — 401 + WWW-Authenticate here triggers the browser auth UI on unrelated pages. */
+function isNextRouterPrefetch(request) {
+  return (
+    request.headers.get('Next-Router-Prefetch') === '1' ||
+    request.headers.get('Sec-Purpose') === 'prefetch'
+  )
+}
+
 export function middleware(request) {
   const pathname = request.nextUrl.pathname
 
@@ -44,6 +52,10 @@ export function middleware(request) {
     const authHeader = request.headers.get('authorization')
 
     if (!authHeader || !authHeader.startsWith('Basic ')) {
+      // Prefetch only: fail closed without WWW-Authenticate so the browser does not show a login modal.
+      if (isNextRouterPrefetch(request)) {
+        return new NextResponse(null, { status: 401 })
+      }
       return new NextResponse('Authentication required', {
         status: 401,
         headers: {

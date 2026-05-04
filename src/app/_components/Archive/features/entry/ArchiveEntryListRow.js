@@ -183,6 +183,7 @@ function ArchiveEntryListRow({
   return shouldRenderLink ? (
     <Link
       href={href}
+      prefetch={isWidlineMedia ? false : undefined}
       scroll={false}
       {...containerProps}
       {...prefetchHandlers}
