@@ -30,22 +30,24 @@ export function middleware(request) {
     }
   }
 
-  // Password protection: set SITE_PASSWORD in the host env. Stops automatically after
-  // May 5, 2026 8:30 AM America/Los_Angeles (PDT → 15:30 UTC). Optional override: SITE_PASSWORD_UNTIL_MS (epoch ms).
+  // Widline Cadet page only: Basic auth when SITE_PASSWORD is set. Stops after
+  // May 5, 2026 8:30 AM America/Los_Angeles (PDT → 15:30 UTC). Optional: SITE_PASSWORD_UNTIL_MS (epoch ms).
+  const isWidlineCadetPath =
+    pathname === '/archive/widline-cadet' || pathname.startsWith('/archive/widline-cadet/')
   const sitePassword = process.env.SITE_PASSWORD
   const siteUsername = process.env.SITE_USERNAME || 'admin' // Default username
   const lockEndMs = process.env.SITE_PASSWORD_UNTIL_MS
     ? Number(process.env.SITE_PASSWORD_UNTIL_MS)
     : Date.UTC(2026, 4, 5, 15, 30, 0)
 
-  if (sitePassword && Date.now() < lockEndMs) {
+  if (isWidlineCadetPath && sitePassword && Date.now() < lockEndMs) {
     const authHeader = request.headers.get('authorization')
 
     if (!authHeader || !authHeader.startsWith('Basic ')) {
       return new NextResponse('Authentication required', {
         status: 401,
         headers: {
-          'WWW-Authenticate': 'Basic realm="Protected Site"',
+          'WWW-Authenticate': 'Basic realm="Widline Cadet"',
         },
       })
     }
@@ -60,7 +62,7 @@ export function middleware(request) {
       return new NextResponse('Invalid credentials', {
         status: 401,
         headers: {
-          'WWW-Authenticate': 'Basic realm="Protected Site"',
+          'WWW-Authenticate': 'Basic realm="Widline Cadet"',
         },
       })
     }
