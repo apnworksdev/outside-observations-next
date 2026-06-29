@@ -5,16 +5,17 @@ import { getSiteSettings } from '@/app/_data/archive';
 import { getClosedHoursLabel } from '@/lib/closedArchiveHours';
 import BlurredImage from '@/app/_components/LaunchCountdown/BlurredImage';
 import { urlFor } from '@/sanity/lib/image';
+import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
 
 // Enable ISR - revalidate every 60 seconds
 export const revalidate = 60;
 
 export async function generateMetadata() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
+  const baseUrl = SITE_URL;
   const canonicalUrl = `${baseUrl}/archive/closed`;
-  const title = 'Archive closed | Outside Observation';
+  const title = `Archive closed | ${SITE_NAME}`;
   const description =
-    `The archive is resting. Closed ${getClosedHoursLabel()}. Outside Observation.`;
+    `The archive is resting. Closed ${getClosedHoursLabel()}. ${SITE_NAME}.`;
 
   let ogImageUrl = `${baseUrl}/share-image.png`;
   try {

@@ -14,7 +14,8 @@ export function middleware(request) {
   const pathname = request.nextUrl.pathname
 
   // Closed archive: redirect by open/closed window (only when useTimezoneRedirect)
-  if (useTimezoneRedirect && pathname.startsWith('/archive')) {
+  const isArchiveEntryPage = pathname.startsWith('/archive/entry/');
+  if (useTimezoneRedirect && pathname.startsWith('/archive') && !isArchiveEntryPage) {
     const closed = isInClosedHours()
     if (pathname === '/archive/closed') {
       if (!closed) return NextResponse.redirect(new URL('/archive', request.url))

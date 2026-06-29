@@ -1,9 +1,10 @@
 import styles from '@app/_assets/legal/privacy.module.css';
+import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
+const baseUrl = SITE_URL;
 
 export async function generateMetadata() {
-  const title = 'Privacy & cookies | Outside Observation';
+  const title = `Privacy & cookies | ${SITE_NAME}`;
   const description =
     'How we use cookies and handle your data when you use this website.';
 

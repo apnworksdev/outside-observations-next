@@ -45,7 +45,14 @@ function getPageSizeBucket(width) {
   return 'lg';
 }
 
-export default function ArchiveEntriesProvider({ initialEntries = [], initialView = null, children }) {
+export default function ArchiveEntriesProvider({
+  initialEntries = [],
+  initialCursor = null,
+  initialHasMore = true,
+  skipInitialFetch = false,
+  initialView = null,
+  children,
+}) {
   /**
    * All stateful logic for the archive lives inside this provider. It keeps track
    * of the active view, orchestrates search queries, and exposes helpers to any
@@ -54,8 +61,8 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   // Ensure initialEntries is an array
   const safeInitialEntries = Array.isArray(initialEntries) ? initialEntries : [];
   const [entries, setEntries] = useState(() => safeInitialEntries);
-  const [nextCursor, setNextCursor] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
+  const [nextCursor, setNextCursor] = useState(initialCursor);
+  const [hasMore, setHasMore] = useState(initialHasMore);
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [paginationError, setPaginationError] = useState(null);
@@ -84,6 +91,9 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
   const pageSizeBucketRef = useRef(null);
   const hasLoadedArchivePageRef = useRef(false);
   const lastArchiveQuerySignatureRef = useRef(null);
+  const skippedInitialFetchRef = useRef(
+    skipInitialFetch && safeInitialEntries.length > 0
+  );
   
   // Get search state from global provider (set by ChatBox or other components)
   const { consumeSearchPayload, setSearchPayload: setGlobalSearchPayload, searchPayload: globalSearchPayload } = useArchiveSearchState();
@@ -314,6 +324,13 @@ export default function ArchiveEntriesProvider({ initialEntries = [], initialVie
 
   useEffect(() => {
     if (pathname !== '/archive') {
+      return;
+    }
+
+    if (skippedInitialFetchRef.current) {
+      skippedInitialFetchRef.current = false;
+      lastArchiveQuerySignatureRef.current = querySignature;
+      hasLoadedArchivePageRef.current = true;
       return;
     }
 

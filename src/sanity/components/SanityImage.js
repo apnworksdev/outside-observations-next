@@ -19,7 +19,7 @@ export default function SanityImage({
   loading = 'lazy',
   placeholder,
   blurDataURL,
-  quality = 75,
+  quality = 82,
   onLoad,
   onError,
   fallback,
@@ -28,7 +28,6 @@ export default function SanityImage({
   const [hasError, setHasError] = useState(false);
 
   if (!image?.asset?._ref) {
-    // If we have a fallback, show it when image is missing
     if (fallback) {
       return fallback;
     }
@@ -38,19 +37,16 @@ export default function SanityImage({
   const imageUrl = urlForImage(image);
 
   if (!imageUrl) {
-    // If we have a fallback, show it when URL is missing
     if (fallback) {
       return fallback;
     }
     return null;
   }
 
-  // Show fallback if image failed to load
   if (hasError) {
     if (fallback) {
       return fallback;
     }
-    // Default fallback: use FallbackImage component
     return (
       <FallbackImage
         alt={alt}
@@ -58,12 +54,10 @@ export default function SanityImage({
     );
   }
 
-  // Determine placeholder: use provided placeholder, or 'blur' if blurDataURL exists, or undefined
-  const placeholderValue = placeholder !== undefined 
-    ? placeholder 
+  const placeholderValue = placeholder !== undefined
+    ? placeholder
     : (blurDataURL ? 'blur' : undefined);
 
-  // If priority is true, don't set loading prop (priority images are eager by default)
   const loadingValue = priority ? undefined : loading;
 
   const handleError = (e) => {
@@ -93,4 +87,3 @@ export default function SanityImage({
     />
   );
 }
-

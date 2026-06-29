@@ -20,7 +20,7 @@ import { ArchiveListErrorFallback } from '@/app/_components/shared/error/ErrorFa
 
 import styles from '@app/_assets/archive/archive-page.module.css';
 
-/** Stable style object — SSR + client both start hidden until scroll lock runs (no hydration mismatch). */
+/** Stable style object for scroll-restore lock (returning visitors only). */
 const OFFSCREEN_SCROLL_LOCK_STYLE = { visibility: 'hidden' };
 
 export default function ArchiveListContent() {
@@ -37,8 +37,8 @@ export default function ArchiveListContent() {
     isRefreshing,
   } = useArchiveEntries();
   const { typeSort, handleSortClick, sortableLegendColumns } = useArchiveListSorting();
-  // Hidden until useLayoutEffect + rAF applies top or saved scroll — avoids any visible "middle" frame.
-  const [archiveContentVisible, setArchiveContentVisible] = useState(false);
+  // Visible by default for SSR/crawlers; hidden only while restoring saved scroll position.
+  const [archiveContentVisible, setArchiveContentVisible] = useState(true);
 
   useArchiveScrollRestore(view, setArchiveContentVisible);
 

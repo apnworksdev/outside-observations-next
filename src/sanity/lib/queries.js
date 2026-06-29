@@ -260,6 +260,8 @@ export const ARCHIVE_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry"] | o
 
 export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && (slug.current == $slug || metadata.slug.current == $slug)][0] {
   _id,
+  _createdAt,
+  _updatedAt,
   metadata {
     year,
     slug,
@@ -334,6 +336,26 @@ export const ARCHIVE_ENTRY_SLUGS = defineQuery(`
   }
   .slug
 `)
+
+/**
+ * Minimal projection for sitemap generation (URLs + image discovery only).
+ * Avoids full archive list payload and Widline merge.
+ */
+export const ARCHIVE_SITEMAP_ENTRIES_QUERY = defineQuery(`*[_type == "archiveEntry" && (defined(slug.current) || defined(metadata.slug.current))] | order(_updatedAt desc) {
+  "slug": coalesce(metadata.slug.current, slug.current),
+  "artName": coalesce(metadata.artName, artName),
+  _updatedAt,
+  poster {
+    asset,
+    crop,
+    hotspot
+  },
+  "previewImage": visualEssayImages[0]->image {
+    asset,
+    crop,
+    hotspot
+  }
+}`)
 
 /**
  * Query to fetch archive entries by IDs - optimized for image display

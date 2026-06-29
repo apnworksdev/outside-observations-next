@@ -2,13 +2,14 @@ import styles from '@app/_assets/lab/lab.module.css';
 import LabTypewriter from '@/app/_components/Lab/LabTypewriter';
 import LabSubmitProposalLink from '@/app/_components/Lab/LabSubmitProposalLink';
 import { getSiteSettings } from '@/app/_data/archive';
+import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
+const baseUrl = SITE_URL;
 
 export async function generateMetadata() {
-  const title = 'Lab | Outside Observation';
+  const title = `Lab | ${SITE_NAME}`;
   const description =
-    'Submit a proposal and collaborate with Outside Observation. Get in touch for new projects and ideas.';
+    `Submit a proposal and collaborate with ${SITE_NAME}. Get in touch for new projects and ideas.`;
 
   return {
     title,

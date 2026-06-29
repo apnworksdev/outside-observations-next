@@ -20,7 +20,9 @@ export default function ClosedArchiveRedirect({ children }) {
   }, []);
 
   useEffect(() => {
-    if (!mounted || !pathname.startsWith('/archive')) return;
+    if (!mounted || !pathname.startsWith('/archive') || pathname.startsWith('/archive/entry/')) {
+      return;
+    }
     const closed = isInClosedHours();
     if (pathname === '/archive/closed') {
       if (!closed) router.replace('/archive');
@@ -29,9 +31,13 @@ export default function ClosedArchiveRedirect({ children }) {
     }
   }, [mounted, pathname, router]);
 
+  const isArchiveEntryPage = pathname.startsWith('/archive/entry/');
   const closed = mounted && pathname.startsWith('/archive') ? isInClosedHours() : false;
-  const shouldRedirect =
-    pathname === '/archive/closed' ? !closed : pathname.startsWith('/archive') && closed;
+  const shouldRedirect = isArchiveEntryPage
+    ? false
+    : pathname === '/archive/closed'
+      ? !closed
+      : pathname.startsWith('/archive') && closed;
 
   return (
     <div

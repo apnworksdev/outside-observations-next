@@ -16,7 +16,7 @@ export const siteSettings = defineType({
       name: 'title',
       title: 'Title',
       type: 'string',
-      initialValue: 'Outside Observation',
+      initialValue: 'Outside Observations',
     }),
     defineField({
       name: 'closedArchiveImage',

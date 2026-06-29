@@ -38,7 +38,7 @@ function hasArchiveScrollSessionKeys() {
   }
 }
 
-function hasSavedScrollForView(view) {
+export function hasSavedScrollForView(view) {
   try {
     const pctStr = sessionStorage.getItem(ARCHIVE_SCROLL_PERCENTAGE_KEY);
     const topStr = sessionStorage.getItem(ARCHIVE_SCROLL_TOP_KEY);
@@ -237,6 +237,12 @@ export function useArchiveScrollRestore(view, setArchiveContentVisible) {
 
   useLayoutEffect(() => {
     if (!isArchiveIndex || !view) {
+      setVisible(true);
+      return;
+    }
+
+    if (!hasSavedScrollForView(view)) {
+      applyArchiveScrollSync(view);
       setVisible(true);
       return;
     }

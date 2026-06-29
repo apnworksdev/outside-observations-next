@@ -19,9 +19,10 @@ import PageTransition from '@/app/_components/layout/PageTransition';
 import PageSectionTracker from '@/app/_components/shared/PageSectionTracker';
 import CookieConsentBanner from '@/app/_components/shared/CookieConsentBanner';
 import { GA4_MEASUREMENT_ID } from '@/app/_helpers/analytics/gtag';
+import { SITE_NAME } from '@/lib/siteUrl';
 
 export const metadata = {
-  title: 'Outside Observation',
+  title: SITE_NAME,
   description: 'A new chapter of Outside Observations. Explore the archive and discover unexpected connections.',
   icons: {
     icon: [

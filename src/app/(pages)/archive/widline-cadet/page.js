@@ -3,14 +3,15 @@ import { client } from '@/sanity/lib/client';
 import { WIDLINE_CADET_QUERY } from '@/sanity/lib/queries';
 import WidlineCadetMediaStage from '@/app/_components/artist-collaborations/WidlineCadetMediaStage';
 import styles from '@app/_assets/archive/artist-collaboration-page.module.css';
+import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
+const baseUrl = SITE_URL;
 
 export const metadata = {
-  title: 'Widline Cadet | Outside Observation',
+  title: `Widline Cadet | ${SITE_NAME}`,
   description: 'Artist collaboration with Widline Cadet.',
   openGraph: {
-    title: 'Widline Cadet | Outside Observation',
+    title: `Widline Cadet | ${SITE_NAME}`,
     description: 'Artist collaboration with Widline Cadet.',
     type: 'website',
     url: `${baseUrl}/archive/widline-cadet`,
@@ -25,7 +26,7 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Widline Cadet | Outside Observation',
+    title: `Widline Cadet | ${SITE_NAME}`,
     description: 'Artist collaboration with Widline Cadet.',
     images: [`${baseUrl}/share-image.png`],
   },

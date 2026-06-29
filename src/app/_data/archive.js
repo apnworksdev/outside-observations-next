@@ -6,6 +6,7 @@ import { client } from '@/sanity/lib/client';
 import {
   ARCHIVE_PAGE_ENTRIES_QUERY,
   ARCHIVE_ENTRIES_QUERY,
+  ARCHIVE_SITEMAP_ENTRIES_QUERY,
   SITE_SETTINGS_QUERY,
   WIDLINE_CADET_QUERY,
 } from '@/sanity/lib/queries';
@@ -87,6 +88,43 @@ export async function getArchiveEntries() {
     if (isCacheSizeError) {
       console.warn('Archive entries exceeded Next cache size; using uncached fallback.');
       return fetchArchiveEntries();
+    }
+
+    throw error;
+  }
+}
+
+const fetchSitemapEntries = async () => {
+  try {
+    const entries = await client.fetch(ARCHIVE_SITEMAP_ENTRIES_QUERY);
+    return Array.isArray(entries) ? entries : [];
+  } catch (error) {
+    console.error('Failed to fetch sitemap entries:', error);
+    return [];
+  }
+};
+
+const getSitemapEntriesCached = unstable_cache(
+  fetchSitemapEntries,
+  ['archive-sitemap-entries-v1'],
+  { revalidate: 60 }
+);
+
+/**
+ * Lightweight archive rows for sitemap.xml (slug, title, poster, lastModified).
+ */
+export async function getSitemapEntries() {
+  try {
+    return await getSitemapEntriesCached();
+  } catch (error) {
+    const message = error?.message || '';
+    const isCacheSizeError =
+      message.includes('items over 2MB can not be cached') ||
+      message.includes('Failed to set Next.js data cache');
+
+    if (isCacheSizeError) {
+      console.warn('Sitemap entries exceeded Next cache size; using uncached fallback.');
+      return fetchSitemapEntries();
     }
 
     throw error;

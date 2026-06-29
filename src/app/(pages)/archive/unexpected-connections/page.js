@@ -1,17 +1,18 @@
 import { getTwoRandomForUnexpectedConnections } from '@app/_data/unexpectedConnections';
 import UnexpectedConnectionsContent from '@app/_components/Archive/features/unexpected/UnexpectedConnectionsContent';
 import UnexpectedConnectionsEmpty from '@app/_components/Archive/features/unexpected/UnexpectedConnectionsEmpty';
+import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
+const baseUrl = SITE_URL;
 
 export const metadata = {
-  title: 'Unexpected Connections | Outside Observation',
+  title: `Unexpected Connections | ${SITE_NAME}`,
   description:
-    'Explore unexpected connections between archive entries. Discover new pairings from Outside Observation.',
+    `Explore unexpected connections between archive entries. Discover new pairings from ${SITE_NAME}.`,
   openGraph: {
-    title: 'Unexpected Connections | Outside Observation',
+    title: `Unexpected Connections | ${SITE_NAME}`,
     description:
-      'Explore unexpected connections between archive entries. Discover new pairings from Outside Observation.',
+      `Explore unexpected connections between archive entries. Discover new pairings from ${SITE_NAME}.`,
     type: 'website',
     url: `${baseUrl}/archive/unexpected-connections`,
     images: [
@@ -19,15 +20,15 @@ export const metadata = {
         url: `${baseUrl}/share-image.png`,
         width: 1200,
         height: 630,
-        alt: 'Outside Observation - Unexpected Connections',
+        alt: `${SITE_NAME} - Unexpected Connections`,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Unexpected Connections | Outside Observation',
+    title: `Unexpected Connections | ${SITE_NAME}`,
     description:
-      'Explore unexpected connections between archive entries. Discover new pairings from Outside Observation.',
+      `Explore unexpected connections between archive entries. Discover new pairings from ${SITE_NAME}.`,
     images: [`${baseUrl}/share-image.png`],
   },
   alternates: {

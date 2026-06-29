@@ -1,16 +1,17 @@
 import ArchiveListContent from '@/app/_components/Archive/features/list/ArchiveListContent';
 import { ErrorBoundary } from '@/app/_components/shared/error/ErrorBoundary';
 import { ArchiveErrorFallback } from '@/app/_components/shared/error/ErrorFallbacks';
+import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
 
 // Enable ISR - revalidate every 60 seconds
 export const revalidate = 60;
 
 // Generate metadata for better SEO (cached)
 export async function generateMetadata() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
+  const baseUrl = SITE_URL;
   const canonicalUrl = `${baseUrl}/archive`;
-  const title = 'Archive | Outside Observation';
-  const description = 'Browse and explore archive entries from Outside Observation.';
+  const title = `Archive | ${SITE_NAME}`;
+  const description = `Browse and explore archive entries from ${SITE_NAME}.`;
 
   return {
     title,
@@ -25,7 +26,7 @@ export async function generateMetadata() {
           url: `${baseUrl}/share-image.png`,
           width: 1200,
           height: 630,
-          alt: 'Outside Observation - Archive',
+          alt: `${SITE_NAME} - Archive`,
         },
       ],
     },

@@ -7,11 +7,12 @@ import { urlFor } from '@/sanity/lib/image';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 import { ArchiveEntryArticle, ArchiveEntryMetadata } from '@/app/_components/Archive/features/entry/ArchiveEntryContent';
 import ArchiveEntryBackdrop from '@/app/_components/Archive/features/entry/ArchiveEntryBackdrop';
+import ArchiveEntryJsonLd from '@/app/_components/Archive/features/entry/ArchiveEntryJsonLd';
 import ArchiveEntryVisitTracker from '@/app/_components/Archive/features/entry/ArchiveEntryVisitTracker';
 import { ErrorBoundary } from '@/app/_components/shared/error/ErrorBoundary';
 import { ArchiveEntryErrorFallback } from '@/app/_components/shared/error/ErrorFallbacks';
+import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
 
-const SITE_TITLE = 'Outside Observation';
 const META_DESCRIPTION_MAX_LENGTH = 160;
 
 function truncateDescription(text) {
@@ -58,20 +59,20 @@ export async function generateMetadata({ params }) {
     const resolved = await params;
     slug = resolved?.slug;
   } catch {
-    return { title: SITE_TITLE };
+    return { title: SITE_NAME };
   }
-  if (!slug) return { title: SITE_TITLE };
+  if (!slug) return { title: SITE_NAME };
 
   let entry;
   try {
     entry = await getCachedArchiveEntry(slug);
   } catch {
-    return { title: SITE_TITLE };
+    return { title: SITE_NAME };
   }
-  if (!entry) return { title: SITE_TITLE };
+  if (!entry) return { title: SITE_NAME };
 
   const artName = entry.metadata?.artName || entry.artName || 'Archive entry';
-  const title = `${artName} | ${SITE_TITLE}`;
+  const title = `${artName} | ${SITE_NAME}`;
 
   const rawDescription =
     entry.aiDescription ||
@@ -80,7 +81,7 @@ export async function generateMetadata({ params }) {
       .join(' · ');
   const description = truncateDescription(rawDescription);
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://outside-observation.com';
+  const baseUrl = SITE_URL;
   const canonicalUrl = `${baseUrl}/archive/entry/${slug}`;
 
   let ogImageUrl = null;
@@ -89,7 +90,7 @@ export async function generateMetadata({ params }) {
   const imageSource = poster || firstVisualImage;
   if (imageSource?.asset?._ref) {
     try {
-      ogImageUrl = urlFor(imageSource).width(1200).height(630).fit('max').url();
+      ogImageUrl = urlFor(imageSource).width(1200).height(630).quality(85).fit('max').url();
     } catch {
       // ignore
     }
@@ -106,6 +107,8 @@ export async function generateMetadata({ params }) {
       description: description || undefined,
       type: 'article',
       url: canonicalUrl,
+      ...(entry._createdAt ? { publishedTime: entry._createdAt } : {}),
+      ...(entry._updatedAt ? { modifiedTime: entry._updatedAt } : {}),
       images: [
         {
           url: ogImageUrl,
@@ -191,6 +194,7 @@ export default async function ArchiveEntryPage({ params }) {
 
   return (
     <ErrorBoundary fallback={ArchiveEntryErrorFallback}>
+      <ArchiveEntryJsonLd entry={entry} slug={entrySlug} />
       <ArchiveEntryVisitTracker slug={entrySlug} />
       <Suspense
         fallback={

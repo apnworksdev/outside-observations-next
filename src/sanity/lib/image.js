@@ -20,24 +20,31 @@ export const urlForImage = (source) => {
   }
 }
 
-// Custom loader for Next.js Image component that uses Sanity's image optimization
-// This prevents Next.js from trying to optimize already-optimized Sanity images
-// Instead, we let Sanity handle the optimization by adding width and quality parameters
-export const sanityImageLoader = ({ src, width, quality = 75 }) => {
-  // Sanity image URLs should be full URLs from urlForImage()
-  // Add width and quality parameters for Sanity's image optimization
+/**
+ * Build a Sanity CDN image URL with width, quality, and format params.
+ */
+export function buildSanityImageUrl(src, { width, quality = 82, format } = {}) {
   try {
     const url = new URL(src)
-    url.searchParams.set('w', width.toString())
+    if (width != null) {
+      url.searchParams.set('w', width.toString())
+    }
     url.searchParams.set('q', quality.toString())
-    // Use auto=format to let Sanity serve WebP/AVIF when supported (smaller file sizes)
-    url.searchParams.set('auto', 'format')
-    // Use fit=max to prevent upscaling (saves bandwidth)
+    if (format) {
+      url.searchParams.set('fm', format)
+    } else {
+      // Let Sanity serve AVIF/WebP/JPEG based on the browser Accept header
+      url.searchParams.set('auto', 'format')
+    }
     url.searchParams.set('fit', 'max')
     return url.toString()
   } catch (error) {
-    // Fallback: if URL parsing fails, return src as-is (shouldn't happen with valid Sanity URLs)
-    console.warn('Failed to parse image URL in sanityImageLoader:', error)
+    console.warn('Failed to parse image URL in buildSanityImageUrl:', error)
     return src
   }
+}
+
+// Custom loader for Next.js Image — Sanity handles format negotiation via auto=format
+export const sanityImageLoader = ({ src, width, quality = 82 }) => {
+  return buildSanityImageUrl(src, { width, quality })
 }

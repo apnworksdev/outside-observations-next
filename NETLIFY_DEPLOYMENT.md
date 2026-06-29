@@ -12,9 +12,12 @@ You **must** set these environment variables in Netlify's dashboard (Site settin
 - `OUTSIDE_OBSERVATIONS_API_KEY` - API key for your external AI service
 - `OUTSIDE_OBSERVATIONS_API_BASE_URL` - Base URL for your external AI service (e.g., `https://your-service-id.region.run.app`)
 
+**Required for production SEO:**
+- `NEXT_PUBLIC_SITE_URL` - Set to `https://outsideobservations.com` in production (all contexts). Canonical and Open Graph URLs depend on this.
+
 **Optional (have defaults):**
 - `NEXT_PUBLIC_SANITY_API_VERSION` - Defaults to "2025-09-22" if not set
-- `NEXT_PUBLIC_SITE_URL` - Canonical and Open Graph URLs (defaults to `https://outside-observation.com`)
+- `NEXT_PUBLIC_SITE_URL` - Canonical and Open Graph URLs (defaults to `https://outsideobservations.com`)
 - `NEXT_PUBLIC_GA4_MEASUREMENT_ID` - GA4 measurement ID (defaults to your GA4 property in code)
 
 **How to set:**
