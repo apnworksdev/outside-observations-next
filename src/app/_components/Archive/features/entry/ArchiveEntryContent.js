@@ -3,6 +3,20 @@ import ArchiveEntryVideo from './ArchiveEntryVideo';
 import { ProtectedMediaWrapper } from './ProtectedMediaWrapper';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
+/**
+ * Alt text: the AI description (clamped ~125 chars for screen readers) beats
+ * the bare title; falls back to "artName — source".
+ */
+function resolveEntryAlt(entry) {
+  const described = (entry?.aiDescription || '').trim();
+  if (described) {
+    return described.length > 125 ? `${described.slice(0, 124).trimEnd()}…` : described;
+  }
+  return [entry?.metadata?.artName || entry?.artName, entry?.metadata?.source || entry?.source]
+    .filter(Boolean)
+    .join(' — ');
+}
+
 // Helper function to render portable text blocks
 function renderTextMarkup(blocks) {
   if (!blocks || !Array.isArray(blocks)) return null;
@@ -94,7 +108,7 @@ export function ArchiveEntryArticle({ entry, headingId }) {
                   <div className={styles.archiveEntryModalPosterOuter}>
                     <div
                       className={`${styles.archiveEntryModalPosterContainer} ${styles.archiveEntryModalPosterContainerImage} ${layout === 'portrait' ? styles.archiveEntryModalPosterContainerPortrait : styles.archiveEntryModalPosterContainerLandscape} ${aspectRatio ? styles.archiveEntryModalPosterContainerWithAspect : ''}`}
-                      style={aspectRatio ? { paddingTop: `${(imageHeight / imageWidth) * 100}%` } : undefined}
+                      style={aspectRatio ? { paddingTop: `${(imageHeight / imageWidth) * 100}%`, '--entry-aspect-ratio': aspectRatio } : undefined}
                     >
                       {aspectRatio ? (
                         <div className={styles.archiveEntryModalPosterAspectBox}>
@@ -104,7 +118,7 @@ export function ArchiveEntryArticle({ entry, headingId }) {
                           >
                             <SanityImage
                               image={image.image}
-                              alt={image.metadata?.artName || image.metadata?.fileName || 'Visual essay image'}
+                              alt={resolveEntryAlt(image) || image.metadata?.fileName || 'Visual essay image'}
                               width={imageWidth}
                               height={imageHeight}
                               className={styles.archiveEntryModalPoster}
@@ -121,7 +135,7 @@ export function ArchiveEntryArticle({ entry, headingId }) {
                         >
                           <SanityImage
                             image={image.image}
-                            alt={image.metadata?.artName || image.metadata?.fileName || 'Visual essay image'}
+                            alt={resolveEntryAlt(image) || image.metadata?.fileName || 'Visual essay image'}
                             width={imageWidth}
                             height={imageHeight}
                             className={styles.archiveEntryModalPoster}
@@ -161,7 +175,7 @@ export function ArchiveEntryArticle({ entry, headingId }) {
             <div className={styles.archiveEntryModalPosterOuter}>
               <div
                 className={`${styles.archiveEntryModalPosterContainer} ${styles.archiveEntryModalPosterContainerImage} ${layout === 'portrait' ? styles.archiveEntryModalPosterContainerPortrait : styles.archiveEntryModalPosterContainerLandscape} ${entry.poster?.dimensions?.aspectRatio ? styles.archiveEntryModalPosterContainerWithAspect : ''}`}
-                style={entry.poster?.dimensions?.aspectRatio ? { paddingTop: `${(posterHeight / posterWidth) * 100}%` } : undefined}
+                style={entry.poster?.dimensions?.aspectRatio ? { paddingTop: `${(posterHeight / posterWidth) * 100}%`, '--entry-aspect-ratio': entry.poster.dimensions.aspectRatio } : undefined}
               >
                 {entry.poster?.dimensions?.aspectRatio ? (
                   <div className={styles.archiveEntryModalPosterAspectBox}>
@@ -171,7 +185,7 @@ export function ArchiveEntryArticle({ entry, headingId }) {
                     >
                       <SanityImage
                         image={entry.poster}
-                        alt={entry.metadata?.artName || entry.artName}
+                        alt={resolveEntryAlt(entry)}
                         width={posterWidth}
                         height={posterHeight}
                         className={styles.archiveEntryModalPoster}
@@ -188,7 +202,7 @@ export function ArchiveEntryArticle({ entry, headingId }) {
                   >
                     <SanityImage
                       image={entry.poster}
-                      alt={entry.metadata?.artName || entry.artName}
+                      alt={resolveEntryAlt(entry)}
                       width={posterWidth}
                       height={posterHeight}
                       className={styles.archiveEntryModalPoster}
@@ -208,7 +222,7 @@ export function ArchiveEntryArticle({ entry, headingId }) {
                 video={entry.video}
                 poster={entry.poster}
                 vimeoUrl={entry.vimeoUrl}
-                alt={entry.metadata?.artName || entry.artName}
+                alt={resolveEntryAlt(entry)}
                 contentWarning={entry.metadata?.contentWarning}
                 entrySlug={entry.metadata?.slug?.current ?? entry.slug?.current ?? ''}
               />

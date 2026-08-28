@@ -124,6 +124,10 @@
 
 .archiveEntryModalPosterContainerWithAspect {
   position: relative;
+  /* The height comes from a percentage padding, i.e. from the width, and so
+     ignores the window. Capping the width by the height budget keeps a
+     portrait image inside the screen on short windows. */
+  max-width: calc((100dvh - var(--entry-vertical-chrome)) * var(--entry-aspect-ratio, 1));
 }
 
 .archiveEntryModalPosterAspectBox {
@@ -462,5 +466,101 @@
     grid-column: 6 / 7;
     width: calc(100% + 6px + 5px);
     right: 3px;
+  }
+}
+/* ------------------------------------------------------------ */
+/*        Previous / next navigation between entries            */
+/* ------------------------------------------------------------ */
+
+.archiveEntryPager {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.archiveEntryPagerButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  background-color: var(--light-gray-color);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: background-color var(--transition-time) var(--transition-effect);
+}
+
+.archiveEntryPagerButton[data-disabled='true'] {
+  opacity: 0.25;
+  pointer-events: none;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .archiveEntryPagerButton:hover {
+    background-color: var(--nav-hover-color);
+  }
+}
+
+/* Chevron drawn with the same stroke language as the header's arrow-down. */
+.archiveEntryPagerButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-left: 1px solid var(--nav-text-color);
+  border-bottom: 1px solid var(--nav-text-color);
+}
+
+.archiveEntryPagerPrevious {
+  left: var(--padding);
+}
+
+.archiveEntryPagerPrevious::before {
+  transform: translate(-40%, -50%) rotate(45deg);
+}
+
+.archiveEntryPagerNext {
+  right: var(--padding);
+}
+
+.archiveEntryPagerNext::before {
+  transform: translate(-60%, -50%) rotate(-135deg);
+}
+
+/* Mobile: the arrows leave the artwork and sit under it, side by side and
+   thumb-sized. A horizontal swipe does the same job (handled in the component);
+   the left screen edge is left free for the OS back gesture. */
+/* Mobile: the backdrop is a fixed flex row, so the pager stays fixed too and
+   sits just above the metadata bar (fixed, 24px tall, z-index 999) rather than
+   over the artwork. The left screen edge is left free for the OS back gesture. */
+@media screen and (max-width: 768px) {
+  .archiveEntryPager {
+    top: auto;
+    bottom: calc(24px + var(--padding) + env(safe-area-inset-bottom, 0px));
+    height: auto;
+    display: flex;
+    justify-content: center;
+    gap: var(--gap);
+    z-index: 1000;
+  }
+
+  .archiveEntryPagerButton {
+    position: relative;
+    transform: none;
+    width: 44px;
+    height: 44px;
+  }
+
+  .archiveEntryPagerPrevious,
+  .archiveEntryPagerNext {
+    left: auto;
+    right: auto;
   }
 }
