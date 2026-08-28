@@ -48,6 +48,13 @@ export default function ArchiveEntryJsonLd({ entry, slug }) {
   const year = entry?.metadata?.year?.value ?? entry?.year;
   const mediaType = entry?.mediaType || 'image';
 
+  const artistName = entry?.metadata?.source || entry?.source || null;
+  const creditText = entry?.metadata?.credit || null;
+  const keywords = [
+    ...(entry?.metadata?.tags?.map((tag) => tag?.name) ?? []),
+    ...(entry?.aiMoodTags?.map((tag) => tag?.name) ?? []),
+  ].filter(Boolean);
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': resolveSchemaType(mediaType),
@@ -58,17 +65,39 @@ export default function ArchiveEntryJsonLd({ entry, slug }) {
     ...(year ? { dateCreated: String(year) } : {}),
     ...(entry._createdAt ? { datePublished: entry._createdAt } : {}),
     ...(entry._updatedAt ? { dateModified: entry._updatedAt } : {}),
-    creator: {
-      '@type': 'Organization',
-      name: SITE_NAME,
-      url: SITE_URL,
+    // The artist is the creator; the site is the archive presenting the work.
+    creator: artistName
+      ? { '@type': 'Person', name: artistName }
+      : { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+    ...(creditText ? { creditText } : {}),
+    ...(artistName ? { copyrightNotice: `© ${artistName}` } : {}),
+    ...(keywords.length > 0 ? { keywords: keywords.join(', ') } : {}),
+    isPartOf: {
+      '@type': 'CollectionPage',
+      name: `${SITE_NAME} Archive`,
+      url: `${SITE_URL}/archive`,
     },
   };
 
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Archive', item: `${SITE_URL}/archive` },
+      { '@type': 'ListItem', position: 2, name: artName, item: canonicalUrl },
+    ],
+  };
+
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+      />
+    </>
   );
 }

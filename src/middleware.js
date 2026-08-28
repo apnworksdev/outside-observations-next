@@ -83,6 +83,12 @@ export function middleware(request) {
 
   const pageType = resolvePageType(pathname)
   const response = NextResponse.next()
+
+  // Preview deployments must never be indexed (they mirror production content).
+  const host = request.headers.get('host') || ''
+  if (host.endsWith('.netlify.app')) {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow')
+  }
   response.headers.set('x-page-type', pageType)
   response.headers.set('x-pathname', pathname)
   // Returning visitor is resolved client-side from localStorage (see HomeContent)

@@ -1,0 +1,20 @@
+# Outside Observations
+
+> A visual research archive: a curated collection of ~2,500 photographic and
+> video works, browsable by artist, year, subject, tags and mood. Works are
+> presented for educational and research purposes; rights remain with their
+> creators.
+
+## What this site offers
+
+- /archive: the full collection, searchable (?search=<query>) and filterable
+  by mood. Each entry has its own page with title, artist, year, description
+  and structured data (schema.org VisualArtwork).
+- /archive/unexpected-connections: an AI-assisted comparison of two works.
+- /archive/widline-cadet: featured artist collaboration.
+
+## Usage policy
+
+- Citing and linking to entry pages is welcome.
+- Image files are not licensed for reuse or model training. Rights holders can
+  request removal at contact@outsideobservations.com.
