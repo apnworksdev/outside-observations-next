@@ -263,19 +263,19 @@
 
 .thumbSizerInput::-webkit-slider-thumb {
   appearance: none;
-  width: 23px;
-  height: 23px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--nav-text-color) 0 4.5px, transparent 4.6px);
+  background-color: var(--nav-text-color);
   cursor: pointer;
 }
 
 .thumbSizerInput::-moz-range-thumb {
-  width: 23px;
-  height: 23px;
+  width: 9px;
+  height: 9px;
   border: none;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--nav-text-color) 0 4.5px, transparent 4.6px);
+  background-color: var(--nav-text-color);
   cursor: pointer;
 }
 
@@ -523,22 +523,19 @@
 }
 
 @media screen and (max-width: 768px) {
+  .headerSearchInput::-webkit-search-cancel-button {
+    width: 32px;
+    height: 32px;
+    margin-left: 0;
+    -webkit-mask-size: 7px 7px;
+    mask-size: 7px 7px;
+    opacity: 0.85;
+  }
+
   .thumbSizerInput {
-    height: 40px;
-    margin-block: calc((var(--bubble-height) - 40px) / 2);
+    height: 44px;
+    margin-block: calc((var(--bubble-height) - 44px) / 2);
     width: 90px;
-  }
-
-  .thumbSizerInput::-webkit-slider-thumb {
-    width: 36px;
-    height: 36px;
-    background: radial-gradient(circle, var(--nav-text-color) 0 4.5px, transparent 4.6px);
-  }
-
-  .thumbSizerInput::-moz-range-thumb {
-    width: 36px;
-    height: 36px;
-    background: radial-gradient(circle, var(--nav-text-color) 0 4.5px, transparent 4.6px);
   }
 
   /* Newsletter popup: on mobile only visible on homepage */
