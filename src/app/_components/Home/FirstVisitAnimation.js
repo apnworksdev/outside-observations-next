@@ -95,6 +95,12 @@ export default function FirstVisitAnimation({ onComplete, children }) {
 
   return (
     <>
+      {/* Ring of dots the intro pops in one by one, then implodes. */}
+      <div className={styles.circleContainer} data-first-visit-animate="ring" aria-hidden="true">
+        {Array.from({ length: 8 }, (_, index) => (
+          <span key={index} className={styles.circle} data-number={index + 1} />
+        ))}
+      </div>
       <div className={`${styles.firstVisitText} ${styles.firstVisitTextCreate}`} ref={createTextRef}>
         <p>Create for each other</p>
       </div>

@@ -1,3 +1,5 @@
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { getSiteSettings } from '@/app/_data/archive';
 import HomeContent from '@/app/_components/Home/HomeContent';
 import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
@@ -43,17 +45,12 @@ export async function generateMetadata() {
 export const revalidate = 60;
 
 export default async function Home() {
-  const siteSettings = await getSiteSettings();
-  const homeImage = siteSettings?.homeImage;
-  const dimensions = homeImage?.dimensions;
-  const homeImageWidth = dimensions?.width ?? 1200;
-  const homeImageHeight = dimensions?.height ?? undefined;
+  // A visitor who has already seen the intro goes straight to the archive,
+  // before this page renders anything at all -- no flash of an empty home.
+  const cookieStore = await cookies();
+  if (cookieStore.get('oo_visited')?.value === '1') {
+    redirect('/archive');
+  }
 
-  return (
-    <HomeContent
-      homeImage={homeImage}
-      homeImageWidth={homeImageWidth}
-      homeImageHeight={homeImageHeight}
-    />
-  );
+  return <HomeContent />;
 }

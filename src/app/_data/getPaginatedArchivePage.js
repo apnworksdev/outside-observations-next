@@ -54,10 +54,10 @@ export function encodeArchivePageCursor(payload) {
   return Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');
 }
 
-function createSignature({ sortColumn, sortDirection, moodTags, searchIds }) {
+function createSignature({ sortColumn, sortDirection, moodTags, searchIds, searchActive }) {
   const sortedTags = [...moodTags].sort().join(',');
   const sortedSearchIds = [...searchIds].sort().join(',');
-  return `${sortColumn || 'updated'}|${sortDirection || 'desc'}|${sortedTags}|${sortedSearchIds}`;
+  return `${sortColumn || 'updated'}|${sortDirection || 'desc'}|${sortedTags}|${searchActive ? 'search' : 'all'}|${sortedSearchIds}`;
 }
 
 function normaliseEntry(entry) {
@@ -195,6 +195,7 @@ export async function getPaginatedArchivePage({
   sortColumn = null,
   sortDirection = null,
   searchIds: rawSearchIds = [],
+  searchActive: rawSearchActive = false,
   moodTags: rawMoodTags = [],
 }) {
   const limit = Math.max(1, Math.min(MAX_LIMIT, Number(rawLimit) || DEFAULT_ARCHIVE_PAGE_LIMIT));
@@ -204,8 +205,11 @@ export async function getPaginatedArchivePage({
   const moodTags = Array.isArray(rawMoodTags)
     ? rawMoodTags.filter((tag) => typeof tag === 'string' && tag.trim().length > 0)
     : [];
+  // A search that matched nothing is still a search: without this flag a
+  // zero-result query would read as "no filter" and return the whole archive.
+  const searchActive = rawSearchActive === true || searchIds.length > 0;
 
-  const signature = createSignature({ sortColumn, sortDirection, moodTags, searchIds });
+  const signature = createSignature({ sortColumn, sortDirection, moodTags, searchIds, searchActive });
   const parsedCursor = decodeCursor(cursor);
   const cursorOffset =
     parsedCursor &&
@@ -226,7 +230,7 @@ export async function getPaginatedArchivePage({
   const archiveCountQuery = `count(${baseFilter})`;
 
   const params = {
-    hasSearchFilter: searchIds.length > 0,
+    hasSearchFilter: searchActive,
     hasMoodFilter: moodTags.length > 0,
     searchIds,
     moodTags,
@@ -238,7 +242,12 @@ export async function getPaginatedArchivePage({
   ]);
   const archiveCount = Number.isFinite(Number(archiveCountRaw)) ? Number(archiveCountRaw) : 0;
 
-  const widlineItems = toWidlineMediaItems(collaboration);
+  // The Widline Cadet collaboration is a featured insert, fetched without any
+  // filter, so it used to be interleaved even into filtered results -- visitors
+  // read those images as matches for their query. It only belongs in the
+  // unfiltered archive.
+  const hasActiveFilter = searchActive || moodTags.length > 0;
+  const widlineItems = hasActiveFilter ? [] : toWidlineMediaItems(collaboration);
   const slots = getDeterministicSlots(archiveCount, widlineItems.length, [
     collaboration?._id || 'widline-cadet',
     ...widlineItems.map((item) => item._id),
