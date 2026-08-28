@@ -21,15 +21,14 @@ export default async function ArchiveLayout({ children }) {
 
   const initialPage = isArchiveIndex
     ? await getPaginatedArchivePage({
-        cursor: null,
-        limit: DEFAULT_ARCHIVE_PAGE_LIMIT,
-        sortColumn: null,
-        sortDirection: null,
-        moodTags: [],
-        searchIds: [],
-      })
+      cursor: null,
+      limit: DEFAULT_ARCHIVE_PAGE_LIMIT,
+      sortColumn: null,
+      sortDirection: null,
+      moodTags: [],
+      searchIds: [],
+    })
     : { items: [], nextCursor: null, hasMore: true };
-
   const content = (
     <>
       {children}
