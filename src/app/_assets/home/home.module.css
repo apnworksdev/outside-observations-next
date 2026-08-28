@@ -105,3 +105,9 @@
   object-fit: cover;
   pointer-events: none;
 }
+.introOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background-color: var(--bg-color);
+}

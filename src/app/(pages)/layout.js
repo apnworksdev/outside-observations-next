@@ -7,7 +7,6 @@ import { getSiteSettings } from '@/app/_data/archive';
 import BodyPageTypeUpdater from '@/app/_helpers/dom/BodyPageTypeUpdater';
 import BodyHydrationGuard from '@/app/_helpers/dom/BodyHydrationGuard';
 import VisitorTracker from '@/app/_helpers/tracking/VisitorTracker';
-import WebsiteVisitTracker from '@/app/_helpers/tracking/WebsiteVisitTracker';
 import StudioLayoutWrapper from '@/app/_components/layout/StudioLayoutWrapper';
 import { ErrorBoundary } from '@/app/_components/shared/error/ErrorBoundary';
 import { ArchiveSearchStateProvider } from '@/app/_components/Archive/providers/ArchiveSearchStateProvider';
@@ -19,6 +18,7 @@ import RadioIframe from '@/app/_components/shared/RadioIframe';
 import PageTransition from '@/app/_components/layout/PageTransition';
 import PageSectionTracker from '@/app/_components/shared/PageSectionTracker';
 import CookieConsentBanner from '@/app/_components/shared/CookieConsentBanner';
+import FirstVisitIntro from '@/app/_components/Home/FirstVisitIntro';
 import { GA4_MEASUREMENT_ID } from '@/app/_helpers/analytics/gtag';
 import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
 
@@ -94,6 +94,12 @@ export default async function RootLayout({ children }) {
             gtag('config', '${GA4_MEASUREMENT_ID}');
           `}
         </Script>
+        <Script id="intro-flash-guard" strategy="beforeInteractive">
+          {`try{if(!localStorage.getItem('has_visited_website'))document.documentElement.setAttribute('data-intro','pending')}catch(e){}`}
+        </Script>
+        <ErrorBoundary>
+          <FirstVisitIntro />
+        </ErrorBoundary>
         <ErrorBoundary>
           <BodyHydrationGuard />
           <VisitorCountProvider>
@@ -109,9 +115,6 @@ export default async function RootLayout({ children }) {
                 </ErrorBoundary>
                 <ErrorBoundary>
                   <VisitorTracker />
-                </ErrorBoundary>
-                <ErrorBoundary>
-                  <WebsiteVisitTracker />
                 </ErrorBoundary>
                 <ErrorBoundary>
                   <StudioLayoutWrapper />
