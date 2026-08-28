@@ -15,13 +15,14 @@ export default function CookieConsentBanner() {
   const [mounted, setMounted] = useState(false);
 
   const isStudioRoute = pathname?.startsWith('/studio');
+  const isIntroRoute = pathname === '/';
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (!mounted || typeof window === 'undefined' || isStudioRoute) return;
+    if (!mounted || typeof window === 'undefined' || isStudioRoute || isIntroRoute) return;
 
     const stored = getLocalStorage(COOKIE_CONSENT_ANALYTICS_KEY);
     if (stored === null || stored === undefined) {
@@ -29,7 +30,7 @@ export default function CookieConsentBanner() {
     } else if (stored === 'true') {
       updateAnalyticsConsent(true);
     }
-  }, [mounted, isStudioRoute]);
+  }, [mounted, isStudioRoute, isIntroRoute]);
 
   const accept = () => {
     setLocalStorage(COOKIE_CONSENT_ANALYTICS_KEY, 'true');
@@ -43,7 +44,7 @@ export default function CookieConsentBanner() {
     setShowBanner(false);
   };
 
-  if (!mounted || !showBanner || isStudioRoute) return null;
+  if (!mounted || !showBanner || isStudioRoute || isIntroRoute) return null;
 
   return (
     <div className={styles.container} role="dialog" aria-label="Cookie consent" data-hide-on-studio="true">

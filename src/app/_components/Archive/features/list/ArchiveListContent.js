@@ -271,7 +271,7 @@ export default function ArchiveListContent() {
                   />
                 </ScrollContainerWrapper>
               )
-            ) : !isInitialLoading && !isRefreshing ? (
+            ) : !isInitialLoading && !isRefreshing && !hasMore ? (
               <div className={styles.archiveEmptyState} role="status">
                 <p>
                   {searchStatus?.query
