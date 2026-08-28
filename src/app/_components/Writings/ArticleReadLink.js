@@ -15,7 +15,7 @@ export default function ArticleReadLink({ slug, title, className }) {
   useEffect(() => {
     const progress = getReadingProgress(slug);
     if (progress === null || progress < MIN_MEANINGFUL_PROGRESS) return;
-    setLabel(progress >= DONE_THRESHOLD ? 'Read again' : `Continue — ${progress}%`);
+    setLabel(progress >= DONE_THRESHOLD ? 'Read again' : `Continue - ${progress}%`);
   }, [slug]);
 
   return (
