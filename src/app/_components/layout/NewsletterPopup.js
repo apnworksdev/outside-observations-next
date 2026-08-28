@@ -40,7 +40,19 @@ export default function NewsletterPopup({ title, description }) {
       data-visible-on-mobile={isHome}
       data-open={showOpenContent}
     >
-      {showOpenContent ? (
+      {/* The trigger stays visible while the panel is open (panel drops below it). */}
+      {!isReturningHome && (
+        <button
+          type="button"
+          className={styles.navBubble}
+          onClick={() => setIsOpen((open) => !open)}
+          aria-expanded={isOpen}
+          aria-label={isOpen ? 'Close newsletter signup' : 'Open newsletter signup'}
+        >
+          Newsletter
+        </button>
+      )}
+      {showOpenContent && (
         <div className={styles.newsletterPopupOpenContent}>
           {showCloseButton && (
             <button
@@ -61,15 +73,6 @@ export default function NewsletterPopup({ title, description }) {
             </div>
           </div>
         </div>
-      ) : (
-        <button
-          type="button"
-          className={styles.navBubble}
-          onClick={() => setIsOpen(true)}
-          aria-label="Open newsletter signup"
-        >
-          Newsletter
-        </button>
       )}
     </div>
   );

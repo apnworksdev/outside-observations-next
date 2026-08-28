@@ -8,6 +8,12 @@ import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
 const baseUrl = SITE_URL;
 
 export const metadata = {
+  robots: {
+    index: true,
+    follow: true,
+    noimageindex: true,
+    'max-image-preview': 'none',
+  },
   title: `Widline Cadet | ${SITE_NAME}`,
   description: 'Artist collaboration with Widline Cadet.',
   openGraph: {

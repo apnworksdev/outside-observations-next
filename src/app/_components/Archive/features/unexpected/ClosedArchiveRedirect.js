@@ -10,6 +10,18 @@ import { isInClosedHours } from '@/lib/closedArchiveHours';
  * Always renders the same wrapper + children (no null) so server and client match.
  * When a redirect is pending we hide content with CSS so the user never sees a flash.
  */
+/**
+ * Crawlers render JavaScript: a bot passing during the closed window would see
+ * /archive redirect away and could deindex it. The closing ritual is for human
+ * visitors only.
+ */
+function isCrawler() {
+  return (
+    typeof navigator !== 'undefined' &&
+    /bot|crawler|spider|crawling|googlebot|bingbot|duckduckbot|baiduspider|yandex/i.test(navigator.userAgent)
+  );
+}
+
 export default function ClosedArchiveRedirect({ children }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -20,7 +32,7 @@ export default function ClosedArchiveRedirect({ children }) {
   }, []);
 
   useEffect(() => {
-    if (!mounted || !pathname.startsWith('/archive') || pathname.startsWith('/archive/entry/')) {
+    if (isCrawler() || !mounted || !pathname.startsWith('/archive') || pathname.startsWith('/archive/entry/')) {
       return;
     }
     const closed = isInClosedHours();
@@ -32,7 +44,7 @@ export default function ClosedArchiveRedirect({ children }) {
   }, [mounted, pathname, router]);
 
   const isArchiveEntryPage = pathname.startsWith('/archive/entry/');
-  const closed = mounted && pathname.startsWith('/archive') ? isInClosedHours() : false;
+  const closed = mounted && !isCrawler() && pathname.startsWith('/archive') ? isInClosedHours() : false;
   const shouldRedirect = isArchiveEntryPage
     ? false
     : pathname === '/archive/closed'

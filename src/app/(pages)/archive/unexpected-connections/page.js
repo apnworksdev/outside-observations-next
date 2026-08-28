@@ -6,6 +6,12 @@ import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
 const baseUrl = SITE_URL;
 
 export const metadata = {
+  robots: {
+    index: true,
+    follow: true,
+    noimageindex: true,
+    'max-image-preview': 'none',
+  },
   title: `Unexpected Connections | ${SITE_NAME}`,
   description:
     `Explore unexpected connections between archive entries. Discover new pairings from ${SITE_NAME}.`,
