@@ -70,6 +70,14 @@ body {
   transition: opacity var(--transition-time) var(--transition-effect);
 }
 
+/* Writings pages are ordinary flowing documents: they scroll with the page,
+   unlike the archive views which scroll inside their own containers.
+   `visible` (not `auto`): making body its own scroll container would trap the
+   wheel, since overscroll-behavior: none blocks chaining up to the document. */
+body[data-page="writings"] {
+  overflow: visible;
+}
+
 /* Show content after hydration (except home page - GSAP controls it completely) */
 body.hydrated {
   opacity: 1;

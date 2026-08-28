@@ -56,6 +56,36 @@ export const structure = (S, context) =>
       //   (listItem) => !['siteSettings', 'archiveEntry'].includes(listItem.getId())
       // ),
 
+      // Writings (editorial section)
+      S.listItem()
+        .title('Writings')
+        .icon(() => '✍️')
+        .child(
+          S.list()
+            .title('Writings')
+            .items([
+              S.listItem()
+                .title('Articles')
+                .schemaType('writingArticle')
+                .child(
+                  S.documentTypeList('writingArticle')
+                    .title('Articles')
+                    .defaultOrdering([{field: 'publishedAt', direction: 'desc'}])
+                ),
+              S.listItem()
+                .title('Authors')
+                .schemaType('author')
+                .child(S.documentTypeList('author').title('Authors')),
+              S.listItem()
+                .title('Page Settings')
+                .child(
+                  S.document()
+                    .schemaType('writingsSettings')
+                    .documentId('writingsSettings')
+                ),
+            ])
+        ),
+
       // Site Settings as a singleton - appears as a direct item
       S.listItem()
         .title('Site Settings')

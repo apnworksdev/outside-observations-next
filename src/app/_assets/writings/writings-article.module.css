@@ -1,0 +1,396 @@
+/* Writing article — collage layout on the site's column grid. */
+
+.container {
+  padding: 0 var(--padding) calc(var(--padding) * 6);
+}
+
+/* Each article in the continuous reader keeps the same top offset, so scrolling
+   from one to the next feels like one uninterrupted document. */
+.article {
+  padding-top: var(--archive-container-top-margin);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  column-gap: var(--column-gap);
+  margin-bottom: calc(var(--padding) * 6);
+}
+
+.title {
+  grid-column: 5 / 9;
+  margin: 0;
+  max-width: 360px;
+  justify-self: center;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 30px;
+  line-height: normal;
+  font-weight: var(--font-weight);
+}
+
+.byline {
+  grid-column: 5 / 9;
+  margin: calc(var(--padding) * 1.5) 0 0;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 10px;
+  color: #000000;
+}
+
+.date {
+  display: block;
+}
+
+/* ------------------------------- Body ---------------------------- */
+
+/* One section per row: the body stacks vertically, and each section is itself
+   a grid on the site's columns so its content lands on the right vertical
+   lines. (A single shared grid would pack non-overlapping blocks side by side.) */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--padding) * 3);
+}
+
+.textSection {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  column-gap: var(--column-gap);
+  margin: 0;
+}
+
+.textSection {
+  text-align: justify;
+  hyphens: auto;
+  /* Body copy reads at 12px, above the site's 10px UI size. */
+  font-size: 12px;
+  line-height: 13px;
+}
+
+.textSection p {
+  margin: 0 0 1em;
+}
+
+.textSection p:last-child {
+  margin-bottom: 0;
+}
+
+/* Both kinds of in-text link read the same: underlined. */
+.textSection a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* Column bands come from the page component (positions + per-block shift),
+   as CSS variables — one rule instead of one per position. */
+.sectionInner {
+  grid-column: var(--col-start, 3) / var(--col-end, 11);
+  /* Air between the text and the guide lines, as in the mockup: a block
+     starting on a line must not sit glued against it. */
+  padding-inline: calc(var(--column-width) / 3);
+}
+
+/* Two-column text: set data-columns="2" on the section when needed. */
+.textSection[data-columns='2'] .sectionInner {
+  columns: 2;
+  column-gap: var(--column-gap);
+}
+
+/* Inline link that reveals an image while hovered (or focused): the article's
+   images live inside the text rather than as standalone blocks. */
+.hoverImageLink {
+  position: relative;
+  text-decoration: underline;
+}
+
+.hoverImageFigure {
+  position: absolute;
+  left: 0;
+  z-index: 20;
+  display: block;
+  /* Sized from the image's aspect ratio against a height budget: a portrait
+     image narrows instead of running off the top of the window. */
+  width: min(460px, calc(50vh * var(--hover-image-ratio, 1)), 80vw);
+  background-color: var(--bg-color);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-time) var(--transition-effect);
+  pointer-events: none;
+  line-height: 0;
+}
+
+/* Above the text by default, below it when the link sits near the top of the
+   window (placement is decided in HoverImageLink). */
+.hoverImageFigure[data-placement='above'] {
+  bottom: calc(100% + 8px);
+}
+
+.hoverImageFigure[data-placement='below'] {
+  top: calc(100% + 8px);
+}
+
+.hoverImageLink:hover .hoverImageFigure,
+.hoverImageLink:focus-visible .hoverImageFigure,
+.hoverImageLink[data-open='true'] .hoverImageFigure {
+  opacity: 1;
+  visibility: visible;
+}
+
+.hoverImageFigure img {
+  width: 100%;
+  height: auto;
+}
+
+/* Caption sits above the image, like a file label. */
+.hoverImageCaption {
+  display: block;
+  margin-bottom: 6px;
+  line-height: var(--line-height);
+  text-align: left;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------ Footer --------------------------- */
+
+.footer {
+  margin-top: calc(var(--padding) * 8);
+  display: grid;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  column-gap: var(--column-gap);
+  row-gap: calc(var(--padding) * 6);
+}
+
+/* A band across the page: hairlines top and bottom, three labels, and dots
+   where the grid's vertical lines cross it. */
+.footerNav {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: center;
+  position: relative;
+  border-top: 1px solid var(--light-gray-color);
+  border-bottom: 1px solid var(--light-gray-color);
+  /* Fixed height: the dot markers derive their own height from it, so they
+     always reach both hairlines whatever the text line-height. */
+  --footer-band-height: 27px;
+  height: var(--footer-band-height);
+}
+
+.footerNav a {
+  text-decoration: none;
+}
+
+.footerNavRight a {
+  text-decoration: underline;
+}
+
+/* All three labels share the band's single row. The explicit grid-row matters:
+   the dot markers also sit on row 1, and without it auto-placement pushes a
+   colliding label onto a second row, outside the band. */
+.footerNavLeft {
+  grid-column: 4 / 6;
+  grid-row: 1;
+  padding-left: calc(14px - var(--column-gap-half));
+}
+
+.footerNavCenter {
+  grid-column: 6 / 9;
+  grid-row: 1;
+  padding-left: calc(14px - var(--column-gap-half));
+}
+
+/* The Share control: a button dressed as the footer's other labels. */
+.footerShare {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+
+.footerNavRight {
+  grid-column: 9 / 12;
+  grid-row: 1;
+  padding-left: calc(14px - var(--column-gap-half));
+}
+
+/* The marker spans the band's full inner height (negative margins cancel the
+   band padding) so its dots land exactly on the top and bottom hairlines.
+   The horizontal offset is half a column gap: the site's vertical lines are
+   drawn in the middle of the gutters, not on the column edges. */
+/* Placed by the grid horizontally (accurate, unlike a 100vw-based calc which
+   drifts with the scrollbar), stretched vertically to the band's inner height.
+   The dots are pulled back half a gutter: the site's visible vertical lines run
+   through the middle of the gutters, not along the column edges. */
+.footerDot {
+  grid-column: var(--line);
+  grid-row: 1;
+  justify-self: start;
+  align-self: start;
+  position: relative;
+  width: 0;
+  /* band height minus its two hairlines */
+  height: calc(var(--footer-band-height) - 2px);
+  pointer-events: none;
+}
+
+.footerDot::before,
+.footerDot::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--column-gap-half) * -1);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #030303;
+  transform: translateX(-50%);
+}
+
+.footerDot::before {
+  top: -3px;
+}
+
+.footerDot::after {
+  bottom: -3px;
+}
+
+/* Closing title block: visually the heading of the article that follows. */
+.footerTitleBlock {
+  grid-column: 5 / 9;
+  text-align: center;
+  text-transform: uppercase;
+  padding-top: calc(var(--padding) * 6);
+  padding-bottom: calc(var(--padding) * 6);
+}
+
+/* Mirrors .title: in the continuous reader this teaser IS the next article's
+   heading, so the two must stay identical. */
+.footerTitle {
+  margin: 0;
+  max-width: 360px;
+  margin-inline: auto;
+  font-size: 30px;
+  line-height: normal;
+}
+
+.footerByline {
+  margin: calc(var(--padding) * 1.5) 0 0;
+  opacity: 0.6;
+}
+
+/* An appended article starts straight after that title, without the top offset
+   a standalone article page needs. */
+.article + .article {
+  padding-top: 0;
+}
+
+/* ------------------------------ Mobile --------------------------- */
+
+@media screen and (max-width: 768px) {
+  /* No hover on touch: the image opens on tap, centred over the page rather
+     than anchored to the text (there is no room beside a narrow column). */
+  .hoverImageFigure {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: min(86vw, calc(70vh * var(--hover-image-ratio, 1)));
+    transform: translate(-50%, -50%);
+    padding: 8px;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.35);
+  }
+
+  .hoverImageFigure[data-placement='above'],
+  .hoverImageFigure[data-placement='below'] {
+    top: 50%;
+    bottom: auto;
+  }
+
+  /* The band stays, its labels stack centred: articles link above, Share in
+     the middle, the byline below. The dots keep marking the visible grid
+     lines (mobile draws them at the 1|2 and 5|6 boundaries) and stretch to
+     the band's grown height so they stay pinned to both hairlines. */
+  .footerNav {
+    height: auto;
+    min-height: var(--footer-band-height);
+    padding: 6px 0;
+  }
+
+  /* Outside the band, vertically: the articles link above the hairlines,
+     Share inside the band with the dots, the byline below. The hairlines
+     move off the nav onto a pseudo-item spanning only the middle row. */
+  .footerNav {
+    height: auto;
+    border-top: none;
+    border-bottom: none;
+    row-gap: 8px;
+  }
+
+  .footerNav::before {
+    content: '';
+    grid-row: 2;
+    grid-column: 1 / -1;
+    align-self: stretch;
+    border-top: 1px solid var(--light-gray-color);
+    border-bottom: 1px solid var(--light-gray-color);
+  }
+
+  .footerNavLeft,
+  .footerNavCenter,
+  .footerNavRight {
+    grid-column: 1 / -1;
+    justify-self: center;
+    text-align: center;
+    padding-left: 0;
+  }
+
+  .footerNavLeft {
+    grid-row: 1;
+  }
+
+  .footerNavCenter {
+    grid-row: 2;
+    align-self: center;
+    /* sets the band's height: 27px with one 13px line of text */
+    padding-block: 7px;
+  }
+
+  .footerNavRight {
+    grid-row: 3;
+  }
+
+  .footerDot {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: stretch;
+    height: auto;
+  }
+
+  .footerDot + .footerDot {
+    grid-column: 6;
+  }
+
+  .title,
+  .byline,
+  .footerTitleBlock {
+    grid-column: 1 / -1;
+  }
+
+  /* The collage survives on mobile: 4 of 6 columns wide, shifted left,
+     centre or right after the block's desktop position (--col-start-m is
+     computed alongside --col-start in WritingArticleBody). */
+  .textSection .sectionInner {
+    grid-column: var(--col-start-m, 1) / calc(var(--col-start-m, 1) + 4) !important;
+  }
+
+.textSection[data-position='two-columns'] .sectionInner {
+    columns: 1;
+  }
+
+}

@@ -1,0 +1,147 @@
+/* Writings listing — laid out on the site's column grid (12 desktop / 6 mobile). */
+
+.container {
+  --writings-col-inset: calc(var(--column-width) / 3);
+  margin-top: var(--archive-container-top-margin);
+  padding: 0 var(--padding);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--padding) * 8);
+  min-height: calc(100dvh - var(--archive-container-top-margin));
+  padding-bottom: calc(var(--padding) * 4);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  column-gap: var(--column-gap);
+  row-gap: calc(var(--padding) * 2);
+  align-items: start;
+}
+
+.rowLabel {
+  grid-column: 2 / 4;
+  /* Same grid row as the content next to it: auto-placement would push a
+     full-width sibling (the article list) to the next row, dropping the first
+     article title below the section label instead of level with it. */
+  grid-row: 1;
+  margin: 0;
+  text-transform: uppercase;
+  padding-inline: var(--writings-col-inset);
+}
+
+/* Per the mockup, every text block keeps half a column of air on each side of
+   its zone instead of running from guide line to guide line. */
+.aboutText,
+.aboutTextSecond {
+  margin: 0;
+  text-align: justify;
+  hyphens: auto;
+  padding-inline: var(--writings-col-inset);
+}
+
+.aboutText {
+  grid-column: 6 / 9;
+}
+
+.aboutTextSecond {
+  grid-column: 9 / 12;
+}
+
+/* -------------------------- Article list ------------------------- */
+
+.articleList {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: subgrid;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  row-gap: calc(var(--padding) * 3);
+}
+
+.articleRow {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+}
+
+.articleTitle {
+  grid-column: 6 / 9;
+  text-decoration: none;
+  padding-inline: var(--writings-col-inset);
+}
+
+.articleAuthor {
+  grid-column: 9 / 12;
+  padding-inline: var(--writings-col-inset);
+}
+
+.articleRead {
+  grid-column: 12 / 13;
+  justify-self: start;
+  text-decoration: underline;
+  /* A fixed nudge off the guide line, not the column-relative inset: the last
+     column is narrow and the quarter-column gap read as a hole. */
+  padding-left: 6px;
+}
+
+.emptyState {
+  grid-column: 6 / 12;
+  margin: 0;
+  opacity: 0.6;
+}
+
+@media (hover: hover) {
+  .articleTitle:hover,
+  .articleRead:hover {
+    font-style: italic;
+  }
+}
+
+/* ------------------------------ Mobile --------------------------- */
+
+@media screen and (max-width: 768px) {
+  .container {
+    --writings-col-inset: 0px;
+    gap: calc(var(--padding) * 4);
+  }
+
+  .rowLabel {
+    grid-column: 1 / -1;
+    /* Back to its own row: on mobile the label spans the full width, so
+       sharing row 1 with the list overlays the first article title. */
+    grid-row: auto;
+  }
+
+  .articleList {
+    grid-row: auto;
+  }
+
+  .aboutText,
+  .aboutTextSecond {
+    grid-column: 1 / -1;
+  }
+
+  .articleRow {
+    row-gap: 2px;
+  }
+
+  .articleTitle {
+    grid-column: 1 / 5;
+  }
+
+  .articleAuthor {
+    grid-column: 1 / 5;
+    opacity: 0.7;
+  }
+
+  .articleRead {
+    /* Last mobile column, to the right of the guide line. */
+    grid-column: 6 / 7;
+    grid-row: 1;
+    padding-left: 6px;
+  }
+}
