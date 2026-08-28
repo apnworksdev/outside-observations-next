@@ -2,10 +2,6 @@ import { NextResponse } from 'next/server';
 import { client } from '@/sanity/lib/client';
 import { WRITING_ARTICLE_QUERY } from '@/sanity/lib/queries';
 
-/**
- * One article as JSON, for the continuous reader: as the visitor scrolls past
- * the end of an article, the next one is fetched and appended in place.
- */
 export async function GET(request, { params }) {
   try {
     const { slug } = await params;

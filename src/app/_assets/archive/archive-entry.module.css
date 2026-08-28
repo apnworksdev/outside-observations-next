@@ -124,9 +124,6 @@
 
 .archiveEntryModalPosterContainerWithAspect {
   position: relative;
-  /* The height comes from a percentage padding, i.e. from the width, and so
-     ignores the window. Capping the width by the height budget keeps a
-     portrait image inside the screen on short windows. */
   max-width: calc((100dvh - var(--entry-vertical-chrome)) * var(--entry-aspect-ratio, 1));
 }
 
@@ -436,7 +433,6 @@
   right: 3px;
 }
 
-
 @media (max-width: 768px) {
   .archiveEntryContentWrapper {
     display: flex;
@@ -469,7 +465,6 @@
   }
 }
 /* ------------------------------------------------------------ */
-/*        Previous / next navigation between entries            */
 /* ------------------------------------------------------------ */
 
 .archiveEntryPager {
@@ -506,7 +501,6 @@
   }
 }
 
-/* Chevron drawn with the same stroke language as the header's arrow-down. */
 .archiveEntryPagerButton::before {
   content: '';
   position: absolute;
@@ -534,12 +528,6 @@
   transform: translate(-60%, -50%) rotate(-135deg);
 }
 
-/* Mobile: the arrows leave the artwork and sit under it, side by side and
-   thumb-sized. A horizontal swipe does the same job (handled in the component);
-   the left screen edge is left free for the OS back gesture. */
-/* Mobile: the backdrop is a fixed flex row, so the pager stays fixed too and
-   sits just above the metadata bar (fixed, 24px tall, z-index 999) rather than
-   over the artwork. The left screen edge is left free for the OS back gesture. */
 @media screen and (max-width: 768px) {
   .archiveEntryPager {
     top: auto;

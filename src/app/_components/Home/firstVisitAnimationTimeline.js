@@ -50,10 +50,6 @@ export function setupFirstVisitTimeline({
 
   const tl = timeline;
 
-  /* ------------------------- Intro: ring of dots ------------------------- */
-  // Eight dots pop in around the centre, one per beat, while the two mottos
-  // are typed letter by letter between them. The ring then takes one breath
-  // (a staggered pulse) and implodes into the centre.
   const ring = document.querySelector('[data-first-visit-animate="ring"]');
   const dots = ring ? Array.from(ring.querySelectorAll('[data-number]')) : [];
   const introTypingSpeed = 0.045;
@@ -76,7 +72,6 @@ export function setupFirstVisitTimeline({
 
     let end = at + typeDuration;
     if (erase) {
-      // Untyped rather than faded: the cursorless erase reads as one gesture.
       tl.to(proxy, { chars: 0, duration: eraseDuration, ease: 'power1.in', onUpdate: render }, end + 1.1);
       end += 1.1 + eraseDuration;
     }
@@ -84,7 +79,6 @@ export function setupFirstVisitTimeline({
   };
 
   if (dots.length > 0) {
-    // A slow settle of the whole ring while the dots land.
     tl.fromTo(
       ring,
       { rotation: -14, transformOrigin: '50% 50%' },
@@ -102,19 +96,16 @@ export function setupFirstVisitTimeline({
     });
   }
 
-  // First motto types under the first dots, erases, second one follows.
   const createEnd = typeInto(createText, timing.getCircleTime(0) + 0.2);
   typeInto(investText, Math.max(createEnd + 0.1, timing.getCircleTime(4) + 0.2), { erase: false });
 
   const lastCircleTime = timing.getCircleTime(7);
   const lastCircleEndTime = lastCircleTime + circleDuration * 2;
 
-  // One breath once the ring is complete...
   if (dots.length > 0) {
     tl.to(dots, { scale: 1.4, duration: 0.22, ease: 'power2.out', stagger: 0.04, yoyo: true, repeat: 1 }, lastCircleEndTime);
   }
 
-  // ...then each dot shrinks to nothing in place, in the order they arrived.
   const implodeTime = lastCircleEndTime + 0.22 * 2 + 0.04 * dots.length + 0.15;
   const implodeDuration = 0.4;
   if (dots.length > 0) {
@@ -126,26 +117,16 @@ export function setupFirstVisitTimeline({
   }
   tl.to(investText, { opacity: 0, duration: circleFadeOutDuration, ease: 'power1.in' }, implodeTime + implodeDuration - 0.1);
 
-  // The stagger means the last dot finishes well after the first one.
   const hiddenCirclesTime = implodeTime + implodeDuration + 0.06 * dots.length;
 
-  // The ring is gone: the lines drop and the header fades back while the
-  // caller is already navigating to the archive. These two tweens run
-  // standalone (not as children of the timeline) because the timeline is
-  // killed when the home page unmounts mid-navigation -- as children they
-  // would freeze halfway.
   tl.call(() => {
     if (linesGrid) {
       gsap.to(linesGrid, { transform: 'translateY(0%)', duration: linesDuration, ease: 'power2.inOut' });
     }
     if (header) {
-      // clearProps: the inline opacity must not outlive the intro, the header
-      // element is shared with every other page.
       gsap.to(header, { opacity: 1, duration: headerFadeDuration, delay: 0.25, ease: 'power1.out', clearProps: 'opacity' });
     }
   }, null, hiddenCirclesTime + 0.1);
 
-  // Completion (and with it the navigation) fires the moment the ring is gone,
-  // so the archive renders behind the still-descending lines.
   tl.set({}, {}, hiddenCirclesTime + 0.05);
 }

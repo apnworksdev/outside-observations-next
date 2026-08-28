@@ -40,7 +40,6 @@ export default function NewsletterPopup({ title, description }) {
       data-visible-on-mobile={isHome}
       data-open={showOpenContent}
     >
-      {/* The trigger stays visible while the panel is open (panel drops below it). */}
       {!isReturningHome && (
         <button
           type="button"

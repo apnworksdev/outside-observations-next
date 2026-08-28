@@ -60,7 +60,6 @@
   min-width: 0;
 }
 
-
 .itemColumn {
   background-color: var(--item-background-color);
   width: calc(100% + 6px);
@@ -260,12 +259,6 @@
 
 .container[data-view="images"] .containerContent {
   display: grid;
-  /* True zoom, flush edges. The cells stretch to fill the row (1fr), so the
-     grid keeps identical margins left and right whatever the size. The image
-     inside is capped at the slider's exact width and centred in its cell, so
-     its size is purely the slider value -- when the column count drops it is
-     the whitespace between images that redistributes, never the image itself.
-     min() keeps a large setting from overflowing a narrow window. */
   grid-template-columns: repeat(auto-fill, minmax(min(var(--archive-thumb-min, 220px), 100%), 1fr));
   column-gap: var(--column-gap);
   row-gap: calc(var(--column-gap) * 10);
@@ -294,12 +287,9 @@
 
 .container[data-view="images"] .archiveEntryImageContainer {
   width: 100%;
-  /* The cell may be wider than the requested size; the image is not. */
   max-width: min(var(--archive-thumb-min, 220px), 100%);
   margin-inline: auto;
   height: 100%;
-  /* Grid items default to min-width: auto, so a narrow span could not shrink
-     below the image's intrinsic width and pushed the grid wider than the page. */
   min-width: 0;
   padding: 0 var(--responsive-padding);
   position: relative;
@@ -463,8 +453,6 @@
   animation: archiveLoadingPulse 1.2s ease-in-out infinite;
 }
 
-/* Empty grid: a filtered search with zero matches, or an archive with no
-   published entries at all. */
 .archiveEmptyState {
   padding: calc(var(--padding) * 6) var(--padding);
   text-align: center;
@@ -506,10 +494,7 @@
 }
 
 @media (max-width: 768px) {
-  /* Open drawer: one extra menu row plus the newsletter row that joins it
-     (it used to be a 5-item vertical stack, hence the old, larger offset). */
   :global(body.mobile-nav-open) .container {
-    /* one wrapped menu row (+8 gap) and the newsletter row (+1 gap) */
     margin-top: calc(var(--archive-container-top-margin) + (var(--bubble-height) + 8px) * 2);
   }
 
@@ -546,8 +531,6 @@
   }
 
   .container[data-view="images"] .containerContent {
-    /* Narrower range than desktop, so the slider can still reach one image
-       per row on a phone (see ArchiveThumbnailSizer). */
     grid-template-columns: repeat(auto-fill, minmax(min(var(--archive-thumb-min-mobile, 170px), 100%), 1fr));
     row-gap: calc(var(--column-gap) * 2);
     padding-left: 5px;
@@ -557,8 +540,6 @@
 
   .container[data-view="images"] .archiveEntryImageContainer {
     max-width: min(var(--archive-thumb-min-mobile, 170px), 100%);
-    /* Desktop rows are 320px tall; mobile images are ~100-140px, so shrink
-       the row height to kill the dead air above the first images. */
     contain-intrinsic-size: 200px;
   }
 

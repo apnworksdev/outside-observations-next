@@ -65,7 +65,6 @@ export default function ArchiveEntryJsonLd({ entry, slug }) {
     ...(year ? { dateCreated: String(year) } : {}),
     ...(entry._createdAt ? { datePublished: entry._createdAt } : {}),
     ...(entry._updatedAt ? { dateModified: entry._updatedAt } : {}),
-    // The artist is the creator; the site is the archive presenting the work.
     creator: artistName
       ? { '@type': 'Person', name: artistName }
       : { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },

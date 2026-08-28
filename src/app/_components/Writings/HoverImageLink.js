@@ -5,25 +5,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import styles from '@app/_assets/writings/writings-article.module.css';
 import SanityImage from '@/sanity/components/SanityImage';
 
-/**
- * Text that reveals its image while hovered. The image normally sits above the
- * text; when the link is too close to the top of the window it flips below, so
- * the image is never cut off by the edge of the screen.
- */
 const MAX_WIDTH = 460;
 const MAX_HEIGHT_RATIO = 0.5;
 
 export default function HoverImageLink({ image, caption, children }) {
   const [placement, setPlacement] = useState('above');
-  // Touch devices have no hover: there, a tap opens the image as a centred
-  // overlay and a second tap (or a tap outside) closes it.
   const [isOpen, setIsOpen] = useState(false);
   const linkRef = useRef(null);
   const ratio = image?.dimensions?.aspectRatio || 1;
 
-  // Size is handled in CSS from the aspect ratio, so a portrait image shrinks
-  // instead of overflowing even before this runs. Here we only decide whether
-  // there is room above the text, and flip the image below when there is not.
   const choosePlacement = useCallback(() => {
     const node = linkRef.current;
     if (!node) {

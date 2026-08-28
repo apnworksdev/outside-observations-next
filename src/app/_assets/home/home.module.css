@@ -5,8 +5,6 @@
 /* ------------------------------------------------------------ */
 
 .circleContainer {
-  /* Overlay: the ring floats above the page during the intro and never takes
-     part in the layout under it. */
   position: fixed;
   top: 0;
   left: 0;

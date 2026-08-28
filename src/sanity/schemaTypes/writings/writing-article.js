@@ -1,12 +1,5 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
-/**
- * Editorial article ("Writings" section).
- *
- * The body is a sequence of blocks the editor composes: text blocks carry a
- * layout position (the collage-style columns of the design), image blocks an
- * alignment. The front-end maps those positions onto the site's column grid.
- */
 export const writingArticle = defineType({
   name: 'writingArticle',
   title: 'Writing',

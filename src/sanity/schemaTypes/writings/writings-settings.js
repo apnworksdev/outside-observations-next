@@ -1,6 +1,5 @@
 import {defineField, defineType} from 'sanity'
 
-/** Singleton: the intro texts of the /writings listing page. */
 export const writingsSettings = defineType({
   name: 'writingsSettings',
   title: 'Writings Settings',

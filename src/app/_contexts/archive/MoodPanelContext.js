@@ -4,13 +4,6 @@ import { createContext, useCallback, useContext, useMemo, useState } from 'react
 
 const MoodPanelContext = createContext(null);
 
-/**
- * MoodPanelProvider - global open state for the moodboard visualizer.
- *
- * The panel itself needs ArchiveEntriesProvider (archive layout only), while the
- * trigger lives in the header (root layout). Keeping the boolean here lets the
- * header open the panel from any page, mirroring ArchiveSearchStateProvider.
- */
 export function MoodPanelProvider({ children }) {
   const [isMoodPanelOpen, setIsMoodPanelOpen] = useState(false);
 

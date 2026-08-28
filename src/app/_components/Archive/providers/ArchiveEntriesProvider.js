@@ -325,8 +325,6 @@ export default function ArchiveEntriesProvider({
   }, [pageSize, searchResults, selectedMoodTags, sorting]);
 
   useEffect(() => {
-    // Entry pages need the same list loaded: the pager walks it to offer
-    // previous / next within the visitor's current filters.
     const needsArchiveList = pathname === '/archive' || pathname.startsWith('/archive/entry/');
     if (!needsArchiveList) {
       return;

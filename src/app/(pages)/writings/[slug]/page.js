@@ -28,7 +28,6 @@ const getCachedArticle = (slug) =>
     { revalidate: 60 }
   )();
 
-/** Reading order, shared by every article page (drives the continuous reader). */
 const getCachedOrder = unstable_cache(
   async () => {
     try {

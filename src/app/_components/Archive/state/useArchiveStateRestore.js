@@ -17,17 +17,10 @@ export function useRestoreArchiveState({
       return;
     }
 
-    // Entry pages share this provider, and the pager walks the same filtered
-    // list, so the stored filters must be restored there too.
     if (pathname !== '/archive' && !pathname.startsWith('/archive/entry/')) {
       return;
     }
 
-    // On the archive index the URL is the single source of truth for the
-    // search: /archive without ?search= means no search, whatever the session
-    // storage still holds (a stale filter here silently empties the grid with
-    // a blank field). Entry pages have no search param, so they still restore
-    // -- the pager needs the filtered list.
     const urlQuery =
       pathname === '/archive'
         ? new URLSearchParams(window.location.search).get('search')?.trim()

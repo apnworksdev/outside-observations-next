@@ -84,7 +84,6 @@ export function middleware(request) {
   const pageType = resolvePageType(pathname)
   const response = NextResponse.next()
 
-  // Preview deployments must never be indexed (they mirror production content).
   const host = request.headers.get('host') || ''
   if (host.endsWith('.netlify.app')) {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow')

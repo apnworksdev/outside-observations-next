@@ -4,11 +4,6 @@ import styles from '@app/_assets/archive/archive-navigation.module.css';
 import { useMoodPanel } from '@/app/_contexts/archive/MoodPanelContext';
 import ArchiveNavigationMoodPanel from './ArchiveNavigationMoodPanel';
 
-/**
- * Renders the moodboard visualizer inside the archive layout, where
- * ArchiveEntriesProvider is available. Opening is driven from the header
- * dropdown through MoodPanelContext.
- */
 export default function MoodPanelHost() {
   const { isMoodPanelOpen, closeMoodPanel } = useMoodPanel();
 

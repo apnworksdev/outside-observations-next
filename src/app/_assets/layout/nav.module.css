@@ -53,9 +53,6 @@
   pointer-events: none;
 }
 
-/* Row 1: logo | centered menu | search + newsletter + live count.
-   Sized so the row's vertical middle matches the logo's middle
-   (logo: 34px from the top, 41px tall => centre at 54.5px, minus 9px padding). */
 .headerTopRow {
   display: flex;
   align-items: center;
@@ -130,8 +127,6 @@
     text-transform: uppercase;
   }
 
-  /* Header menu items keep their text still on hover; only the active
-     item carries the doubled padding (room for its ● dot). */
   .navNavigation .navLi:not([data-active="true"]) .navLink:hover {
     padding-left: var(--padding);
   }
@@ -172,7 +167,6 @@
   top: 50%;
   transform: translateY(-50%);
   left: var(--padding);
-  /* 4px dot, pure black, 5px before the label (label starts at 2 * padding = 18px) */
   width: 4px;
   height: 4px;
   border-radius: 50%;
@@ -249,7 +243,6 @@
 
 /* ------------------------------------------------------------ */
 
-/* Thumbnail size slider, next to the view toggle (images view only). */
 .thumbSizer {
   display: none;
   align-items: center;
@@ -286,14 +279,10 @@
   cursor: pointer;
 }
 
-/* The slider only makes sense in the image grid. */
 :global(body[data-page="archive"]) .archiveNavOptions[data-view="list"] .thumbSizer {
   display: none;
 }
 
-/* The archive view controls carry the same 4px radius as the menu bubbles. */
-/* Wrapper around the featured pill. Transparent on desktop; on mobile it
-   claims a full row so the pill drops below the View controls. */
 .featuredNavRow {
   display: contents;
 }
@@ -303,7 +292,6 @@
   border-radius: var(--border-radius);
 }
 
-/* Featured collaboration pill, sitting with the archive view controls. */
 .featuredNavBubble {
   border-radius: var(--border-radius);
   white-space: nowrap;
@@ -325,7 +313,6 @@
   }
 }
 
-/* On the tinted collaboration page the pill follows that page's greys. */
 :global(body[data-page="widline-cadet"]) .featuredNavBubble[data-active="true"] {
   background-color: var(--nav-widline-active-color);
 }
@@ -340,7 +327,6 @@
 .archiveNavOptions {
   display: none;
   width: fit-content;
-  /* 28px below the logo (logo: top 34px + height 41px) */
   position: fixed;
   top: calc(34px + 41px + 28px);
   left: var(--padding);
@@ -479,9 +465,6 @@
   background-color: #a5a5a5;
 }
 
-/* Widline Cadet page: same treatment as the unexpected-connections theme —
-   every bubble is visible over the artwork, so they all take the radius, and
-   the active / hover states need a darker tone than the default light grey. */
 :global(body[data-page="widline-cadet"]) .navNavigation .navBubble,
 :global(body[data-page="widline-cadet"]) .navDropdownMenu .navBubble {
   border-radius: var(--border-radius);
@@ -509,12 +492,6 @@
   color: var(--white-color);
 }
 
-/* Dark page: the bubbles are already dark on a light background (rule above).
-   Only the active state and the hover need adapting: the light-grey treatments
-   from the default theme are invisible here. */
-
-/* Every bubble is visible here (not just the active one), so they all get
-   the 4px radius. */
 :global(body[data-page="unexpected-connections"]) .navNavigation .navBubble,
 :global(body[data-page="unexpected-connections"]) .navDropdownMenu .navBubble {
   border-radius: var(--border-radius);
@@ -553,7 +530,6 @@
 
   .header {
     padding: var(--responsive-padding);
-    /* match the image grid's 10px side margins */
     padding-left: 10px;
     padding-right: 10px;
   }
@@ -700,7 +676,6 @@
   z-index: 2;
 }
 
-/* Open panel drops below the trigger, which stays visible and clickable. */
 .newsletterPopupWrapper[data-open="true"] .newsletterPopupOpenContent {
   position: absolute;
   top: calc(100% + var(--gap) * 4);
@@ -790,8 +765,6 @@
 
 /* ------------------------------------------------------------ */
 
-/*                    HEADER BAR (2026 MENU)                    */
-
 /* ------------------------------------------------------------ */
 
 .navLogo {
@@ -809,14 +782,11 @@
   display: block;
 }
 
-/* Inert placeholder items (pages not built yet): same look, no action */
 .navLiDisabled .navLink {
   cursor: default;
   pointer-events: auto;
 }
 
-/* Menu items read as plain text; the bubble appears on the active page,
-   on hover, and on the open dropdown (matches the 2026 design). */
 .navNavigation .navBubble {
   background-color: transparent;
   color: var(--nav-text-color);
@@ -844,14 +814,11 @@
   top: 50%;
   transform: translateY(-50%);
   left: var(--padding);
-  /* 4px dot, pure black, 5px before the label (label starts at 2 * padding = 18px) */
   width: 4px;
   height: 4px;
   border-radius: 50%;
   background-color: #000000;
 }
-
-/* ---------------------------- Dropdown ---------------------- */
 
 .navDropdown {
   position: relative;
@@ -866,7 +833,6 @@
   cursor: pointer;
 }
 
-/* Figma arrow-down asset (7x4), masked so it follows currentColor */
 .navDropdownChevron {
   width: 7px;
   height: 4px;
@@ -918,15 +884,12 @@
   pointer-events: auto;
 }
 
-/* ------------------------- Utilities ------------------------ */
-
 .headerUtilities {
   flex: 1 1 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 16px;
-  /* Never narrower than its content, so it can't overlap the centered menu. */
   min-width: max-content;
   pointer-events: auto;
 }
@@ -947,7 +910,6 @@
   display: flex;
   align-items: center;
   height: var(--bubble-height);
-  /* 60px of air on both sides at full width, shrinking on narrower viewports */
   margin: 0 clamp(12px, 3vw, 60px);
   min-width: 0;
 }
@@ -972,7 +934,6 @@
   opacity: 1;
 }
 
-/* Native (blue) search-cancel cross replaced by a discreet one, shown on hover/focus */
 .headerSearchInput::-webkit-search-cancel-button {
   -webkit-appearance: none;
   appearance: none;
@@ -996,12 +957,9 @@
   opacity: 1;
 }
 
-
 .headerSearchInput[data-searching="true"] {
   opacity: 0.5;
 }
-
-/* --------------------- Live visitor count ------------------- */
 
 .headerVisitorCount {
   border-radius: var(--border-radius);
@@ -1024,7 +982,6 @@
   flex-shrink: 0;
 }
 
-/* Intermediate widths: tighten the header so everything keeps fitting */
 @media screen and (max-width: 1280px) {
   .navNavigation :global(menu) {
     gap: 10px;
@@ -1043,8 +1000,6 @@
   }
 }
 
-/* Between the mobile drawer (768px) and 900px the top row can't hold
-   everything: the search moves under the logo, next to the View toggle. */
 @media screen and (min-width: 769px) and (max-width: 900px) {
   .headerSearch {
     position: fixed;
@@ -1053,7 +1008,6 @@
     margin: 0;
   }
 
-  /* On archive pages the View toggle owns the left edge; sit to its right. */
   :global(body[data-page="archive"]) .headerSearch {
     left: 215px;
   }
@@ -1061,21 +1015,13 @@
 
 /* ------------------------------------------------------------ */
 
-/*               HEADER BAR: MOBILE OVERRIDES                   */
-
 /* ------------------------------------------------------------ */
 
 @media screen and (max-width: 768px) {
-  /* One shared wrap for the drawer. The menu items and the newsletter flow in
-     the same rows, so Newsletter sits next to Shop when there is room instead
-     of taking a line of its own. This needs them to be siblings, hence the
-     display: contents on the two wrappers below: it dissolves their boxes and
-     promotes their children to items of this row. */
   .headerTopRow {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
-    /* 8px both ways: the drawer's own rhythm, and the gap under the logo row */
     gap: 8px;
   }
 
@@ -1104,20 +1050,16 @@
     background-color: var(--light-gray-color);
   }
 
-  /* Dissolved too, so the newsletter joins the menu's wrap. The search and the
-     live count are position: fixed below, so they leave the flow anyway. */
   .headerUtilities {
     display: contents;
   }
 
   .headerVisitorCount {
     position: fixed;
-    /* centred on the logo's middle, like the Menu button and the search */
     top: calc(var(--responsive-padding) + (41px - var(--bubble-height)) / 2);
     right: 10px;
   }
 
-  /* Newsletter belongs to the drawer on mobile: no room on the logo row. */
   .headerUtilities .newsletterPopupWrapper {
     display: none;
   }
@@ -1136,7 +1078,6 @@
     background-color: var(--light-gray-color);
   }
 
-  /* Search sits on the logo row, right of the Menu button. */
   .headerSearch {
     display: flex;
     position: fixed;
@@ -1145,12 +1086,6 @@
     margin: 0;
   }
 
-  /* The archive View toggle row flows below the drawer: it slides down when
-     the menu opens and back up when it closes, always visible. */
-  /* Widline Cadet is the widest pill and the last one: it ran off the right
-     edge on a narrow phone. It now always takes the second row, so the grid's
-     top margin can account for it (see variables.css) instead of guessing
-     whether a flex-wrap happened. */
   .archiveNavOptions {
     position: static;
     margin-top: 20px;
@@ -1165,17 +1100,11 @@
     display: flex;
   }
 
-  /* The drawer opens right under the logo row; when open it overlays the
-     toggle row (higher z-index) instead of being pushed below it. */
   .navTitleContainer {
     gap: 10px;
     align-items: center;
   }
 
-  /* The submenu is in the flow on mobile and takes a row of its own, pushing
-     the View toggle row and the grid down. As an overlay it covered the very
-     items it had just revealed. display: contents promotes the trigger and the
-     panel to siblings of the menu items, so the panel can claim a full row. */
   .navDropdown {
     display: contents;
   }
@@ -1189,8 +1118,6 @@
     overflow: visible;
   }
 
-  /* The legacy per-page collapse squeezes the flex items to zero; min-height
-     is the one dimension flex can't shrink below. */
   :global(body.mobile-nav-open) .navNavigation .navLi {
     height: var(--bubble-height) !important;
     min-height: var(--bubble-height) !important;
@@ -1198,7 +1125,6 @@
     overflow: visible;
   }
 
-  /* Closed: only the permanent Archive pill (archive pages) stays. */
   :global(body:not(.mobile-nav-open)) .navNavigation .navLi {
     display: none;
   }
@@ -1209,15 +1135,11 @@
     display: flex;
   }
 
-  /* The submenu overlays (no reflow of the drawer). NavDropdown nudges it
-     back into view when it would run past the right edge. */
   .navDropdownMenu {
     position: static;
-    /* Its own full row, right under the trigger. */
     flex: 0 0 100%;
     flex-direction: row;
     flex-wrap: wrap;
-    /* 8px, the drawer's rhythm: 1px made the two pills read as a single block. */
     gap: 8px;
     margin: 0;
     padding-left: 0;

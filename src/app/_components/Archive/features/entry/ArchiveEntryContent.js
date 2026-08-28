@@ -3,10 +3,6 @@ import ArchiveEntryVideo from './ArchiveEntryVideo';
 import { ProtectedMediaWrapper } from './ProtectedMediaWrapper';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 
-/**
- * Alt text: the AI description (clamped ~125 chars for screen readers) beats
- * the bare title; falls back to "artName — source".
- */
 function resolveEntryAlt(entry) {
   const described = (entry?.aiDescription || '').trim();
   if (described) {

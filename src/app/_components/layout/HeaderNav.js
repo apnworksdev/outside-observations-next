@@ -30,8 +30,6 @@ const MOODBOARD_VISUALIZER_URL = 'https://visualize.outsideobservations.com/';
 export default function HeaderNav({ newsletterTitle, newsletterDescription }) {
   const { openRadio, closeRadio, expandRadio, isOpen: isRadioOpen, isMinimized } = useRadioIframe();
   const pathname = usePathname() ?? '';
-  // Unexpected Connections lives under OO Laboratory now, so it must not light
-  // up Archive even though its URL sits under /archive.
   const isLaboratoryActive = pathname.startsWith(UNEXPECTED_CONNECTIONS_URL);
   const isArchiveActive =
     !isLaboratoryActive && (pathname === '/archive' || pathname.startsWith('/archive/'));
@@ -180,9 +178,6 @@ export default function HeaderNav({ newsletterTitle, newsletterDescription }) {
         <ArchiveViewToggle className={`${styles.archiveNavOption} ${styles.navBubble}`} />
         <ArchiveThumbnailSizer />
         <HelpNav />
-        {/* Featured collaboration, shown alongside the archive view controls.
-            The wrapper is transparent on desktop and claims a full row on
-            mobile, where the pill no longer fits next to the controls. */}
         <div className={styles.featuredNavRow}>
           <Link
             href="/archive/widline-cadet"

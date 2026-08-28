@@ -6,15 +6,6 @@ import { SITE_NAME } from '@/lib/siteUrl';
 import { saveReadingProgress } from '@/app/_helpers/storage/readingProgress';
 import WritingArticleBody from './WritingArticleBody';
 
-/**
- * Continuous reader.
- *
- * The closing band of each article already announces the next one; scrolling
- * past it appends that article in place. The address bar follows whichever
- * article fills the viewport (history.replaceState, so no navigation and no
- * page transition), which keeps every article linkable and reloadable while
- * reading feels like one uninterrupted scroll.
- */
 export default function WritingsReader({ initialArticle, order }) {
   const [articles, setArticles] = useState([initialArticle]);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,9 +45,6 @@ export default function WritingsReader({ initialArticle, order }) {
     }
   }, [nextSummary, isLoading]);
 
-  // Append the next article shortly before the end of the current one.
-  // Listeners go on `document`, not `window`: on these pages the <body> is the
-  // scrolling element, and its scroll events never reach window.
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !nextSummary) {
@@ -71,7 +59,6 @@ export default function WritingsReader({ initialArticle, order }) {
       if (!last) {
         return;
       }
-      // Viewport-relative, so it does not matter which element scrolls.
       if (last.getBoundingClientRect().bottom - window.innerHeight < THRESHOLD) {
         loadNext();
       }
@@ -87,9 +74,6 @@ export default function WritingsReader({ initialArticle, order }) {
     };
   }, [loadNext, nextSummary]);
 
-  // The URL and document title follow the article currently being read. Ratio
-  // thresholds are no help here (an article is far taller than the viewport), so
-  // we simply look for the article crossing the middle of the screen.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) {
@@ -104,9 +88,6 @@ export default function WritingsReader({ initialArticle, order }) {
         const rect = node.getBoundingClientRect();
         if (rect.top <= middle && rect.bottom > middle) {
           current = node.dataset.slug;
-          // Reading progress: how much of this article has passed the bottom
-          // of the viewport. Only the highest value is kept, so scrolling back
-          // up never regresses the bookmark.
           if (rect.height > 0) {
             saveReadingProgress(
               current,

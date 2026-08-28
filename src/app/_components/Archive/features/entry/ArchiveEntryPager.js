@@ -27,7 +27,6 @@ function buildEntryHref(entry) {
     : `/archive/entry/${slug}`;
 }
 
-/** Nearest entry in `step` direction that can actually be linked to. */
 function findNeighbourHref(entries, fromIndex, step) {
   for (let i = fromIndex + step; i >= 0 && i < entries.length; i += step) {
     const href = buildEntryHref(entries[i]);
@@ -39,19 +38,10 @@ function findNeighbourHref(entries, fromIndex, step) {
   return null;
 }
 
-/**
- * Previous / next navigation between entries, without going back to the grid.
- *
- * It walks `visibleEntries`, i.e. the archive list as the visitor currently
- * filtered and sorted it, so search, moods and sorting stay in effect while
- * paging. Reaching the end of the loaded page triggers the same `loadMore`
- * the grid uses, so paging can continue past the first batch.
- */
 export default function ArchiveEntryPager({ slug }) {
   const archive = useArchiveEntriesSafe();
   const router = useRouter();
 
-  // Memoised so the fallback array does not change identity on every render.
   const entries = useMemo(() => archive?.visibleEntries ?? [], [archive?.visibleEntries]);
   const { hasMore, isLoadingMore, loadMore } = archive ?? {};
 
@@ -60,8 +50,6 @@ export default function ArchiveEntryPager({ slug }) {
     [entries, slug]
   );
 
-  // Some rows (visual-essay images, Widline media) carry no slug, so walk past
-  // them instead of dead-ending the arrows.
   const previousHref = useMemo(
     () => (currentIndex < 0 ? null : findNeighbourHref(entries, currentIndex, -1)),
     [entries, currentIndex]
@@ -71,8 +59,6 @@ export default function ArchiveEntryPager({ slug }) {
     [entries, currentIndex]
   );
 
-  // How many extra pages we are willing to pull when the visitor lands straight
-  // on an entry (shared link) that is not in the first loaded page.
   const lookaheadRef = useRef(0);
   const MAX_LOOKAHEAD_PAGES = 3;
 
@@ -83,14 +69,12 @@ export default function ArchiveEntryPager({ slug }) {
 
     if (currentIndex >= 0) {
       lookaheadRef.current = 0;
-      // Near the end of what is loaded: fetch ahead so "next" stays available.
       if (currentIndex >= entries.length - 2) {
         loadMore();
       }
       return;
     }
 
-    // Entry not in the loaded list yet: look a little further before giving up.
     if (entries.length > 0 && lookaheadRef.current < MAX_LOOKAHEAD_PAGES) {
       lookaheadRef.current += 1;
       loadMore();
@@ -106,14 +90,10 @@ export default function ArchiveEntryPager({ slug }) {
     [router]
   );
 
-  // Swipe: pointer events cover real touch, pen, and Chrome's device emulation
-  // (which does not always dispatch touch events, depending on the device-type
-  // setting in the device toolbar).
   const swipeStartRef = useRef(null);
 
   useEffect(() => {
     const SWIPE_MIN_DISTANCE = 60;
-    // Ignore mostly-vertical moves so page scrolling still works.
     const SWIPE_MAX_VERTICAL_RATIO = 0.6;
 
     const isSwipeCapable = (event) =>
@@ -186,7 +166,6 @@ export default function ArchiveEntryPager({ slug }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [goTo, previousHref, nextHref]);
 
-  // Outside the archive list context there is nothing to page through.
   if (!archive || currentIndex < 0) {
     return null;
   }

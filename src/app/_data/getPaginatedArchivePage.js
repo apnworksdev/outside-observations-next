@@ -205,8 +205,6 @@ export async function getPaginatedArchivePage({
   const moodTags = Array.isArray(rawMoodTags)
     ? rawMoodTags.filter((tag) => typeof tag === 'string' && tag.trim().length > 0)
     : [];
-  // A search that matched nothing is still a search: without this flag a
-  // zero-result query would read as "no filter" and return the whole archive.
   const searchActive = rawSearchActive === true || searchIds.length > 0;
 
   const signature = createSignature({ sortColumn, sortDirection, moodTags, searchIds, searchActive });
@@ -242,10 +240,6 @@ export async function getPaginatedArchivePage({
   ]);
   const archiveCount = Number.isFinite(Number(archiveCountRaw)) ? Number(archiveCountRaw) : 0;
 
-  // The Widline Cadet collaboration is a featured insert, fetched without any
-  // filter, so it used to be interleaved even into filtered results -- visitors
-  // read those images as matches for their query. It only belongs in the
-  // unfiltered archive.
   const hasActiveFilter = searchActive || moodTags.length > 0;
   const widlineItems = hasActiveFilter ? [] : toWidlineMediaItems(collaboration);
   const slots = getDeterministicSlots(archiveCount, widlineItems.length, [

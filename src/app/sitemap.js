@@ -47,8 +47,6 @@ export default async function sitemap() {
     },
   ];
 
-  // Deliberately no <image:image> tags: entry pages are indexed, image files
-  // are not (see the robots policy).
   const entryRoutes = entries
     .filter((entry) => entry?.slug && typeof entry.slug === 'string')
     .map((entry) => ({

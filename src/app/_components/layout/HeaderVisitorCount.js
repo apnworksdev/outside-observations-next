@@ -5,11 +5,6 @@ import { useEffect } from 'react';
 import styles from '@app/_assets/layout/nav.module.css';
 import { useVisitorCount } from '@/app/_components/shared/VisitorCountProvider';
 
-/**
- * Live visitor pill in the header ("14 active users").
- * Replaces the "live" item of the former floating archive navigation; the count
- * itself still comes from the global VisitorCountProvider.
- */
 export default function HeaderVisitorCount() {
   const { visitorCount, fetchVisitorCount } = useVisitorCount();
 

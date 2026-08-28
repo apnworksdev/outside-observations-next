@@ -56,7 +56,6 @@ export const structure = (S, context) =>
       //   (listItem) => !['siteSettings', 'archiveEntry'].includes(listItem.getId())
       // ),
 
-      // Writings (editorial section)
       S.listItem()
         .title('Writings')
         .icon(() => '✍️')

@@ -20,24 +20,11 @@ function buildArchiveUrl(query) {
   return query ? `/archive?${SEARCH_PARAM}=${encodeURIComponent(query)}` : '/archive';
 }
 
-// Payload the provider understands as "no search anymore": the grid goes back
-// to the full archive (same shape as an applied search, with the filter off).
 const CLEARED_SEARCH_PAYLOAD = {
   resultsState: { active: false, ids: [], orderedIds: [] },
   statusState: { status: 'idle', query: null, summary: null, error: null },
 };
 
-/**
- * Header text search.
- *
- * Fires on its own once the visitor stops typing (600ms debounce), mirrors the
- * query into the URL (/archive?search=...) so a search can be linked to or
- * returned to directly, and replays the URL's query on first load.
- *
- * The results reuse the very same payload shape the AI chat produces: the
- * archive provider consumes it and filters the grid, so no display logic is
- * duplicated here.
- */
 export default function HeaderSearch() {
   const [value, setValue] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -48,7 +35,6 @@ export default function HeaderSearch() {
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
   const lastQueryRef = useRef(null);
-  // Refs so the stable runSearch callback always sees current routing state.
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
 
@@ -81,8 +67,6 @@ export default function HeaderSearch() {
       lastQueryRef.current = query;
       setSearchPayload(createArchiveSearchPayload(Array.isArray(ids) ? ids : [], query));
 
-      // Mirror the query into the URL so the search survives reload/share.
-      // replace() while already on the archive avoids one history entry per keystroke.
       if (pathnameRef.current !== '/archive') {
         router.push(buildArchiveUrl(query));
       } else {
@@ -99,9 +83,6 @@ export default function HeaderSearch() {
     }
   }, [router, setSearchPayload]);
 
-  // On first load: replay the ?search= query so the URL is a way back in, or,
-  // without a param, adopt the session-restored filter so the field reflects
-  // (and can lift) a search that is still active.
   useEffect(() => {
     const initialQuery = new URLSearchParams(window.location.search).get(SEARCH_PARAM)?.trim();
     if (initialQuery && window.location.pathname === '/archive') {
@@ -110,10 +91,6 @@ export default function HeaderSearch() {
       return;
     }
 
-    // Entry pages keep the filtered list for the pager (restored by the
-    // provider), so the field mirrors the persisted query there. On /archive
-    // itself the URL is the single source of truth: no ?search=, no search --
-    // the provider purges any stale stored filter on its side.
     if (window.location.pathname.startsWith('/archive/entry/')) {
       const persisted = readFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_STATUS, null);
       if (persisted?.query) {
@@ -124,7 +101,6 @@ export default function HeaderSearch() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // When the archive's own Clear button wipes the filters, reset the field and the URL.
   useEffect(() => {
     const handleFiltersChange = (event) => {
       if (event?.detail?.hasActiveFilters === false && lastQueryRef.current) {
@@ -160,7 +136,6 @@ export default function HeaderSearch() {
       if (query.length >= MIN_QUERY_LENGTH && query !== lastQueryRef.current) {
         runSearch(query);
       } else if (query.length === 0 && lastQueryRef.current) {
-        // Field emptied after a search: lift the keyword filter and drop the URL param.
         lastQueryRef.current = null;
         setSearchPayload(CLEARED_SEARCH_PAYLOAD);
         if (window.location.pathname === '/archive' && window.location.search) {

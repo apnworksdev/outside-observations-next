@@ -96,8 +96,6 @@ export async function generateMetadata({ params }) {
   const description = truncateDescription(rawDescription);
 
   const baseUrl = SITE_URL;
-  // An entry answers on both its slugs (metadata.slug and slug): the canonical
-  // always points to one of them so search engines see a single URL.
   const canonicalSlug = entry.metadata?.slug?.current || entry.slug?.current || slug;
   const canonicalUrl = `${baseUrl}/archive/entry/${canonicalSlug}`;
 
@@ -145,8 +143,6 @@ export async function generateMetadata({ params }) {
     robots: {
       index: true,
       follow: true,
-      // Pages are indexed, image files are not (rights posture), unless the
-      // entry explicitly opts in via the Studio toggle.
       ...(entry.allowImageIndexing
         ? {}
         : { noimageindex: true, 'max-image-preview': 'none' }),
@@ -218,8 +214,6 @@ export default async function ArchiveEntryPage({ params }) {
   const entryType = entry?.mediaType || 'image';
   const entrySlug = resolvedParams.slug;
 
-  // Crawl path: sequential prev/next links in the default order, derived from
-  // one cached list shared by every page. React 19 hoists <link> into <head>.
   let neighbours = null;
   try {
     const order = await getCachedEntryOrder();
@@ -259,8 +253,6 @@ export default async function ArchiveEntryPage({ params }) {
           <div className={styles.archiveEntryContentWrapper} data-entry-type={entryType}>
             <ArchiveEntryArticle entry={entry} />
           </div>
-          {/* Before the metadata aside: on mobile the pager flows under the
-              artwork, on desktop it is fixed to the screen edges. */}
           <ArchiveEntryPager slug={entrySlug} />
           <aside className={styles.archiveEntryAside}>
             <ArchiveEntryMetadata entry={entry} />

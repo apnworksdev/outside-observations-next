@@ -17,8 +17,6 @@
   --blur-transparent-color: #D9D9D940;
   --nav-dark-color: #2E2E2E;
   --nav-hover-color: #E3E3E3;
-  /* Widline Cadet page: bubbles are #A5A5A5, so its active/hover tones are
-     steps down that same grey rather than the default light or black ones. */
   --nav-widline-hover-color: #949494;
   --nav-widline-active-color: #6E6E6E;
   --nav-text-color: #000000;
@@ -63,13 +61,10 @@
   --fifth-line-offset: calc(var(--padding) + var(--column-width) * 11 + var(--column-gap) * 10 + var(--column-gap-half));
 
   /* Archive page */
-  /* logo top 34px + logo 41px + 28px gap + view toggle + 16px breathing room */
   --archive-container-top-margin: calc(34px + 41px + 28px + var(--bubble-height) + 16px);
-  /* Was sized for the floating archive menu (bottom right), which is gone. */
   --archive-container-bottom-margin: var(--padding);
   --unexpected-primary-media-height: 0px;
   --archive-list-height: 0px;
-  /* Header, metadata bar and breathing room around an entry's media. */
   --entry-vertical-chrome: 140px;
   --close-archive-button-size: 36px;
   --open-archive-button-size: 242px;
@@ -88,10 +83,6 @@
   }
 }
 
-/* Mobile header stack, mirrored by the grid's top margin:
-   padding + logo 41 + 8 (drawer) + menu row + 20 (gap) + toggle row
-   + 8 + featured row (Widline Cadet always wraps below on mobile) + 12.
-   An open drawer adds one more menu row, handled in archive-page.module.css. */
 @media screen and (max-width: 768px) {
   :root {
     --archive-container-top-margin: calc(var(--responsive-padding) + 41px + 8px + var(--bubble-height) + 20px + var(--bubble-height) + 8px + var(--bubble-height) + 12px);

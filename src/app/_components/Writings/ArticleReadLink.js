@@ -9,12 +9,6 @@ import {
   DONE_THRESHOLD,
 } from '@/app/_helpers/storage/readingProgress';
 
-/**
- * The listing's action link, carrying the reading state in its label:
- * never opened -> "Read", partway through -> "Continue — 62%",
- * finished -> "Read again". Resolved after hydration (the state lives in
- * localStorage), so the server renders the neutral label and no flash occurs.
- */
 export default function ArticleReadLink({ slug, title, className }) {
   const [label, setLabel] = useState('Read');
 

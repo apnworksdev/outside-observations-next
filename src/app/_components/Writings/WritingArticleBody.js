@@ -8,10 +8,6 @@ import styles from '@app/_assets/writings/writings-article.module.css';
 import SanityImage from '@/sanity/components/SanityImage';
 import HoverImageLink from './HoverImageLink';
 
-/**
- * Fallback column bands for documents authored before the explicit
- * "starts at line" / "width" fields existed.
- */
 const LEGACY_POSITIONS = {
   'narrow-left': [2, 2],
   'narrow-center': [5, 3],
@@ -38,10 +34,6 @@ function columnStyle({ startColumn, columnSpan, position }, fallback) {
   const safeSpan = Math.min(Math.max(span, 1), COLUMNS);
   const safeStart = Math.min(Math.max(start, 1), COLUMNS + 1 - safeSpan);
 
-  // Mobile keeps an echo of the desktop collage: blocks span 4 of the 6
-  // columns and the two spare columns go where the desktop block leaned --
-  // left-leaning blocks sit flush left, centred ones centre, right-leaning
-  // ones flush right. Each step is a sixth of the screen: clearly visible.
   const desktopCentre = safeStart + safeSpan / 2;
   const mobileStart = desktopCentre < 5.5 ? 1 : desktopCentre <= 8.5 ? 2 : 3;
 
@@ -55,7 +47,6 @@ const portableComponents = {
         {children}
       </a>
     ),
-    /** Underlined text that reveals its image while hovered. */
     hoverImage: ({ value, children }) => {
       if (!value?.image?.asset) {
         return <span>{children}</span>;
@@ -81,19 +72,10 @@ export function formatArticleDate(value) {
   }
 }
 
-/**
- * One article: header, collage body, and the closing band whose big title is
- * the *next* article — the visitor scrolls straight into it.
- */
 export default function WritingArticleBody({ article, nextArticle, showHeader = true }) {
   const [shareState, setShareState] = useState('idle');
   const shareResetRef = useRef(null);
 
-  /**
-   * Share the article: the native share sheet where there is one (mobile,
-   * mostly), the clipboard elsewhere -- with a moment of "Link copied" as
-   * feedback before the label settles back.
-   */
   const handleShare = async () => {
     const url = window.location.href;
     const payload = { title: article?.title || document.title, url };
@@ -102,7 +84,6 @@ export default function WritingArticleBody({ article, nextArticle, showHeader = 
       try {
         await navigator.share(payload);
       } catch {
-        // Closing the share sheet rejects: nothing to report.
       }
       return;
     }
@@ -124,8 +105,6 @@ export default function WritingArticleBody({ article, nextArticle, showHeader = 
 
   return (
     <article className={styles.article} data-slug={article.slug}>
-      {/* Appended articles inherit the previous article's closing title block as
-          their own heading, so the reader sees one title, not two. */}
       {showHeader ? (
         <header className={styles.header}>
           <h1 className={styles.title}>{article.title}</h1>

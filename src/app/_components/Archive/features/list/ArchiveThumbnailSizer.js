@@ -5,25 +5,12 @@ import { useCallback, useEffect, useState } from 'react';
 import styles from '@app/_assets/layout/nav.module.css';
 import { getLocalStorage, setLocalStorage } from '@/app/_helpers/storage/localStorage';
 
-// Suffixed: the previous slider stored levels 1-4, which would be read back as
-// positions of 1-4% and shrink the thumbnails to nothing for returning visitors.
 const STORAGE_KEY = 'outside-observations-archive-thumb-size-fluid';
 
-/**
- * Fluid sizing. The slider drives the *minimum* width of a thumbnail and the
- * grid fits as many columns as that allows (auto-fill), so the images scale
- * continuously instead of jumping between whole grid spans.
- *
- * The stored value is a 0-100 position rather than a width, so a size chosen on
- * desktop stays meaningful on mobile: the same position maps into a narrower
- * range there, where 620px would never fit.
- */
 const DESKTOP_RANGE = [70, 620];
 const MOBILE_RANGE = [90, 360];
 const DEFAULT_POSITION = 28;
 const MOBILE_QUERY = '(max-width: 768px)';
-// The layout the site had before the slider existed, and the size a first-time
-// visitor should land on: 6 thumbnails per row, 2 on mobile.
 const DEFAULT_PER_ROW_DESKTOP = 6;
 const DEFAULT_PER_ROW_MOBILE = 2;
 
@@ -35,8 +22,6 @@ function clampPosition(value) {
   return Math.min(100, Math.max(0, parsed));
 }
 
-// Rounded to whole pixels: the slider's 0.1 steps span half a pixel, so this is
-// the real granularity -- one pixel of growth per step, which reads as smooth.
 function widthFor([min, max], position) {
   return Math.round(min + ((max - min) * position) / 100);
 }
@@ -45,11 +30,6 @@ function positionFor([min, max], width) {
   return Math.min(100, Math.max(0, ((width - min) / (max - min)) * 100));
 }
 
-/**
- * Default position, derived from the viewport rather than hardcoded: a width in
- * pixels means a different number of thumbnails per row on a 13" laptop and on
- * a 27" display, so the fallback is expressed as a count and converted here.
- */
 function defaultPosition() {
   const isMobile = window.matchMedia(MOBILE_QUERY).matches;
   const perRow = isMobile ? DEFAULT_PER_ROW_MOBILE : DEFAULT_PER_ROW_DESKTOP;

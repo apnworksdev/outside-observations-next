@@ -5,12 +5,6 @@ import { ARCHIVE_ENTRIES_TEXT_SEARCH_IDS_QUERY, MATCHING_TAG_IDS_QUERY } from '@
 const MAX_RESULTS = 60;
 const MAX_QUERY_LENGTH = 120;
 
-/**
- * API route backing the header search field.
- * Runs a free-text GROQ search over archive metadata and returns matching IDs
- * only: the caller feeds them to the archive search payload, which reuses the
- * same display path as the AI-driven search.
- */
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -20,11 +14,8 @@ export async function POST(request) {
       return NextResponse.json({ error: 'query must be a non-empty string' }, { status: 400 });
     }
 
-    // GROQ `match` is word-prefix based: appending * lets partial words match.
     const term = `${rawQuery.slice(0, MAX_QUERY_LENGTH)}*`;
 
-    // Two steps: resolve matching tag ids first (tiny collection), then filter
-    // entries via indexed references() instead of per-entry dereferencing.
     const tagIdsRaw = await client.fetch(MATCHING_TAG_IDS_QUERY, { term });
     const tagIds = Array.isArray(tagIdsRaw) ? tagIdsRaw.filter(Boolean) : [];
 

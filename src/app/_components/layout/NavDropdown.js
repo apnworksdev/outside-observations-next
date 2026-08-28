@@ -4,11 +4,6 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import styles from '@app/_assets/layout/nav.module.css';
 
-/**
- * Generic header dropdown (used by "OO Laboratory").
- * Items are either links or buttons, so the moodboard visualizer can open a
- * panel while Unexpected Connections navigates to its own page.
- */
 const VIEWPORT_MARGIN = 10;
 
 export default function NavDropdown({ label = '', items = [], className = '', isActive = false }) {
@@ -17,11 +12,6 @@ export default function NavDropdown({ label = '', items = [], className = '', is
   const menuRef = useRef(null);
   const menuId = useId();
 
-  /**
-   * The menu is absolutely positioned under its trigger, so on narrow screens
-   * (or with a large font size) it can run past the right edge. Shift it back
-   * by however much it overflows instead of letting the layout reflow.
-   */
   const clampIntoViewport = useCallback(() => {
     const menu = menuRef.current;
     if (!menu) {
@@ -29,8 +19,6 @@ export default function NavDropdown({ label = '', items = [], className = '', is
     }
 
     menu.style.transform = '';
-    // On mobile the panel is in the flow and already width-constrained; nudging
-    // it would shift it off the drawer's left edge.
     if (window.getComputedStyle(menu).position !== 'absolute') {
       return;
     }

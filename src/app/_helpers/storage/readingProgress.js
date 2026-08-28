@@ -1,18 +1,10 @@
 import { getLocalStorage, setLocalStorage } from './localStorage';
 
-/**
- * Per-article reading progress, stored locally (per browser, per device).
- * One map under a single key: { [slug]: highest percentage reached }.
- */
 const STORAGE_KEY = 'outside-observations-writings-progress';
 
-/** Below this, an article only glanced at still counts as unread. */
 export const MIN_MEANINGFUL_PROGRESS = 5;
-/** From here on, the article counts as finished. */
 export const DONE_THRESHOLD = 90;
 
-/* In-memory write-through cache: saveReadingProgress is called from a scroll
-   handler, and parsing JSON on every scroll tick would be wasted work. */
 let cache = null;
 
 function readAll() {
@@ -33,7 +25,6 @@ export function getReadingProgress(slug) {
   return Number.isFinite(value) ? value : null;
 }
 
-/** Keeps the highest value ever reached: progress never regresses. */
 export function saveReadingProgress(slug, percent) {
   if (!slug || !Number.isFinite(percent)) return;
   const clamped = Math.max(0, Math.min(100, Math.round(percent)));
@@ -43,6 +34,5 @@ export function saveReadingProgress(slug, percent) {
   try {
     setLocalStorage(STORAGE_KEY, JSON.stringify(all));
   } catch {
-    // Storage unavailable: reading works fine without a bookmark.
   }
 }

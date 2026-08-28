@@ -82,7 +82,6 @@ export function removeFromSessionStorage(key) {
   try {
     window.sessionStorage.removeItem(key);
   } catch {
-    // Storage unavailable: nothing to remove.
   }
 }
 

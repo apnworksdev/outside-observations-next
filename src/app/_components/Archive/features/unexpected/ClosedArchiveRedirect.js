@@ -10,11 +10,6 @@ import { isInClosedHours } from '@/lib/closedArchiveHours';
  * Always renders the same wrapper + children (no null) so server and client match.
  * When a redirect is pending we hide content with CSS so the user never sees a flash.
  */
-/**
- * Crawlers render JavaScript: a bot passing during the closed window would see
- * /archive redirect away and could deindex it. The closing ritual is for human
- * visitors only.
- */
 function isCrawler() {
   return (
     typeof navigator !== 'undefined' &&
