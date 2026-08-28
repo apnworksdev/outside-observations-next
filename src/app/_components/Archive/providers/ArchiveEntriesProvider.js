@@ -171,6 +171,7 @@ export default function ArchiveEntriesProvider({
     fetchAbortRef.current = controller;
 
     const searchIds = searchResults?.active ? searchResults?.ids ?? [] : [];
+    const searchActive = searchResults?.active === true;
     const sortColumn = sorting?.column ?? null;
     const sortDirection = sorting?.direction ?? null;
 
@@ -197,6 +198,7 @@ export default function ArchiveEntriesProvider({
           sortDirection,
           moodTags: selectedMoodTags,
           searchIds,
+          searchActive,
         }),
       });
 
@@ -323,7 +325,10 @@ export default function ArchiveEntriesProvider({
   }, [pageSize, searchResults, selectedMoodTags, sorting]);
 
   useEffect(() => {
-    if (pathname !== '/archive') {
+    // Entry pages need the same list loaded: the pager walks it to offer
+    // previous / next within the visitor's current filters.
+    const needsArchiveList = pathname === '/archive' || pathname.startsWith('/archive/entry/');
+    if (!needsArchiveList) {
       return;
     }
 

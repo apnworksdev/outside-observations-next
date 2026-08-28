@@ -271,6 +271,14 @@ export default function ArchiveListContent() {
                   />
                 </ScrollContainerWrapper>
               )
+            ) : !isInitialLoading && !isRefreshing ? (
+              <div className={styles.archiveEmptyState} role="status">
+                <p>
+                  {searchStatus?.query
+                    ? `No results for “${searchStatus.query}”. Try another search or clear the filters.`
+                    : 'Nothing to show here yet.'}
+                </p>
+              </div>
             ) : null}
             {isLoadingMore ? (
               <div className={styles.archivePaginationLoadingMore} role="status" aria-live="polite">

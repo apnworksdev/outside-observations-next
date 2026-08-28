@@ -11,6 +11,7 @@ export async function POST(request) {
       sortColumn = null,
       sortDirection = null,
       searchIds = [],
+      searchActive = false,
       moodTags = [],
     } = body ?? {};
 
@@ -20,6 +21,7 @@ export async function POST(request) {
       sortColumn,
       sortDirection,
       searchIds,
+      searchActive,
       moodTags,
     });
 

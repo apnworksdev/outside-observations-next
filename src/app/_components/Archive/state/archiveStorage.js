@@ -77,6 +77,15 @@ export function readFromSessionStorage(key, defaultValue) {
   }
 }
 
+export function removeFromSessionStorage(key) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch {
+    // Storage unavailable: nothing to remove.
+  }
+}
+
 export function writeToSessionStorage(key, value) {
   if (typeof window === 'undefined') {
     return;

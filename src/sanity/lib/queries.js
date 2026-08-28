@@ -268,6 +268,7 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && (sl
     artName,
     fileName,
     source,
+    credit,
     contentWarning,
     tags[]->{
       _id,
@@ -279,6 +280,7 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && (sl
   artName,
   fileName,
   source,
+  allowImageIndexing,
   tags[]->{
     _id,
     name
@@ -328,6 +330,18 @@ export const ARCHIVE_ENTRY_QUERY = defineQuery(`*[_type == "archiveEntry" && (sl
   textMarkup,
   textContent
 }`)
+
+/**
+ * Every entry slug in the default archive order (_updatedAt desc). One shared
+ * query, cached, from which each entry page derives its rel=prev/next links —
+ * a per-page neighbours query would double the API calls at build time.
+ */
+export const ARCHIVE_ENTRY_ORDER_QUERY = defineQuery(`
+  *[_type == "archiveEntry" && (defined(slug.current) || defined(metadata.slug.current))]
+  | order(_updatedAt desc) {
+    "slug": coalesce(metadata.slug.current, slug.current)
+  }.slug
+`)
 
 export const ARCHIVE_ENTRY_SLUGS = defineQuery(`
   *[_type == "archiveEntry" && (defined(slug.current) || defined(metadata.slug.current))] 
@@ -538,4 +552,96 @@ export const PARENT_ARCHIVE_FOR_VISUAL_ESSAY_IMAGE_QUERY = defineQuery(
     "slug": coalesce(metadata.slug.current, slug.current),
     "visualEssayImages": visualEssayImages[]->{ _id, image { asset } }
   }`
+)
+
+/**
+ * Header text search, step 1: ids of tags whose name matches the query.
+ * Resolving tags first keeps the main query on indexed references() instead of
+ * dereferencing every entry's tags (which costs seconds on cold queries).
+ */
+export const MATCHING_TAG_IDS_QUERY = defineQuery(
+  `*[_type == "tag" && name match $term]._id`
+)
+
+/**
+ * Header text search, step 2: archive entry IDs matching a free-text query.
+ * Scans the metadata fields a visitor would reasonably search by (art name,
+ * file name, source, credit, year, subjects) plus the AI description, and
+ * matches tag/mood names through $tagIds resolved by MATCHING_TAG_IDS_QUERY.
+ * Only IDs are fetched: the archive provider re-hydrates the entries itself.
+ */
+export const ARCHIVE_ENTRIES_TEXT_SEARCH_IDS_QUERY = defineQuery(
+  `*[_type == "archiveEntry"
+    && defined(poster.asset)
+    && (
+      metadata.artName match $term
+      || metadata.fileName match $term
+      || metadata.source match $term
+      || metadata.credit match $term
+      || metadata.year.value match $term
+      || aiDescription match $term
+      || metadata.subject match $term
+      || (count($tagIds) > 0 && references($tagIds))
+    )] | order(_updatedAt desc) [0...$limit] {
+    _id
+  }`
+)
+
+/* ------------------------------------------------------------------ */
+/*                         Writings (editorial)                       */
+/* ------------------------------------------------------------------ */
+
+export const WRITINGS_SETTINGS_QUERY = defineQuery(
+  `*[_type == "writingsSettings"][0] { aboutFirstColumn, aboutSecondColumn }`
+)
+
+export const WRITINGS_LIST_QUERY = defineQuery(
+  `*[_type == "writingArticle" && defined(slug.current)] | order(publishedAt desc) {
+    _id,
+    title,
+    "slug": slug.current,
+    publishedAt,
+    excerpt,
+    "authorName": author->name
+  }`
+)
+
+export const WRITING_ARTICLE_QUERY = defineQuery(
+  `*[_type == "writingArticle" && slug.current == $slug][0] {
+    _id,
+    _updatedAt,
+    title,
+    "slug": slug.current,
+    publishedAt,
+    excerpt,
+    subtitle,
+    author->{ name, "slug": slug.current, bio, link },
+    body[] {
+      _type,
+      _key,
+      startColumn,
+      columnSpan,
+      position,
+      // Hover-image annotations carry an asset, so expand their metadata here.
+      text[] {
+        ...,
+        markDefs[] {
+          ...,
+          _type == "hoverImage" => {
+            ...,
+            image {
+              ...,
+              asset,
+              'lqip': asset->metadata.lqip,
+              'dimensions': asset->metadata.dimensions
+            }
+          }
+        }
+      }
+    }
+  }`
+)
+
+export const WRITING_ARTICLE_SLUGS_QUERY = defineQuery(
+  `*[_type == "writingArticle" && defined(slug.current)].slug.current`
 )
