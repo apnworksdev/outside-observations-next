@@ -255,27 +255,27 @@
 
 .thumbSizerInput {
   width: 70px;
-  height: 2px;
+  height: var(--bubble-height);
   appearance: none;
-  background-color: var(--dark-gray-color);
+  background: linear-gradient(var(--dark-gray-color), var(--dark-gray-color)) center / 100% 2px no-repeat;
   cursor: pointer;
 }
 
 .thumbSizerInput::-webkit-slider-thumb {
   appearance: none;
-  width: 9px;
-  height: 9px;
+  width: 23px;
+  height: 23px;
   border-radius: 50%;
-  background-color: var(--nav-text-color);
+  background: radial-gradient(circle, var(--nav-text-color) 0 4.5px, transparent 4.6px);
   cursor: pointer;
 }
 
 .thumbSizerInput::-moz-range-thumb {
-  width: 9px;
-  height: 9px;
+  width: 23px;
+  height: 23px;
   border: none;
   border-radius: 50%;
-  background-color: var(--nav-text-color);
+  background: radial-gradient(circle, var(--nav-text-color) 0 4.5px, transparent 4.6px);
   cursor: pointer;
 }
 
@@ -523,6 +523,24 @@
 }
 
 @media screen and (max-width: 768px) {
+  .thumbSizerInput {
+    height: 40px;
+    margin-block: calc((var(--bubble-height) - 40px) / 2);
+    width: 90px;
+  }
+
+  .thumbSizerInput::-webkit-slider-thumb {
+    width: 36px;
+    height: 36px;
+    background: radial-gradient(circle, var(--nav-text-color) 0 4.5px, transparent 4.6px);
+  }
+
+  .thumbSizerInput::-moz-range-thumb {
+    width: 36px;
+    height: 36px;
+    background: radial-gradient(circle, var(--nav-text-color) 0 4.5px, transparent 4.6px);
+  }
+
   /* Newsletter popup: on mobile only visible on homepage */
   .newsletterPopupWrapper[data-visible-on-mobile="false"] {
     display: none;
