@@ -120,6 +120,14 @@ export const archiveEntry = defineType({
       },
     }),
     defineField({
+      name: 'allowImageIndexing',
+      title: 'Allow image indexing (Google Images)',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        'Off by default: the entry PAGE is indexed by search engines, but the image files are not. Turn on only for works whose rights allow public image indexing.',
+    }),
+    defineField({
       name: 'vectorStoreStatus',
       title: 'Vector Store',
       type: 'string',

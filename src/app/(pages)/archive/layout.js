@@ -3,7 +3,7 @@ import {
   DEFAULT_ARCHIVE_PAGE_LIMIT,
   getPaginatedArchivePage,
 } from '@/app/_data/getPaginatedArchivePage';
-import ArchiveNavigationContainer from '@/app/_components/Archive/features/navigation/ArchiveNavigationContainer';
+import MoodPanelHost from '@/app/_components/Archive/features/navigation/MoodPanelHost';
 import ArchiveEntriesProvider from '@/app/_components/Archive/providers/ArchiveEntriesProvider';
 import ClosedArchiveRedirect from '@/app/_components/Archive/features/unexpected/ClosedArchiveRedirect';
 import { ErrorBoundary } from '@/app/_components/shared/error/ErrorBoundary';
@@ -33,7 +33,7 @@ export default async function ArchiveLayout({ children }) {
   const content = (
     <>
       {children}
-      <ArchiveNavigationContainer />
+      <MoodPanelHost />
     </>
   );
 

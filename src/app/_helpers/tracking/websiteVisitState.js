@@ -36,6 +36,7 @@ export const markWebsiteAsVisited = () => {
 
   try {
     setLocalStorage(WEBSITE_VISIT_KEY, 'true');
+    document.cookie = 'oo_visited=1; path=/; max-age=31536000; samesite=lax';
   } catch {
     // Silently fail if localStorage is unavailable.
   }

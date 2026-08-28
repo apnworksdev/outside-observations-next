@@ -118,7 +118,8 @@ function ArchiveEntryMediaLink({
             video={entry.video}
             poster={entry.poster}
             vimeoUrl={entry.videoExcerptUrl || entry.vimeoUrl}
-            alt={entry.metadata?.artName || entry.artName || 'Archive entry video'}
+            sizes="(max-width: 768px) 50vw, 20vw"
+            alt={[entry.metadata?.artName || entry.artName || 'Archive entry video', entry.metadata?.source || entry.source].filter(Boolean).join(' — ')}
             className={styles.archiveEntryVideo}
             fallbackClassName={styles.archiveEntryImage}
             width={POSTER_WIDTH}
@@ -136,7 +137,8 @@ function ArchiveEntryMediaLink({
         >
           <SanityImage
             image={entry.poster}
-            alt={entry.metadata?.artName || entry.artName || 'Archive entry poster'}
+            sizes="(max-width: 768px) 50vw, 20vw"
+            alt={[entry.metadata?.artName || entry.artName || 'Archive entry poster', entry.metadata?.source || entry.source].filter(Boolean).join(' — ')}
             className={styles.archiveEntryImage}
             width={POSTER_WIDTH}
             height={posterHeight}

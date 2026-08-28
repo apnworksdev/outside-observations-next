@@ -28,12 +28,12 @@
 
 .navBubble {
   height: var(--bubble-height);
-  background-color: var(--gray-color);
+  background-color: var(--light-gray-color);
   display: flex;
   align-items: center;
   padding-right: var(--padding);
   padding-left: var(--padding);
-  color: var(--white-color);
+  color: var(--nav-text-color);
   width: fit-content;
   pointer-events: auto;
   transition: background-color var(--transition-time) var(--transition-effect);
@@ -43,6 +43,8 @@
   position: fixed;
   top: 0;
   left: 0;
+  width: 100%;
+  box-sizing: border-box;
   z-index: 100;
   padding: var(--padding);
   display: flex;
@@ -51,9 +53,19 @@
   pointer-events: none;
 }
 
+.headerTopRow {
+  display: flex;
+  align-items: center;
+  gap: var(--padding);
+  width: 100%;
+  min-height: 91px;
+}
+
 .navTitleContainer {
   display: flex;
   gap: 1px;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .navTitleSpan.outside {
@@ -65,19 +77,25 @@
 }
 
 .navNavigation {
-  margin-left: var(--padding);
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
 }
 
 .navNavigation :global(menu) {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--nav-item-gap);
 }
 
 .navNavigation .navLi {
-  margin-left: var(--padding);
+  position: relative;
   transition: margin-left var(--transition-time) var(--transition-effect), margin-top var(--transition-time) var(--transition-effect);
+}
+
+.navNavigation .navLi[data-active="true"] .navLink {
+  border-radius: var(--border-radius);
 }
 
 /* ------------------------------------------------------------ */
@@ -108,6 +126,10 @@
     /* text-decoration: underline; */
     text-transform: uppercase;
   }
+
+  .navNavigation .navLi:not([data-active="true"]) .navLink:hover {
+    padding-left: var(--padding);
+  }
 }
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav),
@@ -126,7 +148,6 @@
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) .navLink,
 :global(body[data-page="widline-cadet"]) .navNavigation .navLi:global(.archive-nav) .navBubble:global(.widline-cadet-nav-bubble),
-:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) .navLink,
 :global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) .navLink,
 .navNavigation .navLi:global(.radio-nav)[data-active="true"] .navLink {
   padding-left: calc(var(--padding) * 2);
@@ -139,7 +160,6 @@
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.archive-nav) .navLink::before,
 :global(body[data-page="widline-cadet"]) .navNavigation .navLi:global(.archive-nav) .navBubble:global(.widline-cadet-nav-bubble)::before,
-:global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.archive-nav) .navLink::before,
 :global(body[data-page="lab"]) .navNavigation .navLi:global(.lab-nav) .navLink::before,
 .navNavigation .navLi:global(.radio-nav)[data-active="true"] .navLink::before {
   content: '';
@@ -147,10 +167,10 @@
   top: 50%;
   transform: translateY(-50%);
   left: var(--padding);
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background-color: currentColor;
+  background-color: #000000;
 }
 
 .navNavigation .navLi:global(.radio-nav)[data-active="true"] .navLink::before {
@@ -174,8 +194,8 @@
   display: flex;
   align-items: flex-start;
   gap: 0;
-  background-color: var(--gray-color);
-  color: var(--bg-color);
+  background-color: var(--light-gray-color);
+  color: var(--nav-text-color);
   padding-right: var(--padding);
   padding-left: var(--padding);
   padding-top: 6px;
@@ -223,8 +243,93 @@
 
 /* ------------------------------------------------------------ */
 
+.thumbSizer {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+:global(body[data-page="archive"]) .thumbSizer {
+  display: flex;
+}
+
+.thumbSizerInput {
+  width: 70px;
+  height: 2px;
+  appearance: none;
+  background-color: var(--dark-gray-color);
+  cursor: pointer;
+}
+
+.thumbSizerInput::-webkit-slider-thumb {
+  appearance: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: var(--nav-text-color);
+  cursor: pointer;
+}
+
+.thumbSizerInput::-moz-range-thumb {
+  width: 9px;
+  height: 9px;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--nav-text-color);
+  cursor: pointer;
+}
+
+:global(body[data-page="archive"]) .archiveNavOptions[data-view="list"] .thumbSizer {
+  display: none;
+}
+
+.featuredNavRow {
+  display: contents;
+}
+
+.archiveNavOptions .navBubble,
+.archiveNavOptions .helpNav {
+  border-radius: var(--border-radius);
+}
+
+.featuredNavBubble {
+  border-radius: var(--border-radius);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.featuredNavBubble[data-active="true"] {
+  background-color: var(--nav-dark-color);
+  color: var(--white-color);
+}
+
+@media (hover: hover) {
+  .featuredNavBubble:hover {
+    background-color: var(--nav-hover-color);
+  }
+
+  .featuredNavBubble[data-active="true"]:hover {
+    background-color: var(--nav-dark-color);
+  }
+}
+
+:global(body[data-page="widline-cadet"]) .featuredNavBubble[data-active="true"] {
+  background-color: var(--nav-widline-active-color);
+}
+
+@media (hover: hover) {
+  :global(body[data-page="widline-cadet"]) .featuredNavBubble:hover {
+    background-color: var(--nav-widline-hover-color);
+    color: var(--white-color);
+  }
+}
+
 .archiveNavOptions {
   display: none;
+  width: fit-content;
+  position: fixed;
+  top: calc(34px + 41px + 28px);
+  left: var(--padding);
 }
 
 :global(body[data-page="archive"]) .navNavigation .navLi:global(.lab-nav) {
@@ -234,6 +339,7 @@
 :global(body[data-page="archive"]) .archiveNavOptions {
   display: flex;
   gap: var(--gap);
+  pointer-events: auto;
 }
 
 :global(body[data-page="archive"]) .backToArchiveButton {
@@ -260,6 +366,7 @@
   pointer-events: auto;
   background-color: var(--gray-color);
   padding: 0 5px;
+  border-radius: var(--border-radius);
 }
 
 .navNavigation .navLi:global(.radio-nav)[data-active="true"] .radioNavButtons {
@@ -350,11 +457,65 @@
 :global(body[data-page="unexpected-connections"]) .navBubble,
 :global(body[data-page="unexpected-connections"]) .helpNav {
   background-color: var(--fg-color-75);
+  color: var(--white-color);
 }
 
 :global(body[data-page="widline-cadet"]) .navBubble,
 :global(body[data-page="widline-cadet"]) .helpNav {
   background-color: #a5a5a5;
+}
+
+:global(body[data-page="widline-cadet"]) .navNavigation .navBubble,
+:global(body[data-page="widline-cadet"]) .navDropdownMenu .navBubble {
+  border-radius: var(--border-radius);
+}
+
+:global(body[data-page="widline-cadet"]) .navNavigation .navLi[data-active="true"] .navLink {
+  background-color: var(--nav-widline-active-color);
+  color: var(--white-color);
+}
+
+:global(body[data-page="widline-cadet"]) .navNavigation .navLi[data-active="true"] .navLink::before {
+  background-color: var(--white-color);
+}
+
+@media (hover: hover) {
+  :global(body[data-page="widline-cadet"]) .navNavigation .navLink:hover,
+  :global(body[data-page="widline-cadet"]) .headerUtilities .newsletterPopupWrapper > .navBubble:hover {
+    background-color: var(--nav-widline-hover-color);
+    color: var(--white-color);
+  }
+}
+
+:global(body[data-page="widline-cadet"]) .navDropdown[data-open="true"] .navDropdownTrigger {
+  background-color: var(--nav-widline-active-color);
+  color: var(--white-color);
+}
+
+:global(body[data-page="unexpected-connections"]) .navNavigation .navBubble,
+:global(body[data-page="unexpected-connections"]) .navDropdownMenu .navBubble {
+  border-radius: var(--border-radius);
+}
+:global(body[data-page="unexpected-connections"]) .navNavigation .navLi[data-active="true"] .navLink {
+  background-color: var(--fg-color);
+  color: var(--white-color);
+}
+
+:global(body[data-page="unexpected-connections"]) .navNavigation .navLi[data-active="true"] .navLink::before {
+  background-color: var(--white-color);
+}
+
+@media (hover: hover) {
+  :global(body[data-page="unexpected-connections"]) .navNavigation .navLink:hover,
+  :global(body[data-page="unexpected-connections"]) .headerUtilities .newsletterPopupWrapper > .navBubble:hover {
+    background-color: var(--fg-color);
+    color: var(--white-color);
+  }
+}
+
+:global(body[data-page="unexpected-connections"]) .navDropdown[data-open="true"] .navDropdownTrigger {
+  background-color: var(--fg-color);
+  color: var(--white-color);
 }
 
 :global(body[data-page="unexpected-connections"]) .navNavigation .navLi:global(.lab-nav) {
@@ -369,6 +530,8 @@
 
   .header {
     padding: var(--responsive-padding);
+    padding-left: 10px;
+    padding-right: 10px;
   }
   
   .navMenuMobile {
@@ -401,9 +564,8 @@
   }
 
   :global(body.mobile-nav-open) .navNavigation {
-    height: calc(var(--bubble-height) * 5 + var(--gap) * 4);
-    overflow-y: hidden;
-    overflow-x: visible;
+    height: calc(var(--bubble-height) * 6 + var(--gap) * 5);
+    overflow: visible;
     pointer-events: auto;
   }
 
@@ -506,9 +668,7 @@
 /* ------------------------------------------------------------ */
 
 .newsletterPopupWrapper {
-  position: fixed;
-  top: var(--padding);
-  right: var(--padding);
+  position: relative;
   pointer-events: none;
   display: flex;
   flex-direction: column;
@@ -516,10 +676,14 @@
   z-index: 2;
 }
 
-.newsletterPopupWrapper[data-open="true"] {
+.newsletterPopupWrapper[data-open="true"] .newsletterPopupOpenContent {
+  position: absolute;
+  top: calc(100% + var(--gap) * 4);
+  right: 0;
   width: calc(var(--column-width) * 2 + var(--column-gap));
   min-width: 250px;
   max-width: 350px;
+  z-index: 10;
 }
 
 .newsletterPopupWrapper > * {
@@ -597,4 +761,388 @@
 :global(body[data-page="unexpected-connections"]) .newsletterPopupContentText,
 :global(body[data-page="unexpected-connections"]) .newsletterPopupKlaviyoFormContainer {
   background-color: var(--fg-color-75);
+}
+
+/* ------------------------------------------------------------ */
+
+/* ------------------------------------------------------------ */
+
+.navLogo {
+  position: fixed;
+  top: 34px;
+  left: 51px;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.navLogoImage {
+  height: 41px;
+  width: auto;
+  display: block;
+}
+
+.navLiDisabled .navLink {
+  cursor: default;
+  pointer-events: auto;
+}
+
+.navNavigation .navBubble {
+  background-color: transparent;
+  color: var(--nav-text-color);
+}
+
+@media (hover: hover) {
+  .navNavigation .navLink:hover {
+    background-color: var(--nav-hover-color);
+    border-radius: var(--border-radius);
+  }
+
+  .navNavigation .navLi:not([data-active="true"]) .navLink:hover {
+    padding-left: var(--padding);
+  }
+}
+
+.navNavigation .navLi[data-active="true"] .navLink {
+  background-color: var(--light-gray-color);
+  padding-left: calc(var(--padding) * 2);
+}
+
+.navNavigation .navLi[data-active="true"] .navLink::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: var(--padding);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #000000;
+}
+
+.navDropdown {
+  position: relative;
+}
+
+.navDropdownTrigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.navDropdownChevron {
+  width: 7px;
+  height: 4px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%207%204%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M0.458008%200.458313L3.20801%203.20831L5.95801%200.458313%27%20stroke%3D%27black%27%20stroke-width%3D%270.916667%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%207%204%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M0.458008%200.458313L3.20801%203.20831L5.95801%200.458313%27%20stroke%3D%27black%27%20stroke-width%3D%270.916667%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: transform var(--transition-time) var(--transition-effect);
+}
+
+.navDropdown[data-open="true"] .navDropdownChevron {
+  transform: rotate(180deg);
+}
+
+.navDropdownMenu {
+  position: absolute;
+  top: calc(100% + var(--gap) * 4);
+  left: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.navDropdownMenu[hidden] {
+  display: none;
+}
+
+.navDropdown[data-open="true"] .navDropdownTrigger {
+  background-color: var(--nav-hover-color);
+  border-radius: var(--border-radius);
+}
+
+.navDropdownMenu .navBubble {
+  background-color: var(--nav-hover-color);
+  border-radius: var(--border-radius);
+  color: var(--nav-text-color);
+}
+
+.navDropdownItem > * {
+  white-space: nowrap;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  pointer-events: auto;
+}
+
+.headerUtilities {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  min-width: max-content;
+  pointer-events: auto;
+}
+
+.headerUtilities .newsletterPopupWrapper > .navBubble {
+  background-color: transparent;
+  color: var(--nav-text-color);
+}
+
+@media (hover: hover) {
+  .headerUtilities .newsletterPopupWrapper > .navBubble:hover {
+    background-color: var(--nav-hover-color);
+    border-radius: var(--border-radius);
+  }
+}
+
+.headerSearch {
+  display: flex;
+  align-items: center;
+  height: var(--bubble-height);
+  margin: 0 clamp(12px, 3vw, 60px);
+  min-width: 0;
+}
+
+.headerSearchInput {
+  width: 190px;
+  min-width: 80px;
+  max-width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--light-gray-color);
+  background: transparent;
+  font: inherit;
+  color: var(--nav-dark-color);
+  outline-offset: 2px;
+  appearance: none;
+}
+
+.headerSearchInput::placeholder {
+  color: var(--nav-dark-color);
+  opacity: 1;
+}
+
+.headerSearchInput::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 7px;
+  height: 7px;
+  margin-left: 8px;
+  background-color: var(--nav-text-color);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%207%207%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M1%201l5%205M6%201l-5%205%27%20stroke%3D%27black%27%20stroke-width%3D%270.916667%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%207%207%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M1%201l5%205M6%201l-5%205%27%20stroke%3D%27black%27%20stroke-width%3D%270.916667%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%3C/svg%3E") center / contain no-repeat;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-time) var(--transition-effect);
+}
+
+.headerSearch:hover .headerSearchInput::-webkit-search-cancel-button,
+.headerSearchInput:focus::-webkit-search-cancel-button {
+  opacity: 0.85;
+}
+
+.headerSearchInput::-webkit-search-cancel-button:hover {
+  opacity: 1;
+}
+
+.headerSearchInput[data-searching="true"] {
+  opacity: 0.5;
+}
+
+.headerVisitorCount {
+  border-radius: var(--border-radius);
+  height: var(--bubble-height);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: var(--padding);
+  padding-right: var(--padding);
+  background-color: var(--nav-dark-color);
+  color: var(--white-color);
+  white-space: nowrap;
+}
+
+.headerVisitorCountDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--nav-live-dot-color);
+  flex-shrink: 0;
+}
+
+@media screen and (max-width: 1280px) {
+  .navNavigation :global(menu) {
+    gap: 10px;
+  }
+
+  .headerUtilities {
+    gap: 10px;
+  }
+
+  .headerSearch {
+    margin: 0 14px;
+  }
+
+  .headerSearchInput {
+    width: 110px;
+  }
+}
+
+@media screen and (min-width: 769px) and (max-width: 900px) {
+  .headerSearch {
+    position: fixed;
+    top: calc(34px + 41px + 28px);
+    left: var(--padding);
+    margin: 0;
+  }
+
+  :global(body[data-page="archive"]) .headerSearch {
+    left: 215px;
+  }
+}
+
+/* ------------------------------------------------------------ */
+
+/* ------------------------------------------------------------ */
+
+@media screen and (max-width: 768px) {
+  .headerTopRow {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .navTitleContainer {
+    flex: 0 0 100%;
+  }
+
+  .navLogo {
+    position: static;
+  }
+
+  .headerTopRow {
+    min-height: 0;
+  }
+
+  .navNavigation,
+  .navNavigation :global(menu) {
+    display: contents;
+  }
+
+  .navNavigation .navLi {
+    margin-left: 0;
+  }
+
+  .navNavigation .navBubble {
+    background-color: var(--light-gray-color);
+  }
+
+  .headerUtilities {
+    display: contents;
+  }
+
+  .headerVisitorCount {
+    position: fixed;
+    top: calc(var(--responsive-padding) + (41px - var(--bubble-height)) / 2);
+    right: 10px;
+  }
+
+  .headerUtilities .newsletterPopupWrapper {
+    display: none;
+  }
+
+  :global(body.mobile-nav-open) .headerUtilities .newsletterPopupWrapper,
+  .headerUtilities .newsletterPopupWrapper[data-visible-on-mobile="true"] {
+    display: flex;
+  }
+
+  .headerUtilities .newsletterPopupWrapper[data-open="true"] .newsletterPopupOpenContent {
+    right: auto;
+    left: 0;
+  }
+
+  .headerUtilities .newsletterPopupWrapper > .navBubble {
+    background-color: var(--light-gray-color);
+  }
+
+  .headerSearch {
+    display: flex;
+    position: fixed;
+    top: calc(var(--responsive-padding) + (41px - var(--bubble-height)) / 2);
+    left: 106px;
+    margin: 0;
+  }
+
+  .archiveNavOptions {
+    position: static;
+    margin-top: 20px;
+    margin-left: 0;
+    flex-wrap: wrap;
+    row-gap: 8px;
+    max-width: 100%;
+  }
+
+  .archiveNavOptions .featuredNavRow {
+    flex: 0 0 100%;
+    display: flex;
+  }
+
+  .navTitleContainer {
+    gap: 10px;
+    align-items: center;
+  }
+
+  .navDropdown {
+    display: contents;
+  }
+
+  .navNavigation .navLi {
+    margin-left: 0;
+  }
+
+  :global(body.mobile-nav-open) .navNavigation {
+    height: auto;
+    overflow: visible;
+  }
+
+  :global(body.mobile-nav-open) .navNavigation .navLi {
+    height: var(--bubble-height) !important;
+    min-height: var(--bubble-height) !important;
+    width: auto !important;
+    overflow: visible;
+  }
+
+  :global(body:not(.mobile-nav-open)) .navNavigation .navLi {
+    display: none;
+  }
+
+  :global(body[data-page="archive"]:not(.mobile-nav-open)) .navNavigation .navLi:global(.archive-nav),
+  :global(body[data-page="unexpected-connections"]:not(.mobile-nav-open)) .navNavigation .navLi:global(.archive-nav),
+  :global(body[data-page="archive-entry"]:not(.mobile-nav-open)) .navNavigation .navLi:global(.archive-nav) {
+    display: flex;
+  }
+
+  .navDropdownMenu {
+    position: static;
+    flex: 0 0 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding-left: 0;
+    max-width: 100%;
+  }
 }

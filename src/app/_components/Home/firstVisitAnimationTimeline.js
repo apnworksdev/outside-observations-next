@@ -49,113 +49,84 @@ export function setupFirstVisitTimeline({
   if (formLines.length > 0) gsap.set(formLines, { transform: 'translateX(-100%)' });
 
   const tl = timeline;
-  const firstCircleTime = timing.getCircleTime(1);
-  tl.to(createText, { opacity: 1, duration: textFadeDuration, ease: 'power1.out' }, firstCircleTime);
 
-  const fourthCircleTime = timing.getCircleTime(4);
-  tl.to(createText, { opacity: 0, duration: textFadeDuration, ease: 'power1.in' }, fourthCircleTime);
+  const ring = document.querySelector('[data-first-visit-animate="ring"]');
+  const dots = ring ? Array.from(ring.querySelectorAll('[data-number]')) : [];
+  const introTypingSpeed = 0.045;
+  const eraseDuration = 0.35;
 
-  const fifthCircleTime = timing.getCircleTime(5);
-  const fifthCircleEndTime = fifthCircleTime + circleDuration;
-  tl.to(investText, { opacity: 1, duration: textFadeDuration, ease: 'power1.out' }, fifthCircleEndTime);
+  const typeInto = (element, at, { erase = true } = {}) => {
+    const p = element.querySelector('p');
+    const text = p ? (p.textContent || '').trim() : '';
+    if (!p || !text) return at;
+
+    const proxy = { chars: 0 };
+    const render = () => {
+      p.textContent = text.substring(0, Math.round(proxy.chars));
+    };
+    const typeDuration = text.length * introTypingSpeed;
+
+    tl.set(p, { textContent: '' }, at);
+    tl.set(element, { opacity: 1 }, at);
+    tl.to(proxy, { chars: text.length, duration: typeDuration, ease: 'none', onUpdate: render }, at);
+
+    let end = at + typeDuration;
+    if (erase) {
+      tl.to(proxy, { chars: 0, duration: eraseDuration, ease: 'power1.in', onUpdate: render }, end + 1.1);
+      end += 1.1 + eraseDuration;
+    }
+    return end;
+  };
+
+  if (dots.length > 0) {
+    tl.fromTo(
+      ring,
+      { rotation: -14, transformOrigin: '50% 50%' },
+      { rotation: 0, duration: timing.getCircleTime(7) + circleDuration - timing.startTime, ease: 'power1.out' },
+      timing.startTime
+    );
+
+    dots.forEach((dot, index) => {
+      tl.fromTo(
+        dot,
+        { scale: 0, opacity: 0 },
+        { scale: 1, opacity: 1, duration: circleDuration, ease: 'back.out(2.4)' },
+        timing.getCircleTime(index)
+      );
+    });
+  }
+
+  const createEnd = typeInto(createText, timing.getCircleTime(0) + 0.2);
+  typeInto(investText, Math.max(createEnd + 0.1, timing.getCircleTime(4) + 0.2), { erase: false });
 
   const lastCircleTime = timing.getCircleTime(7);
   const lastCircleEndTime = lastCircleTime + circleDuration * 2;
-  const circlesFadeOutEndTime = lastCircleEndTime + circleFadeOutDuration;
-  const hiddenCirclesTime = circlesFadeOutEndTime;
-  tl.to(investText, { opacity: 0, duration: textFadeDuration, ease: 'power1.in' }, hiddenCirclesTime);
 
-  const longTextStartTime = hiddenCirclesTime + textFadeDuration + longTextDelay;
-  tl.to(longText, { opacity: 1, duration: textFadeDuration, ease: 'power1.out' }, longTextStartTime);
-
-  const longTextEndTime = longTextStartTime + textFadeDuration + longTextDisplayDuration;
-  tl.to(longText, { opacity: 0, duration: textFadeDuration, ease: 'power1.in' }, longTextEndTime);
-
-  const linesStartTime = longTextEndTime + textFadeDuration;
-  if (linesGrid) {
-    tl.to(linesGrid, { transform: 'translateY(0%)', duration: linesDuration, ease: 'none' }, linesStartTime);
+  if (dots.length > 0) {
+    tl.to(dots, { scale: 1.4, duration: 0.22, ease: 'power2.out', stagger: 0.04, yoyo: true, repeat: 1 }, lastCircleEndTime);
   }
 
-  const contentElementsStartTime = linesStartTime + linesDuration;
-  let storedText = '';
-  if (firstMessage) {
-    const textElement = firstMessage.querySelector('p');
-    if (textElement) storedText = (textElement.textContent || textElement.innerText || '').trim();
+  const implodeTime = lastCircleEndTime + 0.22 * 2 + 0.04 * dots.length + 0.15;
+  const implodeDuration = 0.4;
+  if (dots.length > 0) {
+    tl.to(
+      dots,
+      { scale: 0, duration: implodeDuration, ease: 'power3.in', stagger: 0.06 },
+      implodeTime
+    );
   }
+  tl.to(investText, { opacity: 0, duration: circleFadeOutDuration, ease: 'power1.in' }, implodeTime + implodeDuration - 0.1);
+
+  const hiddenCirclesTime = implodeTime + implodeDuration + 0.06 * dots.length;
 
   tl.call(() => {
-    if (!firstMessage) {
-      firstMessage = content.querySelector('[data-first-visit-animate="first-message"]');
-      if (firstMessage) firstMessage.style.transition = 'none';
-    }
-    const nextFormElements = content.querySelectorAll('[data-first-visit-animate="form-element"]');
-    const nextFormLines = content.querySelectorAll('[data-first-visit-animate="form-line"]');
-
-    if (firstMessage) {
-      const rootComputedStyle = window.getComputedStyle(document.documentElement);
-      const darkGrayColor = rootComputedStyle.getPropertyValue('--dark-gray-color').trim();
-      const bgColor = rootComputedStyle.getPropertyValue('--bg-color').trim();
-      const initialFgColor = rootComputedStyle.getPropertyValue('--fg-color').trim() || '#000000';
-      const textElement = firstMessage.querySelector('p');
-      if (!textElement) return;
-      const textFromDOM = (textElement.textContent || textElement.innerText || '').trim();
-      const defaultMessage = `Welcome to Outside Observations®. We're glad you're here.
-
-Use the menu on the left to explore, or tell me what you're looking for and I'll point you in the right direction.`;
-      const textToType = storedText || textFromDOM || defaultMessage;
-      if (!textToType) return;
-
-      firstMessage.style.transition = 'none';
-      gsap.set(firstMessage, { opacity: 1, color: initialFgColor, backgroundColor: 'transparent' });
-      textElement.textContent = '';
-
-      const typewriterObj = { progress: 0 };
-      const typewriterDuration = textToType.length * typingSpeed;
-      const currentTime = tl.time();
-      tl.to(typewriterObj, {
-        progress: 1,
-        duration: typewriterDuration,
-        ease: 'none',
-        onUpdate: function onUpdate() {
-          const progress = typewriterObj.progress;
-          const currentLength = Math.floor(textToType.length * progress);
-          textElement.textContent = textToType.substring(0, currentLength);
-        },
-        onComplete: function onComplete() {
-          textElement.textContent = textToType;
-        },
-      }, currentTime)
-        .to(firstMessage, {
-          backgroundColor: darkGrayColor || '#333333',
-          color: bgColor || '#ffffff',
-          duration: messageBackgroundColorDuration,
-          ease: 'none',
-        }, '>')
-        .call(() => {
-          firstMessage.style.transition = '';
-        });
-    }
-
-    if (nextFormLines.length > 0) {
-      tl.to(nextFormLines, {
-        transform: 'translateX(0%)',
-        duration: linesDuration,
-        ease: 'none',
-      }, `>+${formDelay}`);
-    }
-    if (nextFormElements.length > 0) {
-      tl.to(nextFormElements, {
-        opacity: 1,
-        duration: formElementFadeDuration,
-        ease: 'power1.out',
-      }, '>');
+    if (linesGrid) {
+      gsap.to(linesGrid, { transform: 'translateY(0%)', duration: linesDuration, ease: 'power2.inOut' });
     }
     if (header) {
-      tl.to(header, {
-        opacity: 1,
-        duration: headerFadeDuration,
-        ease: 'power1.out',
-      }, '>');
+      gsap.to(header, { opacity: 1, duration: headerFadeDuration, delay: 0.25, ease: 'power1.out', clearProps: 'opacity' });
     }
-  }, null, contentElementsStartTime);
+  }, null, hiddenCirclesTime + 0.1);
+
+  tl.set({}, {}, hiddenCirclesTime + 0.05);
 }

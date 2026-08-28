@@ -6,6 +6,7 @@ export function resolvePageType(pathname) {
   if (pathname.startsWith('/archive/unexpected-connections')) return 'unexpected-connections';
   if (pathname.startsWith('/archive/closed')) return 'archive-closed';
   if (pathname.startsWith('/archive')) return 'archive';
+  if (pathname.startsWith('/writings')) return 'writings';
   if (pathname.startsWith('/lab')) return 'lab';
   if (pathname.startsWith('/radio')) return 'radio';
   if (pathname.startsWith('/privacy')) return 'privacy';

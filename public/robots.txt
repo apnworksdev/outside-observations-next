@@ -1,8 +1,41 @@
+# Outside Observations — crawling policy
+#
+# Search engines: welcome. Pages are indexable; image files are not
+# (the archive presents third-party works — see /llms.txt).
+# AI training crawlers: disallowed.
+
 User-agent: *
 Allow: /
 Disallow: /lab
 Disallow: /studio
 Disallow: /vector-store
 Disallow: /api
+# Image files are served through the Next.js optimizer: not for indexing.
+Disallow: /_next/image
+
+# --- AI training crawlers (blocked: artwork must not enter training sets) ---
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
 
 Sitemap: https://outsideobservations.com/sitemap.xml

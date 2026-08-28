@@ -70,6 +70,10 @@ body {
   transition: opacity var(--transition-time) var(--transition-effect);
 }
 
+body[data-page="writings"] {
+  overflow: visible;
+}
+
 /* Show content after hydration (except home page - GSAP controls it completely) */
 body.hydrated {
   opacity: 1;

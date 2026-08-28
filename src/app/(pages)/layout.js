@@ -14,12 +14,13 @@ import { ArchiveSearchStateProvider } from '@/app/_components/Archive/providers/
 import { VisitorCountProvider } from '@/app/_components/shared/VisitorCountProvider';
 import { RadioIframeProvider } from '@/app/_components/shared/RadioIframeProvider';
 import { ContentWarningConsentProvider } from '@/app/_contexts/archive/ContentWarningConsentContext';
+import { MoodPanelProvider } from '@/app/_contexts/archive/MoodPanelContext';
 import RadioIframe from '@/app/_components/shared/RadioIframe';
 import PageTransition from '@/app/_components/layout/PageTransition';
 import PageSectionTracker from '@/app/_components/shared/PageSectionTracker';
 import CookieConsentBanner from '@/app/_components/shared/CookieConsentBanner';
 import { GA4_MEASUREMENT_ID } from '@/app/_helpers/analytics/gtag';
-import { SITE_NAME } from '@/lib/siteUrl';
+import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
 
 export const metadata = {
   title: SITE_NAME,
@@ -41,6 +42,21 @@ export const viewport = {
   userScalable: true,
 };
 
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: SITE_URL,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${SITE_URL}/archive?search={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+};
+
 export default async function RootLayout({ children }) {
   const siteSettings = await getSiteSettings();
   const newsletterTitle = siteSettings?.newsletter?.title ?? undefined;
@@ -51,6 +67,10 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         {/* Consent default must run before gtag so GA4 respects it (Consent Mode v2) */}
         <Script id="ga4-consent-default" strategy="beforeInteractive">
           {`
@@ -80,6 +100,7 @@ export default async function RootLayout({ children }) {
             <RadioIframeProvider>
               <ContentWarningConsentProvider>
                 <ArchiveSearchStateProvider>
+                <MoodPanelProvider>
                 <ErrorBoundary>
                   <BodyPageTypeUpdater />
                 </ErrorBoundary>
@@ -114,6 +135,7 @@ export default async function RootLayout({ children }) {
                     {children}
                   </PageTransition>
                 </ErrorBoundary>
+                </MoodPanelProvider>
                 </ArchiveSearchStateProvider>
               </ContentWarningConsentProvider>
             </RadioIframeProvider>

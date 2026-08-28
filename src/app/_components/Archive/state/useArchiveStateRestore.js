@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { SESSION_STORAGE_KEYS, readFromSessionStorage } from './archiveStorage';
+import { SESSION_STORAGE_KEYS, readFromSessionStorage, removeFromSessionStorage } from './archiveStorage';
 
 export function useRestoreArchiveState({
   pathname,
@@ -17,12 +17,26 @@ export function useRestoreArchiveState({
       return;
     }
 
-    if (pathname !== '/archive') {
+    if (pathname !== '/archive' && !pathname.startsWith('/archive/entry/')) {
       return;
     }
 
-    const storedSearchResults = readFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_RESULTS, null);
-    const storedSearchStatus = readFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_STATUS, null);
+    const urlQuery =
+      pathname === '/archive'
+        ? new URLSearchParams(window.location.search).get('search')?.trim()
+        : null;
+    const searchRestorable = pathname !== '/archive' || Boolean(urlQuery);
+    if (!searchRestorable) {
+      removeFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_RESULTS);
+      removeFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_STATUS);
+    }
+
+    const storedSearchResults = searchRestorable
+      ? readFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_RESULTS, null)
+      : null;
+    const storedSearchStatus = searchRestorable
+      ? readFromSessionStorage(SESSION_STORAGE_KEYS.SEARCH_STATUS, null)
+      : null;
     const storedSorting = readFromSessionStorage(SESSION_STORAGE_KEYS.SORTING, null);
     const storedMoodTags = readFromSessionStorage(SESSION_STORAGE_KEYS.MOOD_TAGS, null);
 

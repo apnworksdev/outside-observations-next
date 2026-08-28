@@ -1,0 +1,334 @@
+
+.container {
+  padding: 0 var(--padding) calc(var(--padding) * 6);
+}
+
+.article {
+  padding-top: var(--archive-container-top-margin);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  column-gap: var(--column-gap);
+  margin-bottom: calc(var(--padding) * 6);
+}
+
+.title {
+  grid-column: 5 / 9;
+  margin: 0;
+  max-width: 360px;
+  justify-self: center;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 30px;
+  line-height: normal;
+  font-weight: var(--font-weight);
+}
+
+.byline {
+  grid-column: 5 / 9;
+  margin: calc(var(--padding) * 1.5) 0 0;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 10px;
+  color: #000000;
+}
+
+.date {
+  display: block;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--padding) * 3);
+}
+
+.textSection {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  column-gap: var(--column-gap);
+  margin: 0;
+}
+
+.textSection {
+  text-align: justify;
+  hyphens: auto;
+  font-size: 12px;
+  line-height: 13px;
+}
+
+.textSection p {
+  margin: 0 0 1em;
+}
+
+.textSection p:last-child {
+  margin-bottom: 0;
+}
+
+.textSection a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.sectionInner {
+  grid-column: var(--col-start, 3) / var(--col-end, 11);
+  padding-inline: calc(var(--column-width) / 3);
+}
+
+.textSection[data-columns='2'] .sectionInner {
+  columns: 2;
+  column-gap: var(--column-gap);
+}
+
+.hoverImageLink {
+  position: relative;
+  text-decoration: underline;
+}
+
+.hoverImageFigure {
+  position: absolute;
+  left: 0;
+  z-index: 20;
+  display: block;
+  width: min(460px, calc(50vh * var(--hover-image-ratio, 1)), 80vw);
+  background-color: var(--bg-color);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-time) var(--transition-effect);
+  pointer-events: none;
+  line-height: 0;
+}
+
+.hoverImageFigure[data-placement='above'] {
+  bottom: calc(100% + 8px);
+}
+
+.hoverImageFigure[data-placement='below'] {
+  top: calc(100% + 8px);
+}
+
+.hoverImageLink:hover .hoverImageFigure,
+.hoverImageLink:focus-visible .hoverImageFigure,
+.hoverImageLink[data-open='true'] .hoverImageFigure {
+  opacity: 1;
+  visibility: visible;
+}
+
+.hoverImageFigure img {
+  width: 100%;
+  height: auto;
+}
+
+.hoverImageCaption {
+  display: block;
+  margin-bottom: 6px;
+  line-height: var(--line-height);
+  text-align: left;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.footer {
+  margin-top: calc(var(--padding) * 8);
+  display: grid;
+  grid-template-columns: repeat(var(--columns), 1fr);
+  column-gap: var(--column-gap);
+  row-gap: calc(var(--padding) * 6);
+}
+
+.footerNav {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: center;
+  position: relative;
+  border-top: 1px solid var(--light-gray-color);
+  border-bottom: 1px solid var(--light-gray-color);
+  --footer-band-height: 27px;
+  height: var(--footer-band-height);
+}
+
+.footerNav a {
+  text-decoration: none;
+}
+
+.footerNavRight a {
+  text-decoration: underline;
+}
+
+.footerNavLeft {
+  grid-column: 4 / 6;
+  grid-row: 1;
+  padding-left: calc(14px - var(--column-gap-half));
+}
+
+.footerNavCenter {
+  grid-column: 6 / 9;
+  grid-row: 1;
+  padding-left: calc(14px - var(--column-gap-half));
+}
+
+.footerShare {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.footerNavRight {
+  grid-column: 9 / 12;
+  grid-row: 1;
+  padding-left: calc(14px - var(--column-gap-half));
+}
+
+.footerDot {
+  grid-column: var(--line);
+  grid-row: 1;
+  justify-self: start;
+  align-self: start;
+  position: relative;
+  width: 0;
+  height: calc(var(--footer-band-height) - 2px);
+  pointer-events: none;
+}
+
+.footerDot::before,
+.footerDot::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--column-gap-half) * -1);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #030303;
+  transform: translateX(-50%);
+}
+
+.footerDot::before {
+  top: -3px;
+}
+
+.footerDot::after {
+  bottom: -3px;
+}
+
+.footerTitleBlock {
+  grid-column: 5 / 9;
+  text-align: center;
+  text-transform: uppercase;
+  padding-top: calc(var(--padding) * 6);
+  padding-bottom: calc(var(--padding) * 6);
+}
+
+.footerTitle {
+  margin: 0;
+  max-width: 360px;
+  margin-inline: auto;
+  font-size: 30px;
+  line-height: normal;
+}
+
+.footerByline {
+  margin: calc(var(--padding) * 1.5) 0 0;
+  opacity: 0.6;
+}
+
+.article + .article {
+  padding-top: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .hoverImageFigure {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: min(86vw, calc(70vh * var(--hover-image-ratio, 1)));
+    transform: translate(-50%, -50%);
+    padding: 8px;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.35);
+  }
+
+  .hoverImageFigure[data-placement='above'],
+  .hoverImageFigure[data-placement='below'] {
+    top: 50%;
+    bottom: auto;
+  }
+
+  .footerNav {
+    height: auto;
+    min-height: var(--footer-band-height);
+    padding: 6px 0;
+  }
+
+  .footerNav {
+    height: auto;
+    border-top: none;
+    border-bottom: none;
+    row-gap: 8px;
+  }
+
+  .footerNav::before {
+    content: '';
+    grid-row: 2;
+    grid-column: 1 / -1;
+    align-self: stretch;
+    border-top: 1px solid var(--light-gray-color);
+    border-bottom: 1px solid var(--light-gray-color);
+  }
+
+  .footerNavLeft,
+  .footerNavCenter,
+  .footerNavRight {
+    grid-column: 1 / -1;
+    justify-self: center;
+    text-align: center;
+    padding-left: 0;
+  }
+
+  .footerNavLeft {
+    grid-row: 1;
+  }
+
+  .footerNavCenter {
+    grid-row: 2;
+    align-self: center;
+    padding-block: 7px;
+  }
+
+  .footerNavRight {
+    grid-row: 3;
+  }
+
+  .footerDot {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: stretch;
+    height: auto;
+  }
+
+  .footerDot + .footerDot {
+    grid-column: 6;
+  }
+
+  .title,
+  .byline,
+  .footerTitleBlock {
+    grid-column: 1 / -1;
+  }
+
+  .textSection .sectionInner {
+    grid-column: var(--col-start-m, 1) / calc(var(--col-start-m, 1) + 4) !important;
+  }
+
+.textSection[data-position='two-columns'] .sectionInner {
+    columns: 1;
+  }
+
+}

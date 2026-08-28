@@ -71,7 +71,6 @@
   height: var(--open-archive-button-size);
 }
 
-
 /* ------------------------------------------------------------ */
 /*                      TOGGLE BUTTON                           */
 /* ------------------------------------------------------------ */
@@ -658,4 +657,35 @@
   text-transform: uppercase;
   text-decoration: underline;
   text-decoration-style: dotted;
+}
+
+/* ------------------------------------------------------------ */
+/* ------------------------------------------------------------ */
+
+.moodPanelHost {
+  position: fixed;
+  top: calc(var(--padding) + var(--bubble-height) + var(--padding) * 3);
+  right: var(--padding);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  align-items: flex-end;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.moodPanelHostHeader {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.moodPanelHostClose {
+  height: var(--bubble-height);
+  min-width: var(--bubble-height);
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  background-color: var(--gray-color);
+  color: var(--white-color);
 }

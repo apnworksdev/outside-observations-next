@@ -15,6 +15,12 @@
   --pink-color: #CCB8CE;
   --dark-pink-color: #B4A2B8;
   --blur-transparent-color: #D9D9D940;
+  --nav-dark-color: #2E2E2E;
+  --nav-hover-color: #E3E3E3;
+  --nav-widline-hover-color: #949494;
+  --nav-widline-active-color: #6E6E6E;
+  --nav-text-color: #000000;
+  --nav-live-dot-color: #3BD16F;
 
   /* Fonts */
   --font-family: 'courier', monospace;
@@ -32,6 +38,7 @@
   --dots-min-width: 36px;
   --gap: 1px;
   --item-gap: 3px;
+  --nav-item-gap: 16px;
   --border-radius: 4px;
 
   /* Transitions */
@@ -54,10 +61,11 @@
   --fifth-line-offset: calc(var(--padding) + var(--column-width) * 11 + var(--column-gap) * 10 + var(--column-gap-half));
 
   /* Archive page */
-  --archive-container-top-margin: calc(var(--responsive-padding) + var(--bubble-height) * 2 + var(--gap) * 2);
-  --archive-container-bottom-margin: calc(var(--padding) + var(--bubble-height) * 3 + var(--gap) * 3);
+  --archive-container-top-margin: calc(34px + 41px + 28px + var(--bubble-height) + 16px);
+  --archive-container-bottom-margin: var(--padding);
   --unexpected-primary-media-height: 0px;
   --archive-list-height: 0px;
+  --entry-vertical-chrome: 140px;
   --close-archive-button-size: 36px;
   --open-archive-button-size: 242px;
 }
@@ -74,3 +82,10 @@
     --close-archive-button-size: 62px;
   }
 }
+
+@media screen and (max-width: 768px) {
+  :root {
+    --archive-container-top-margin: calc(var(--responsive-padding) + 41px + 8px + var(--bubble-height) + 20px + var(--bubble-height) + 8px + var(--bubble-height) + 12px);
+  }
+}
+

@@ -2,13 +2,14 @@ import { notFound } from 'next/navigation';
 import { unstable_cache } from 'next/cache';
 import { Suspense } from 'react';
 import { client } from '@/sanity/lib/client';
-import { ARCHIVE_ENTRY_QUERY, ARCHIVE_ENTRY_SLUGS } from '@/sanity/lib/queries';
+import { ARCHIVE_ENTRY_QUERY, ARCHIVE_ENTRY_SLUGS, ARCHIVE_ENTRY_ORDER_QUERY } from '@/sanity/lib/queries';
 import { urlFor } from '@/sanity/lib/image';
 import styles from '@app/_assets/archive/archive-entry.module.css';
 import { ArchiveEntryArticle, ArchiveEntryMetadata } from '@/app/_components/Archive/features/entry/ArchiveEntryContent';
 import ArchiveEntryBackdrop from '@/app/_components/Archive/features/entry/ArchiveEntryBackdrop';
 import ArchiveEntryJsonLd from '@/app/_components/Archive/features/entry/ArchiveEntryJsonLd';
 import ArchiveEntryVisitTracker from '@/app/_components/Archive/features/entry/ArchiveEntryVisitTracker';
+import ArchiveEntryPager from '@/app/_components/Archive/features/entry/ArchiveEntryPager';
 import { ErrorBoundary } from '@/app/_components/shared/error/ErrorBoundary';
 import { ArchiveEntryErrorFallback } from '@/app/_components/shared/error/ErrorFallbacks';
 import { SITE_NAME, SITE_URL } from '@/lib/siteUrl';
@@ -45,6 +46,19 @@ const fetchArchiveEntry = async (slug) => {
  * Cached version of fetchArchiveEntry
  * Cache key includes the slug to ensure proper cache invalidation per entry
  */
+const getCachedEntryOrder = unstable_cache(
+  async () => {
+    try {
+      return await client.fetch(ARCHIVE_ENTRY_ORDER_QUERY);
+    } catch (error) {
+      console.error('Failed to fetch archive entry order:', error);
+      return [];
+    }
+  },
+  ['archive-entry-order'],
+  { revalidate: 60 }
+);
+
 const getCachedArchiveEntry = (slug) => {
   return unstable_cache(
     async () => fetchArchiveEntry(slug),
@@ -82,7 +96,8 @@ export async function generateMetadata({ params }) {
   const description = truncateDescription(rawDescription);
 
   const baseUrl = SITE_URL;
-  const canonicalUrl = `${baseUrl}/archive/entry/${slug}`;
+  const canonicalSlug = entry.metadata?.slug?.current || entry.slug?.current || slug;
+  const canonicalUrl = `${baseUrl}/archive/entry/${canonicalSlug}`;
 
   let ogImageUrl = null;
   const poster = entry.poster;
@@ -125,6 +140,13 @@ export async function generateMetadata({ params }) {
       images: [ogImageUrl],
     },
     alternates: { canonical: canonicalUrl },
+    robots: {
+      index: true,
+      follow: true,
+      ...(entry.allowImageIndexing
+        ? {}
+        : { noimageindex: true, 'max-image-preview': 'none' }),
+    },
   };
 }
 
@@ -192,8 +214,29 @@ export default async function ArchiveEntryPage({ params }) {
   const entryType = entry?.mediaType || 'image';
   const entrySlug = resolvedParams.slug;
 
+  let neighbours = null;
+  try {
+    const order = await getCachedEntryOrder();
+    const canonical = entry.metadata?.slug?.current || entry.slug?.current || entrySlug;
+    const index = Array.isArray(order) ? order.indexOf(canonical) : -1;
+    if (index >= 0) {
+      neighbours = {
+        previous: index > 0 ? { slug: order[index - 1] } : null,
+        next: index < order.length - 1 ? { slug: order[index + 1] } : null,
+      };
+    }
+  } catch {
+    neighbours = null;
+  }
+
   return (
     <ErrorBoundary fallback={ArchiveEntryErrorFallback}>
+      {neighbours?.previous?.slug ? (
+        <link rel="prev" href={`${SITE_URL}/archive/entry/${neighbours.previous.slug}`} />
+      ) : null}
+      {neighbours?.next?.slug ? (
+        <link rel="next" href={`${SITE_URL}/archive/entry/${neighbours.next.slug}`} />
+      ) : null}
       <ArchiveEntryJsonLd entry={entry} slug={entrySlug} />
       <ArchiveEntryVisitTracker slug={entrySlug} />
       <Suspense
@@ -210,6 +253,7 @@ export default async function ArchiveEntryPage({ params }) {
           <div className={styles.archiveEntryContentWrapper} data-entry-type={entryType}>
             <ArchiveEntryArticle entry={entry} />
           </div>
+          <ArchiveEntryPager slug={entrySlug} />
           <aside className={styles.archiveEntryAside}>
             <ArchiveEntryMetadata entry={entry} />
           </aside>

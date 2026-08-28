@@ -37,12 +37,31 @@ export async function generateMetadata() {
       images: [`${baseUrl}/share-image.png`],
     },
     alternates: { canonical: canonicalUrl },
+    robots: {
+      index: true,
+      follow: true,
+      noimageindex: true,
+      'max-image-preview': 'none',
+    },
   };
 }
+
+const collectionJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${SITE_NAME} Archive`,
+  url: `${SITE_URL}/archive`,
+  description: `Visual research archive by ${SITE_NAME}.`,
+  isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: SITE_URL },
+};
 
 export default function Archive() {
   return (
     <ErrorBoundary fallback={ArchiveErrorFallback}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd) }}
+      />
       <ArchiveListContent />
     </ErrorBoundary>
   );
