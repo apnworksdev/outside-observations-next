@@ -34,7 +34,10 @@ function defaultPosition() {
   const isMobile = window.matchMedia(MOBILE_QUERY).matches;
   const perRow = isMobile ? DEFAULT_PER_ROW_MOBILE : DEFAULT_PER_ROW_DESKTOP;
   const range = isMobile ? MOBILE_RANGE : DESKTOP_RANGE;
-  const width = document.documentElement.clientWidth / perRow;
+  const sidePadding = isMobile ? 5 : 9;
+  const gap = 9;
+  const available = document.documentElement.clientWidth - sidePadding * 2 - gap * (perRow - 1);
+  const width = Math.floor(available / perRow) - 1;
   return Number.isFinite(width) && width > 0 ? positionFor(range, width) : DEFAULT_POSITION;
 }
 
