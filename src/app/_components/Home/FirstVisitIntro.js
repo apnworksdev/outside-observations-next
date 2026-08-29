@@ -19,15 +19,16 @@ export default function FirstVisitIntro() {
   const finish = () => {
     markWebsiteAsVisited();
     document.documentElement.removeAttribute('data-intro');
-    setPhase('done');
+    setPhase('closing');
+    setTimeout(() => setPhase('done'), 900);
   };
 
-  if (phase !== 'playing') {
+  if (phase !== 'playing' && phase !== 'closing') {
     return null;
   }
 
   return (
-    <div className={styles.introOverlay}>
+    <div className={styles.introOverlay} data-state={phase}>
       <FirstVisitAnimation onComplete={finish} />
     </div>
   );
