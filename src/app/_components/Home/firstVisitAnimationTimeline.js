@@ -121,12 +121,25 @@ export function setupFirstVisitTimeline({
 
   tl.call(() => {
     if (linesGrid) {
+      gsap.set(linesGrid, { zIndex: 10001 });
       gsap.to(linesGrid, { transform: 'translateY(0%)', duration: linesDuration, ease: 'power2.inOut' });
     }
     if (header) {
-      gsap.to(header, { opacity: 1, duration: headerFadeDuration, delay: 0.25, ease: 'power1.out', clearProps: 'opacity' });
+      gsap.to(header, {
+        opacity: 1,
+        duration: headerFadeDuration,
+        delay: linesDuration + 0.1,
+        ease: 'power1.out',
+        clearProps: 'opacity',
+      });
     }
-  }, null, hiddenCirclesTime + 0.1);
+  }, null, hiddenCirclesTime + 0.15);
 
-  tl.set({}, {}, hiddenCirclesTime + 0.05);
+  tl.call(() => {
+    if (linesGrid) {
+      gsap.set(linesGrid, { clearProps: 'zIndex' });
+    }
+  }, null, hiddenCirclesTime + 0.15 + linesDuration);
+
+  tl.set({}, {}, hiddenCirclesTime + 0.15 + linesDuration + 0.05);
 }
