@@ -162,7 +162,7 @@ export default function WritingArticleBody({ article, nextArticle, showHeader = 
             <p className={styles.footerTitle}>{nextArticle.title}</p>
             <p className={styles.footerByline}>
               {nextArticle.authorName}
-              {nextDate ? ` — ${nextDate}` : ''}
+              {nextDate ? ` - ${nextDate}` : ''}
             </p>
           </div>
         ) : null}

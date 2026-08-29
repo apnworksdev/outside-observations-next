@@ -12,25 +12,12 @@ export const author = defineType({
       validation: (Rule) => Rule.required().min(1).max(120),
     }),
     defineField({
-      name: 'slug',
-      title: 'Slug',
-      type: 'slug',
-      options: {source: 'name', maxLength: 96},
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: 'bio',
-      title: 'Short bio',
-      type: 'text',
-      rows: 3,
-    }),
-    defineField({
       name: 'link',
       title: 'Website / social link',
       type: 'url',
     }),
   ],
   preview: {
-    select: {title: 'name', subtitle: 'bio'},
+    select: {title: 'name', subtitle: 'link'},
   },
 })

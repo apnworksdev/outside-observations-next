@@ -1,4 +1,7 @@
+import {createElement as h} from 'react'
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {ColumnBandPreview} from '../../components/previews/ColumnBandPreview'
+import {ColumnBandInput} from '../../components/inputs/ColumnBandInput'
 
 export const writingArticle = defineType({
   name: 'writingArticle',
@@ -29,13 +32,9 @@ export const writingArticle = defineType({
       name: 'publishedAt',
       title: 'Published on',
       type: 'date',
+      description:
+        'Shown under the title, and controls visibility: a published article only appears on the site once this date is reached. Set a future date to schedule.',
       validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: 'subtitle',
-      title: 'Footer subtitle',
-      type: 'string',
-      description: 'Short theme line shown at the bottom of the article (e.g. "Evidence as content").',
     }),
     defineField({
       name: 'excerpt',
@@ -103,8 +102,7 @@ export const writingArticle = defineType({
               title: 'Starts at line',
               type: 'number',
               initialValue: 2,
-              description:
-                'Which vertical line of the site grid the block starts on (1 = far left, 12 = far right). The lines are visible on the page.',
+              hidden: true,
               validation: (Rule) => Rule.required().integer().min(1).max(12),
             }),
             defineField({
@@ -112,24 +110,11 @@ export const writingArticle = defineType({
               title: 'Width',
               type: 'number',
               initialValue: 8,
-              description: 'Preset widths, in columns of the site grid.',
-              options: {
-                list: [
-                  {title: '2 columns — narrow', value: 2},
-                  {title: '3 columns', value: 3},
-                  {title: '4 columns', value: 4},
-                  {title: '5 columns', value: 5},
-                  {title: '6 columns', value: 6},
-                  {title: '7 columns', value: 7},
-                  {title: '8 columns — wide', value: 8},
-                  {title: '9 columns', value: 9},
-                  {title: '10 columns — full', value: 10},
-                ],
-                layout: 'radio',
-              },
-              validation: (Rule) => Rule.required(),
+              hidden: true,
+              validation: (Rule) => Rule.required().integer().min(1).max(12),
             }),
           ],
+          components: {input: ColumnBandInput},
           preview: {
             select: {text: 'text', startColumn: 'startColumn', columnSpan: 'columnSpan'},
             prepare({text, startColumn, columnSpan}) {
@@ -141,7 +126,8 @@ export const writingArticle = defineType({
               const width = columnSpan ?? 8
               return {
                 title: plain.slice(0, 80),
-                subtitle: `Text — line ${from} → ${from + width} (${width} col.)`,
+                subtitle: `Line ${from} → ${from + width} (${width} col.)`,
+                media: h(ColumnBandPreview, {start: from, span: width}),
               }
             },
           },
@@ -160,7 +146,7 @@ export const writingArticle = defineType({
   preview: {
     select: {title: 'title', authorName: 'author.name', date: 'publishedAt'},
     prepare({title, authorName, date}) {
-      return {title, subtitle: [authorName, date].filter(Boolean).join(' — ')}
+      return {title, subtitle: [authorName, date].filter(Boolean).join(' - ')}
     },
   },
 })
