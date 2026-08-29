@@ -48,7 +48,7 @@ export async function generateMetadata({ params }) {
   if (!article) return { title: SITE_NAME };
 
   const title = `${article.title} | ${SITE_NAME}`;
-  const description = article.excerpt || `${article.title} — by ${article.author?.name ?? SITE_NAME}.`;
+  const description = article.excerpt || `${article.title} - by ${article.author?.name ?? SITE_NAME}.`;
   const canonicalUrl = `${SITE_URL}/writings/${article.slug}`;
 
   return {
@@ -95,7 +95,7 @@ function ArticleJsonLd({ article }) {
     publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
     isPartOf: {
       '@type': 'CollectionPage',
-      name: `${SITE_NAME} — Writings`,
+      name: `${SITE_NAME} - Writings`,
       url: `${SITE_URL}/writings`,
     },
   };

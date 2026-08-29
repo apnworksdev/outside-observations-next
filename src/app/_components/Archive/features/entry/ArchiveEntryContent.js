@@ -10,7 +10,7 @@ function resolveEntryAlt(entry) {
   }
   return [entry?.metadata?.artName || entry?.artName, entry?.metadata?.source || entry?.source]
     .filter(Boolean)
-    .join(' — ');
+    .join(' - ');
 }
 
 // Helper function to render portable text blocks

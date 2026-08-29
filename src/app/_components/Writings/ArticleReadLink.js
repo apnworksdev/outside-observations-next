@@ -23,7 +23,7 @@ export default function ArticleReadLink({ slug, title, className }) {
       href={`/writings/${slug}`}
       className={className}
       data-transition="nav"
-      aria-label={`${label === 'Read' ? 'Read' : label} — ${title}`}
+      aria-label={`${label === 'Read' ? 'Read' : label} - ${title}`}
     >
       {label}
     </Link>

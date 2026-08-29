@@ -1,4 +1,16 @@
 import {TaskButtonsTool} from './components/tools/TaskButtonsTool'
+import {ArticlePreviewPane} from './components/views/ArticlePreviewPane'
+
+/** Extra views per document type. Only writing articles get the Preview tab. */
+export const defaultDocumentNode = (S, {schemaType}) => {
+  if (schemaType === 'writingArticle') {
+    return S.document().views([
+      S.view.form(),
+      S.view.component(ArticlePreviewPane).title('Preview'),
+    ])
+  }
+  return S.document()
+}
 
 export const structure = (S, context) =>
   S.list()

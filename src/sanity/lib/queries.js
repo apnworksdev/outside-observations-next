@@ -575,7 +575,7 @@ export const WRITINGS_SETTINGS_QUERY = defineQuery(
 )
 
 export const WRITINGS_LIST_QUERY = defineQuery(
-  `*[_type == "writingArticle" && defined(slug.current)] | order(publishedAt desc) {
+  `*[_type == "writingArticle" && defined(slug.current) && publishedAt <= now()] | order(publishedAt desc) {
     _id,
     title,
     "slug": slug.current,
@@ -586,14 +586,47 @@ export const WRITINGS_LIST_QUERY = defineQuery(
 )
 
 export const WRITING_ARTICLE_QUERY = defineQuery(
-  `*[_type == "writingArticle" && slug.current == $slug][0] {
+  `*[_type == "writingArticle" && slug.current == $slug && publishedAt <= now()][0] {
     _id,
     _updatedAt,
     title,
     "slug": slug.current,
     publishedAt,
     excerpt,
-    subtitle,
+    author->{ name, "slug": slug.current, bio, link },
+    body[] {
+      _type,
+      _key,
+      startColumn,
+      columnSpan,
+      position,
+      text[] {
+        ...,
+        markDefs[] {
+          ...,
+          _type == "hoverImage" => {
+            ...,
+            image {
+              ...,
+              asset,
+              'lqip': asset->metadata.lqip,
+              'dimensions': asset->metadata.dimensions
+            }
+          }
+        }
+      }
+    }
+  }`
+)
+
+export const WRITING_ARTICLE_PREVIEW_QUERY = defineQuery(
+  `*[_id == $id][0] {
+    _id,
+    _updatedAt,
+    title,
+    "slug": slug.current,
+    publishedAt,
+    excerpt,
     author->{ name, "slug": slug.current, bio, link },
     body[] {
       _type,
@@ -621,5 +654,5 @@ export const WRITING_ARTICLE_QUERY = defineQuery(
 )
 
 export const WRITING_ARTICLE_SLUGS_QUERY = defineQuery(
-  `*[_type == "writingArticle" && defined(slug.current)].slug.current`
+  `*[_type == "writingArticle" && defined(slug.current) && publishedAt <= now()].slug.current`
 )
